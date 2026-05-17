@@ -1,59 +1,117 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Optimove - Sistem Pendukung Keputusan (SPK) Rekomendasi Olahraga
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Optimove adalah aplikasi Sistem Pendukung Keputusan (SPK) berbasis web untuk memberikan rekomendasi olahraga terbaik yang paling sesuai dengan profil fisik dan kebiasaan pengguna. Aplikasi ini dirancang menggunakan metode Simple Additive Weighting (SAW) berdasarkan analisis kecocokan profil terhadap data historis dari dataset kebugaran nyata (700+ responden).
 
-## About Laravel
+Aplikasi ini dibangun menggunakan Laravel 12 (Backend), React.js & Inertia.js (Frontend), Tailwind CSS (Adaline Design System), dan MySQL (Database).
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Metodologi SPK (Metode SAW)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Sistem menghitung kecocokan profil menggunakan 5 kriteria utama dengan bobot akademis sebagai berikut:
 
-## Learning Laravel
+| No | Kriteria | Jenis Kriteria | Skala Pengukuran | Bobot |
+|---|---|---|---|---|
+| 1 | Tingkat Kebugaran | Benefit | Ordinal (5 Level) | 30% (0.30) |
+| 2 | Rentang Usia | Benefit | Ordinal (5 Rentang) | 25% (0.25) |
+| 3 | Frekuensi Olahraga | Benefit | Ordinal (4 Level) | 25% (0.25) |
+| 4 | Jenis Kelamin | Benefit | Nominal (Biner) | 10% (0.10) |
+| 5 | Pola Makan Sehat | Benefit | Ordinal (3 Level) | 10% (0.10) |
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Algoritma Pencocokan Hybrid
+1. Penyaringan Jarak Usia (Age-Thresholding): Sistem hanya mengevaluasi responden di dataset yang memiliki usia dekat (skor ordinal usia >= 0.5) agar rekomendasi relevan secara biologis.
+2. Perhitungan SAW: Setiap baris data dinilai kecocokannya menggunakan normalisasi linier ordinal: 1 - (|Input - Data| / Rentang Maks).
+3. Skor Hybrid (Popularitas + Kemiripan): Skor akhir dihitung dengan rumus:
+   Skor Hybrid = Rata-rata SAW * log(Jumlah Responden + 1)
+4. Normalisasi Relatif: Hasil dipetakan ke rentang 40% – 100% menggunakan penskalaan Min-Max agar visualisasi progress bar di halaman hasil terlihat kontras dan mudah dibaca.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Panduan Pemasangan & Cara Menjalankan Aplikasi
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Ikuti langkah-langkah di bawah ini untuk memasang dan menjalankan proyek Optimove di komputer lokal Anda.
 
-### Premium Partners
+### Prasyarat Sistem
+Pastikan perangkat Anda sudah terpasang:
+- PHP >= 8.2
+- Composer (Dependency manager PHP)
+- Node.js & NPM (Minimal Node v18)
+- MySQL Database Server (XAMPP, Laragon, atau MySQL installer mandiri)
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+### Langkah-Langkah Pemasangan
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+#### 1. Kloning Repository (Jika mengunduh dari GitHub)
+```bash
+git clone https://github.com/kikiizzet/Optimove-RekomendasiOlahraga-SPK.git
+cd Optimove-RekomendasiOlahraga-SPK
+```
 
-## Code of Conduct
+#### 2. Install Dependensi Backend (Laravel)
+Jalankan perintah berikut untuk mengunduh semua library PHP yang dibutuhkan:
+```bash
+composer install
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+#### 3. Install Dependensi Frontend (React & Vite)
+Jalankan perintah berikut untuk memasang paket-paket Node.js (seperti Inertia, React, Tailwind, dll):
+```bash
+npm install
+```
 
-## Security Vulnerabilities
+#### 4. Konfigurasi Environment File (.env)
+Salin file .env.example menjadi .env:
+```bash
+copy .env.example .env
+```
+Buka file .env di text editor Anda, lalu sesuaikan bagian konfigurasi database MySQL Anda:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306  # Sesuaikan dengan port MySQL Anda (default biasanya 3306)
+DB_DATABASE=optimove
+DB_USERNAME=root
+DB_PASSWORD=
+```
+*Catatan: Pastikan Anda sudah membuat database kosong bernama optimove di phpMyAdmin atau MySQL client Anda sebelum lanjut.*
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+#### 5. Generate Application Key
+```bash
+php artisan key:generate
+```
 
-## License
+#### 6. Jalankan Migrasi & Impor Dataset (Seeding)
+Aplikasi ini membaca dataset awal dari file Excel BD20-1-Fitness-Dataset.xlsx. Perintah di bawah ini akan membuat tabel database sekaligus membaca & mengimpor dataset secara otomatis ke MySQL:
+```bash
+php artisan migrate:fresh --seed
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+#### 7. Build Aset Frontend
+Untuk menjalankan aplikasi dalam mode produksi (lebih cepat & ringan):
+```bash
+npm run build
+```
+Atau jika Anda ingin dalam mode pengembangan (hot-reloading):
+```bash
+npm run dev
+```
+
+#### 8. Jalankan Local Server Laravel
+```bash
+php artisan serve
+```
+
+Aplikasi Anda kini sudah siap! Buka browser Anda dan akses alamat:
+http://127.0.0.1:8000
+
+---
+
+## Antarmuka Halaman (Adaline Design System)
+
+Desain antarmuka dibuat profesional, bersih, dan bebas dari ornamen bergaya AI / chat bot sesuai standar akademis sistem informasi:
+1. Navigasi Sticky: Akses instan ke Statistik, Metodologi, Form Analisis, dan Riwayat.
+2. Dashboard Statistik Dataset: Distribusi demografis responden nyata (Kelompok usia, Jenis Kelamin, Tingkat Kebugaran, Frekuensi, dan Olahraga terpopuler) berbasis diagram batang horizontal minimalis.
+3. Formulir Kriteria SAW Transparan: Setiap dropdown pilihan dilengkapi dengan label informasi persentase bobot akademisnya.
+4. Visualisasi Skor Persentase: Hasil rekomendasi Top 5 ditampilkan rapi dengan ranking, warna harmonis, badge status, dan indikator progress bar persentase skor kecocokan.
+5. Riwayat Pencarian Otomatis: Menyimpan dan menampilkan 10 riwayat kalkulasi terakhir yang dimasukkan oleh pengguna ke database.
