@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Colors */
+    --color-canvas-ice: #fbfdf6;
+    --color-adaline-ink: #0a1d08;
+    --color-mist-gray: #c5ccb6;
+    --color-deep-earth: #31200b;
+    --color-valley-green: #203b14;
+    --color-stone-moss: #e0e5d5;
+    --color-amber-seed: #4a3212;
+    --color-forest-dew: #d7e8b5;
+    --color-blackest-night: #000000;
+
+    /* Typography */
+    --font-akkurat: 'akkurat', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-fragmentmono: 'fragmentMono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+    /* Background and Text default */
+    background-color: var(--color-canvas-ice);
+    color: var(--color-adaline-ink);
+  }
+}
