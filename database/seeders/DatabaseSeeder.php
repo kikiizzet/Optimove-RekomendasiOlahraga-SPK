@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'name' => 'Admin User',
             'email' => 'admin@optimove.test',
+            'role' => 'admin',
         ]);
 
         $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load(base_path("BD20-1-Fitness-Dataset.xlsx"));

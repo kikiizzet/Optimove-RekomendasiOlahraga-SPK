@@ -1,4 +1,4 @@
-import { useForm, usePage } from '@inertiajs/react';
+import { useForm, usePage, Link } from '@inertiajs/react';
 import { useRef } from 'react';
 
 const rankStyle = (rank) => {
@@ -46,7 +46,7 @@ function SectionLabel({ children }) {
 }
 
 export default function Index({ formData, histories = [], stats = {} }) {
-    const { recommendations } = usePage().props;
+    const { recommendations, auth } = usePage().props;
     const formRef = useRef(null);
 
     const { data, setData, post, processing, errors } = useForm({
@@ -83,16 +83,34 @@ export default function Index({ formData, histories = [], stats = {} }) {
                     <div className="flex items-center gap-10">
                         <span className="font-bold text-lg" style={{ letterSpacing: '-0.04em' }}>Optimove</span>
                         <div className="hidden md:flex gap-8 text-sm">
-                            <a href="#statistik" className="transition hover:opacity-50">Statistik Dataset</a>
                             <a href="#metodologi" className="transition hover:opacity-50">Metodologi SAW</a>
                             <a href="#form" className="transition hover:opacity-50">Mulai Analisis</a>
                             <a href="#riwayat" className="transition hover:opacity-50">Riwayat</a>
                         </div>
                     </div>
-                    <button onClick={scrollToForm} className="py-2 px-6 rounded-full text-sm font-bold transition hover:opacity-80"
-                        style={{ backgroundColor: amber, color: ice }}>
-                        Mulai Sekarang
-                    </button>
+                    <div className="flex items-center gap-3 md:gap-4">
+                        {auth?.user ? (
+                            <>
+                                {auth.user.role === 'admin' && (
+                                    <>
+                                        <a href={route('admin.dashboard')} className="hidden md:inline-block py-2 px-4 rounded-xl text-xs font-bold transition hover:opacity-80 border"
+                                            style={{ borderColor: green, color: green }}>
+                                            Dashboard Admin
+                                        </a>
+                                    </>
+                                )}
+                                <Link href={route('logout')} method="post" as="button" className="ml-2 text-xs font-bold transition hover:opacity-60"
+                                    style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>
+                                    Logout
+                                </Link>
+                            </>
+                        ) : (
+                            <button onClick={scrollToForm} className="py-2 px-4 md:px-6 rounded-xl text-xs md:text-sm font-bold transition hover:opacity-90"
+                                style={{ backgroundColor: amber, color: ice }}>
+                                Mulai
+                            </button>
+                        )}
+                    </div>
                 </nav>
             </header>
 
@@ -101,9 +119,7 @@ export default function Index({ formData, histories = [], stats = {} }) {
                 <img src="/images/hero-bg.png" alt="Landscape" className="absolute inset-0 w-full h-full object-cover" style={{ opacity: 0.28 }} />
                 <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, rgba(251,253,246,0.05) 0%, rgba(251,253,246,0.82) 65%, rgba(251,253,246,1) 100%)` }} />
                 <div className="relative z-10 max-w-7xl mx-auto px-6 flex flex-col items-center justify-center text-center" style={{ minHeight: '90vh' }}>
-                    <div className="inline-flex px-4 py-1.5 rounded-full text-xs font-mono mb-8 border" style={{ borderColor: moss, color: green }}>
-                        Sistem Pendukung Keputusan · Metode SAW · {stats.total || 0} Responden
-                    </div>
+                    
                     <h1 className="font-bold mb-6" style={{ fontSize: 'clamp(2.5rem,6vw,4.5rem)', letterSpacing: '-0.04em', lineHeight: 1.1 }}>
                         Olahraga yang Tepat,<br />Dimulai dari Data Anda
                     </h1>
@@ -124,67 +140,7 @@ export default function Index({ formData, histories = [], stats = {} }) {
                 </div>
             </section>
 
-            {/* STATISTIK DATASET */}
-            <section id="statistik" className="py-28" style={{ backgroundColor: moss }}>
-                <div className="max-w-7xl mx-auto px-6 md:px-10">
-                    <div className="text-center mb-14">
-                        <SectionLabel>Statistik Dataset</SectionLabel>
-                        <h2 className="font-bold" style={{ fontSize: 'clamp(1.8rem,4vw,2.8rem)', letterSpacing: '-0.04em' }}>
-                            Distribusi Data Responden
-                        </h2>
-                        <p className="mt-3 text-sm max-w-lg mx-auto" style={{ opacity: 0.6 }}>
-                            Dataset terdiri dari {stats.total || 0} responden dengan beragam latar belakang kebugaran. Distribusi ini menjadi dasar perhitungan SAW.
-                        </p>
-                    </div>
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                        {[
-                            { label: 'Total Responden', value: stats.total || 0 },
-                            { label: 'Kelompok Usia', value: Object.keys(stats.age || {}).length },
-                            { label: 'Jenis Olahraga', value: Object.keys(stats.top_sports || {}).length + '+' },
-                            { label: 'Kriteria SAW', value: 5 },
-                        ].map(s => (
-                            <Card key={s.label}>
-                                <div className="text-3xl font-bold mb-1" style={{ letterSpacing: '-0.04em', color: green }}>{s.value}</div>
-                                <div className="text-sm" style={{ opacity: 0.55 }}>{s.label}</div>
-                            </Card>
-                        ))}
-                    </div>
-
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {stats.gender && (
-                            <Card>
-                                <div className="text-sm font-bold mb-4">Distribusi Jenis Kelamin</div>
-                                <BarChart data={stats.gender} total={stats.total} />
-                            </Card>
-                        )}
-                        {stats.age && (
-                            <Card>
-                                <div className="text-sm font-bold mb-4">Distribusi Rentang Usia</div>
-                                <BarChart data={stats.age} total={stats.total} />
-                            </Card>
-                        )}
-                        {stats.fitness && (
-                            <Card>
-                                <div className="text-sm font-bold mb-4">Distribusi Tingkat Kebugaran</div>
-                                <BarChart data={stats.fitness} total={stats.total} />
-                            </Card>
-                        )}
-                        {stats.frequency && (
-                            <Card>
-                                <div className="text-sm font-bold mb-4">Distribusi Frekuensi Olahraga</div>
-                                <BarChart data={stats.frequency} total={stats.total} />
-                            </Card>
-                        )}
-                        {stats.top_sports && (
-                            <Card className="lg:col-span-2">
-                                <div className="text-sm font-bold mb-4">Olahraga Paling Populer di Dataset</div>
-                                <BarChart data={stats.top_sports} total={stats.total} />
-                            </Card>
-                        )}
-                    </div>
-                </div>
-            </section>
 
             {/* METODOLOGI */}
             <section id="metodologi" className="py-28" style={{ backgroundColor: ice }}>
@@ -387,9 +343,10 @@ export default function Index({ formData, histories = [], stats = {} }) {
             </section>
 
             {/* FOOTER */}
-            <footer className="py-10 border-t text-center text-xs font-mono tracking-widest uppercase"
+            <footer className="py-10 border-t text-center text-xs font-mono tracking-widest uppercase relative group"
                 style={{ borderColor: moss, color: 'var(--color-mist-gray)', backgroundColor: ice }}>
                 Optimove · SPK Rekomendasi Olahraga · Metode SAW · 2026
+                <a href={route('login')} className="absolute bottom-2 right-2 text-[10px] opacity-0 group-hover:opacity-10 transition-opacity duration-500 hover:!opacity-100 p-2">admin</a>
             </footer>
         </div>
     );

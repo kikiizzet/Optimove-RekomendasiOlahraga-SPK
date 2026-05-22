@@ -3,7 +3,16 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
+
+const THEME = {
+    ink: '#0a1d08',
+    ice: '#fbfdf6',
+    moss: '#e0e5d5',
+    dew: '#d7e8b5',
+    green: '#203b14',
+    brown: '#4a3212',
+};
 
 export default function ResetPassword({ token, email }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -22,72 +31,110 @@ export default function ResetPassword({ token, email }) {
     };
 
     return (
-        <GuestLayout>
+        <GuestLayout title="Atur Ulang Password">
             <Head title="Reset Password" />
 
-            <form onSubmit={submit}>
+            <form onSubmit={submit} className="space-y-5">
+                {/* Email */}
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
-
-                    <TextInput
+                    <label className="block text-sm font-bold mb-2" style={{ color: THEME.ink }}>
+                        Email
+                    </label>
+                    <input
                         id="email"
                         type="email"
                         name="email"
                         value={data.email}
-                        className="mt-1 block w-full"
+                        placeholder="nama@example.com"
                         autoComplete="username"
                         onChange={(e) => setData('email', e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-offset-2 transition"
+                        style={{
+                            borderColor: errors.email ? '#ef4444' : THEME.moss,
+                            color: THEME.ink,
+                            backgroundColor: THEME.ice,
+                        }}
                     />
-
-                    <InputError message={errors.email} className="mt-2" />
+                    {errors.email && (
+                        <p className="mt-2 text-sm" style={{ color: '#ef4444' }}>{errors.email}</p>
+                    )}
                 </div>
 
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
+                {/* Password */}
+                <div>
+                    <label className="block text-sm font-bold mb-2" style={{ color: THEME.ink }}>
+                        Password Baru
+                    </label>
+                    <input
                         id="password"
                         type="password"
                         name="password"
                         value={data.password}
-                        className="mt-1 block w-full"
+                        placeholder="••••••••"
                         autoComplete="new-password"
-                        isFocused={true}
+                        autoFocus
                         onChange={(e) => setData('password', e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-offset-2 transition"
+                        style={{
+                            borderColor: errors.password ? '#ef4444' : THEME.moss,
+                            color: THEME.ink,
+                            backgroundColor: THEME.ice,
+                        }}
                     />
-
-                    <InputError message={errors.password} className="mt-2" />
+                    {errors.password && (
+                        <p className="mt-2 text-sm" style={{ color: '#ef4444' }}>{errors.password}</p>
+                    )}
                 </div>
 
-                <div className="mt-4">
-                    <InputLabel
-                        htmlFor="password_confirmation"
-                        value="Confirm Password"
-                    />
-
-                    <TextInput
+                {/* Confirm Password */}
+                <div>
+                    <label className="block text-sm font-bold mb-2" style={{ color: THEME.ink }}>
+                        Konfirmasi Password
+                    </label>
+                    <input
                         type="password"
                         id="password_confirmation"
                         name="password_confirmation"
                         value={data.password_confirmation}
-                        className="mt-1 block w-full"
+                        placeholder="••••••••"
                         autoComplete="new-password"
-                        onChange={(e) =>
-                            setData('password_confirmation', e.target.value)
-                        }
+                        onChange={(e) => setData('password_confirmation', e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-offset-2 transition"
+                        style={{
+                            borderColor: errors.password_confirmation ? '#ef4444' : THEME.moss,
+                            color: THEME.ink,
+                            backgroundColor: THEME.ice,
+                        }}
                     />
-
-                    <InputError
-                        message={errors.password_confirmation}
-                        className="mt-2"
-                    />
+                    {errors.password_confirmation && (
+                        <p className="mt-2 text-sm" style={{ color: '#ef4444' }}>{errors.password_confirmation}</p>
+                    )}
                 </div>
 
-                <div className="mt-4 flex items-center justify-end">
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Reset Password
-                    </PrimaryButton>
-                </div>
+                {/* Submit Button */}
+                <button
+                    type="submit"
+                    disabled={processing}
+                    className="w-full py-3 rounded-xl font-bold text-sm transition hover:opacity-90 disabled:opacity-60"
+                    style={{
+                        backgroundColor: THEME.brown,
+                        color: THEME.ice,
+                    }}
+                >
+                    {processing ? 'Sedang mengatur...' : 'Atur Ulang Password'}
+                </button>
+
+                <Link
+                    href={route('login')}
+                    className="block text-center py-3 rounded-xl text-sm font-bold border transition hover:opacity-80"
+                    style={{
+                        borderColor: THEME.moss,
+                        color: THEME.ink,
+                        backgroundColor: THEME.dew,
+                    }}
+                >
+                    Kembali ke Login
+                </Link>
             </form>
         </GuestLayout>
     );
