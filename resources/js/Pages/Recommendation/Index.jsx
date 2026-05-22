@@ -1,5 +1,5 @@
 import { useForm, usePage, Link } from '@inertiajs/react';
-import { useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
 
 const rankStyle = (rank) => {
     if (rank === 1) return { bg: 'var(--color-adaline-ink)', text: 'var(--color-canvas-ice)' };
@@ -16,19 +16,41 @@ const FIELDS = [
     { key: 'diet', label: 'Pola Makan Sehat', weight: '10%', opts: [{ v: 'No', l: 'Tidak' }, { v: 'Not always', l: 'Kadang-kadang' }, { v: 'Yes', l: 'Ya, Selalu' }] },
 ];
 
-function BarChart({ data, total }) {
-    const max = Math.max(...Object.values(data));
+
+
+function AnimatedCounter({ target, duration = 1800 }) {
+    const [count, setCount] = useState(0);
+    const ref = useRef(null);
+    const started = useRef(false);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting && !started.current) {
+                started.current = true;
+                const start = performance.now();
+                const tick = (now) => {
+                    const progress = Math.min((now - start) / duration, 1);
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    setCount(Math.floor(eased * target));
+                    if (progress < 1) requestAnimationFrame(tick);
+                };
+                requestAnimationFrame(tick);
+            }
+        }, { threshold: 0.3 });
+        if (ref.current) observer.observe(ref.current);
+        return () => observer.disconnect();
+    }, [target, duration]);
+
+    return <span ref={ref}>{count.toLocaleString('id-ID')}</span>;
+}
+
+function MiniBar({ value, max, color }) {
     return (
-        <div className="space-y-2">
-            {Object.entries(data).map(([label, count]) => (
-                <div key={label} className="flex items-center gap-3 text-xs">
-                    <div className="w-28 shrink-0 truncate" style={{ opacity: 0.7 }}>{label}</div>
-                    <div className="flex-1 rounded-full h-2 overflow-hidden" style={{ backgroundColor: 'var(--color-stone-moss)' }}>
-                        <div className="h-full rounded-full" style={{ width: `${(count / max) * 100}%`, backgroundColor: 'var(--color-valley-green)' }} />
-                    </div>
-                    <div className="w-8 text-right font-mono" style={{ color: 'var(--color-valley-green)' }}>{count}</div>
-                </div>
-            ))}
+        <div className="flex-1 rounded-full h-1.5 overflow-hidden" style={{ backgroundColor: 'var(--color-stone-moss)' }}>
+            <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${Math.round((value / max) * 100)}%`, backgroundColor: color }}
+            />
         </div>
     );
 }
@@ -74,6 +96,17 @@ export default function Index({ formData, histories = [], stats = {} }) {
     const amber = 'var(--color-amber-seed)';
     const dew = 'var(--color-forest-dew)';
 
+    // Derived stats
+    const topSportsEntries = Object.entries(stats.top_sports || {}).slice(0, 8);
+    const maxSportCount = topSportsEntries.length > 0 ? Math.max(...topSportsEntries.map(([, c]) => c)) : 1;
+    const genderMale = stats.gender?.Male || 0;
+    const genderFemale = stats.gender?.Female || 0;
+    const totalGender = genderMale + genderFemale || 1;
+    const fitnessEntries = Object.entries(stats.fitness || {});
+    const maxFitness = fitnessEntries.length > 0 ? Math.max(...fitnessEntries.map(([, c]) => c)) : 1;
+    const totalDataset = stats.total || 0;
+    const totalSports = topSportsEntries.length;
+
     return (
         <div className="min-h-screen font-sans" style={{ backgroundColor: ice, color: ink }}>
 
@@ -83,6 +116,7 @@ export default function Index({ formData, histories = [], stats = {} }) {
                     <div className="flex items-center gap-10">
                         <span className="font-bold text-lg" style={{ letterSpacing: '-0.04em' }}>Optimove</span>
                         <div className="hidden md:flex gap-8 text-sm">
+                            <a href="#statistik" className="transition hover:opacity-50">Dataset</a>
                             <a href="#metodologi" className="transition hover:opacity-50">Metodologi SAW</a>
                             <a href="#form" className="transition hover:opacity-50">Mulai Analisis</a>
                             <a href="#riwayat" className="transition hover:opacity-50">Riwayat</a>
@@ -140,10 +174,160 @@ export default function Index({ formData, histories = [], stats = {} }) {
                 </div>
             </section>
 
+            {/* COUNTER STRIP */}
+            <section style={{ backgroundColor: ink, color: ice }}>
+                <div className="max-w-7xl mx-auto px-6 md:px-10 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                    {[
+                        { label: 'Responden Dataset', value: totalDataset, suffix: '' },
+                        { label: 'Jenis Olahraga', value: totalSports > 0 ? totalSports : 15, suffix: '+' },
+                        { label: 'Kriteria Penilaian', value: 5, suffix: '' },
+                        { label: 'Rekomendasi Diproses', value: histories.length > 0 ? undefined : 0, static: true },
+                    ].map((item, i) => (
+                        <div key={i} className="flex flex-col items-center gap-2">
+                            <div className="text-4xl font-extrabold tracking-tighter" style={{ letterSpacing: '-0.04em', color: dew }}>
+                                {item.static
+                                    ? <AnimatedCounter target={0} />
+                                    : item.value !== undefined
+                                        ? <><AnimatedCounter target={item.value} />{item.suffix}</>
+                                        : <AnimatedCounter target={0} />
+                                }
+                            </div>
+                            <div className="text-xs font-mono uppercase tracking-widest" style={{ opacity: 0.6 }}>{item.label}</div>
+                        </div>
+                    ))}
+                </div>
+            </section>
 
+            {/* STATISTIK DATASET */}
+            {totalDataset > 0 && (
+                <section id="statistik" className="py-24" style={{ backgroundColor: dew }}>
+                    <div className="max-w-7xl mx-auto px-6 md:px-10">
+                        <div className="text-center mb-14">
+                            <SectionLabel>Transparansi Data</SectionLabel>
+                            <h2 className="font-bold" style={{ fontSize: 'clamp(1.8rem,4vw,2.8rem)', letterSpacing: '-0.04em' }}>
+                                Mengenal Dataset Kami
+                            </h2>
+                            <p className="mt-3 text-sm max-w-lg mx-auto" style={{ opacity: 0.65 }}>
+                                Rekomendasi Optimove didasarkan pada dataset fitness nyata dengan <strong>{totalDataset.toLocaleString('id-ID')} responden</strong>. Berikut distribusi datanya.
+                            </p>
+                        </div>
+
+                        <div className="grid md:grid-cols-3 gap-6">
+                            {/* Distribusi Gender */}
+                            <Card>
+                                <div className="font-mono text-xs mb-4 uppercase tracking-widest" style={{ color: green }}>Distribusi Gender</div>
+                                <div className="space-y-4">
+                                    <div>
+                                        <div className="flex justify-between text-sm font-bold mb-2">
+                                            <span>Laki-laki</span>
+                                            <span className="font-mono" style={{ color: green }}>
+                                                {genderMale.toLocaleString('id-ID')}
+                                                <span className="text-xs font-normal ml-1 opacity-60">({Math.round((genderMale / totalGender) * 100)}%)</span>
+                                            </span>
+                                        </div>
+                                        <div className="w-full rounded-full h-2 overflow-hidden" style={{ backgroundColor: moss }}>
+                                            <div className="h-full rounded-full" style={{ width: `${Math.round((genderMale / totalGender) * 100)}%`, backgroundColor: green }} />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="flex justify-between text-sm font-bold mb-2">
+                                            <span>Perempuan</span>
+                                            <span className="font-mono" style={{ color: amber }}>
+                                                {genderFemale.toLocaleString('id-ID')}
+                                                <span className="text-xs font-normal ml-1 opacity-60">({Math.round((genderFemale / totalGender) * 100)}%)</span>
+                                            </span>
+                                        </div>
+                                        <div className="w-full rounded-full h-2 overflow-hidden" style={{ backgroundColor: moss }}>
+                                            <div className="h-full rounded-full" style={{ width: `${Math.round((genderFemale / totalGender) * 100)}%`, backgroundColor: amber }} />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="mt-5 pt-4 border-t text-xs" style={{ borderColor: moss, opacity: 0.5 }}>
+                                    Total {totalDataset.toLocaleString('id-ID')} responden terverifikasi
+                                </div>
+                            </Card>
+
+                            {/* Distribusi Tingkat Kebugaran */}
+                            <Card>
+                                <div className="font-mono text-xs mb-4 uppercase tracking-widest" style={{ color: green }}>Tingkat Kebugaran</div>
+                                <div className="space-y-2.5">
+                                    {[
+                                        { key: 'Unfit', label: 'Tidak Bugar' },
+                                        { key: 'Average', label: 'Rata-rata' },
+                                        { key: 'Good', label: 'Bugar' },
+                                        { key: 'Very good', label: 'Sangat Bugar' },
+                                        { key: 'Excellent', label: 'Prima' },
+                                    ].map(({ key, label }) => {
+                                        const val = stats.fitness?.[key] || 0;
+                                        return (
+                                            <div key={key} className="flex items-center gap-3 text-xs">
+                                                <div className="w-20 shrink-0 font-medium" style={{ opacity: 0.8 }}>{label}</div>
+                                                <MiniBar value={val} max={maxFitness} color={green} />
+                                                <div className="w-10 text-right font-mono font-bold" style={{ color: green }}>{val}</div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </Card>
+
+                            {/* Top Olahraga Populer di Dataset */}
+                            <Card>
+                                <div className="font-mono text-xs mb-4 uppercase tracking-widest" style={{ color: green }}>Olahraga Terpopuler</div>
+                                <div className="space-y-2.5">
+                                    {topSportsEntries.slice(0, 5).map(([sport, count]) => (
+                                        <div key={sport} className="flex items-center gap-3 text-xs">
+                                            <div className="flex-1 min-w-0 font-medium truncate" style={{ opacity: 0.85 }}>{sport}</div>
+                                            <MiniBar value={count} max={maxSportCount} color={green} />
+                                            <div className="w-10 text-right font-mono font-bold" style={{ color: green }}>{count}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-5 pt-4 border-t text-xs" style={{ borderColor: moss, opacity: 0.5 }}>
+                                    {totalSports} jenis olahraga dalam dataset
+                                </div>
+                            </Card>
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* OLAHRAGA TERSEDIA — SPORT GRID */}
+            {topSportsEntries.length > 0 && (
+                <section className="py-20" style={{ backgroundColor: ice }}>
+                    <div className="max-w-7xl mx-auto px-6 md:px-10">
+                        <div className="text-center mb-12">
+                            <SectionLabel>Koleksi Olahraga</SectionLabel>
+                            <h2 className="font-bold" style={{ fontSize: 'clamp(1.6rem,3.5vw,2.5rem)', letterSpacing: '-0.04em' }}>
+                                Olahraga yang Didukung Sistem
+                            </h2>
+                            <p className="mt-3 text-sm max-w-md mx-auto" style={{ opacity: 0.55 }}>
+                                Sistem SAW kami mencakup berbagai jenis aktivitas fisik dari dataset responden nyata.
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                            {topSportsEntries.map(([sport, count], i) => (
+                                <div
+                                    key={sport}
+                                    className="flex flex-col items-center text-center p-5 rounded-2xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-md cursor-default"
+                                    style={{
+                                        backgroundColor: i === 0 ? ink : ice,
+                                        borderColor: i === 0 ? ink : moss,
+                                        color: i === 0 ? ice : ink,
+                                    }}
+                                >
+                                    <div className="font-bold text-sm leading-tight mb-1">{sport}</div>
+                                    <div className="text-xs font-mono mt-1" style={{ opacity: i === 0 ? 0.7 : 0.45 }}>
+                                        {count} responden
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* METODOLOGI */}
-            <section id="metodologi" className="py-28" style={{ backgroundColor: ice }}>
+            <section id="metodologi" className="py-28" style={{ backgroundColor: dew }}>
                 <div className="max-w-5xl mx-auto px-6 md:px-10">
                     <div className="text-center mb-12">
                         <SectionLabel>Metodologi</SectionLabel>
@@ -204,7 +388,7 @@ export default function Index({ formData, histories = [], stats = {} }) {
             </section>
 
             {/* FORM + RESULT */}
-            <section id="form" ref={formRef} className="py-28" style={{ backgroundColor: dew }}>
+            <section id="form" ref={formRef} className="py-28" style={{ backgroundColor: ice }}>
                 <div className="max-w-7xl mx-auto px-6 md:px-10">
                     <div className="text-center mb-12">
                         <SectionLabel>Analisis SPK</SectionLabel>
@@ -296,7 +480,7 @@ export default function Index({ formData, histories = [], stats = {} }) {
             </section>
 
             {/* RIWAYAT */}
-            <section id="riwayat" className="py-28" style={{ backgroundColor: ice }}>
+            <section id="riwayat" className="py-28" style={{ backgroundColor: dew }}>
                 <div className="max-w-7xl mx-auto px-6 md:px-10">
                     <div className="mb-10">
                         <SectionLabel>Riwayat</SectionLabel>
@@ -343,10 +527,27 @@ export default function Index({ formData, histories = [], stats = {} }) {
             </section>
 
             {/* FOOTER */}
-            <footer className="py-10 border-t text-center text-xs font-mono tracking-widest uppercase relative group"
+            <footer className="py-12 border-t text-xs font-mono"
                 style={{ borderColor: moss, color: 'var(--color-mist-gray)', backgroundColor: ice }}>
-                Optimove · SPK Rekomendasi Olahraga · Metode SAW · 2026
-                <a href={route('login')} className="absolute bottom-2 right-2 text-[10px] opacity-0 group-hover:opacity-10 transition-opacity duration-500 hover:!opacity-100 p-2">admin</a>
+                <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="tracking-widest uppercase text-center md:text-left">
+                        Optimove · SPK Rekomendasi Olahraga · Metode SAW · 2026
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Link href={route('admin.dashboard')} 
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border font-bold tracking-normal uppercase transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm"
+                            style={{ 
+                                borderColor: moss, 
+                                color: ink,
+                                backgroundColor: dew,
+                            }}>
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            Masuk Halaman Admin
+                        </Link>
+                    </div>
+                </div>
             </footer>
         </div>
     );

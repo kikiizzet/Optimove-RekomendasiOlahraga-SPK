@@ -54,7 +54,15 @@ class RecommendationController extends Controller
     private function parseSports(string $raw): array
     {
         $parts = preg_split('/[;,]/', $raw);
-        return array_filter(array_map('trim', $parts), function ($s) {
+        $mapped = array_map(function ($s) {
+            $trimmed = trim($s);
+            if (strcasecmp($trimmed, 'Walking or jogging') === 0) {
+                return 'Walking or jogging';
+            }
+            return ucwords(strtolower($trimmed));
+        }, $parts);
+
+        return array_filter($mapped, function ($s) {
             return $s !== '' && stripos($s, "don't really") === false
                 && stripos($s, "i don't") === false;
         });

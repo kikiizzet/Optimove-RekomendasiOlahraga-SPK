@@ -124,51 +124,24 @@ export default function Login({ status, canResetPassword }) {
                     {processing ? 'Sedang masuk...' : 'Masuk Akun'}
                 </button>
 
-                {/* Divider */}
-                <div className="flex items-center gap-4 my-6">
-                    <div className="flex-1 h-px" style={{ backgroundColor: THEME.moss }} />
-                    <span className="text-xs" style={{ color: THEME.green, opacity: 0.6 }}>ATAU</span>
-                    <div className="flex-1 h-px" style={{ backgroundColor: THEME.moss }} />
-                </div>
-
-                {/* Links */}
-                <div className="space-y-3">
+                {/* Extra Links */}
+                <div className="flex items-center justify-between mt-6 text-xs">
                     {canResetPassword && (
                         <Link
                             href={route('password.request')}
-                            className="block text-center py-3 rounded-xl text-sm font-bold border transition hover:opacity-80"
-                            style={{
-                                borderColor: THEME.moss,
-                                color: THEME.ink,
-                                backgroundColor: THEME.dew,
-                            }}
+                            className="hover:underline transition opacity-80 hover:opacity-100"
+                            style={{ color: THEME.green }}
                         >
-                            Lupa Password?
+                            Lupa password?
                         </Link>
                     )}
-
                     <Link
                         href={route('register')}
-                        className="block text-center py-3 rounded-xl text-sm font-bold border transition hover:opacity-80"
-                        style={{
-                            borderColor: THEME.moss,
-                            color: THEME.ink,
-                            backgroundColor: THEME.dew,
-                        }}
+                        className="hover:underline transition opacity-80 hover:opacity-100 ml-auto"
+                        style={{ color: THEME.green }}
                     >
-                        Buat Akun Baru
+                        Belum punya akun? Daftar
                     </Link>
-                </div>
-
-                {/* Demo Info */}
-                <div className="mt-6 p-4 rounded-xl text-xs" style={{ backgroundColor: THEME.dew, borderLeft: `3px solid ${THEME.green}` }}>
-                    <p style={{ color: THEME.ink, marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                        Demo Admin:
-                    </p>
-                    <p style={{ color: THEME.ink, opacity: 0.7, fontFamily: 'monospace' }}>
-                        📧 admin@optimove.test<br/>
-                        🔐 password
-                    </p>
                 </div>
             </form>
         </GuestLayout>
