@@ -15,7 +15,7 @@ export default function AdminLayout({ children, activeTab = 'dashboard' }) {
     };
 
     return (
-        <div className="min-h-screen flex flex-col md:flex-row font-sans" style={{ backgroundColor: THEME.ice, color: THEME.ink }}>
+        <div className="h-screen flex flex-col md:flex-row font-sans overflow-hidden" style={{ backgroundColor: THEME.ice, color: THEME.ink }}>
             
             {/* MOBILE TOP HEADER */}
             <header className="md:hidden flex items-center justify-between px-6 py-4 border-b z-50 sticky top-0 backdrop-blur-md bg-opacity-90" 
@@ -55,6 +55,14 @@ export default function AdminLayout({ children, activeTab = 'dashboard' }) {
                         }`}>
                         Dataset Management
                     </Link>
+                    <Link href={route('admin.triggers.index')} onClick={() => setShowingMobileMenu(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                            activeTab === 'triggers' 
+                            ? 'bg-[#d7e8b5] text-[#203b14]' 
+                            : 'hover:bg-[#e0e5d5]/30'
+                        }`}>
+                        Automasi & Log Audit
+                    </Link>
                     <div className="border-t my-2" style={{ borderColor: THEME.moss }} />
                     <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold hover:bg-[#e0e5d5]/30" style={{ color: THEME.green }}>
                         Kembali ke Beranda
@@ -66,7 +74,7 @@ export default function AdminLayout({ children, activeTab = 'dashboard' }) {
             )}
 
             {/* DESKTOP SIDEBAR - MATCHING GUEST NAV BAR */}
-            <aside className="hidden md:flex flex-col w-72 shrink-0 border-r min-h-screen sticky top-0" 
+            <aside className="hidden md:flex flex-col w-72 shrink-0 border-r h-screen sticky top-0" 
                 style={{ backgroundColor: THEME.ice, borderColor: THEME.moss }}>
                 
                 {/* Brand Area */}
@@ -107,6 +115,19 @@ export default function AdminLayout({ children, activeTab = 'dashboard' }) {
                         </svg>
                         Dataset Management
                     </Link>
+
+                    <Link href={route('admin.triggers.index')}
+                        className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 group hover:-translate-y-0.5 ${
+                            activeTab === 'triggers' 
+                            ? 'bg-[#d7e8b5] shadow-sm translate-x-1' 
+                            : 'hover:bg-[#e0e5d5]/30'
+                        }`}
+                        style={{ color: activeTab === 'triggers' ? THEME.green : THEME.ink }}>
+                        <svg className="w-5 h-5 shrink-0 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Automasi & Log Audit
+                    </Link>
                 </nav>
 
                 {/* Profile & Footer Actions */}
@@ -138,14 +159,14 @@ export default function AdminLayout({ children, activeTab = 'dashboard' }) {
                             <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                             </svg>
-                            Keluar (Logout)
+                            Logout
                         </Link>
                     </div>
                 </div>
             </aside>
 
             {/* MAIN CONTENT AREA */}
-            <main className="flex-1 min-w-0 overflow-y-auto px-6 md:px-10 py-8" style={{ backgroundColor: THEME.ice }}>
+            <main className="flex-1 min-w-0 overflow-y-auto h-full px-6 md:px-10 py-8" style={{ backgroundColor: THEME.ice }}>
                 {children}
             </main>
         </div>

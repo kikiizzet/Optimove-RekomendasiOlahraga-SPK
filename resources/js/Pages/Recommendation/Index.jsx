@@ -68,16 +68,56 @@ function SectionLabel({ children }) {
 }
 
 export default function Index({ formData, histories = [], stats = {} }) {
-    const { recommendations, auth } = usePage().props;
+    const { recommendations, auth, bmi, bmiCategory } = usePage().props;
     const formRef = useRef(null);
 
     const { data, setData, post, processing, errors } = useForm({
+        age: formData?.age || '',
         age_group: formData?.age_group || '19 to 25',
         gender: formData?.gender || 'Male',
         fitness_level: formData?.fitness_level || 'Good',
         exercise_frequency: formData?.exercise_frequency || '1 to 2 times a week',
         diet: formData?.diet || 'Not always',
+        height: formData?.height || '',
+        weight: formData?.weight || '',
+        physical_condition: formData?.physical_condition || 'none',
     });
+
+    const [ageWarning, setAgeWarning] = useState('');
+    const [conditionInfo, setConditionInfo] = useState('');
+
+    useEffect(() => {
+        const ageVal = parseInt(data.age);
+        if (ageVal) {
+            let grp = '40 and above';
+            if (ageVal <= 18) grp = '15 to 18';
+            else if (ageVal <= 25) grp = '19 to 25';
+            else if (ageVal <= 30) grp = '26 to 30';
+            else if (ageVal <= 40) grp = '31 to 40';
+            setData('age_group', grp);
+        }
+    }, [data.age]);
+
+    useEffect(() => {
+        const ageVal = parseInt(data.age);
+        if (ageVal && (ageVal < 15 || ageVal > 60)) {
+            setAgeWarning('⚠️ Perhatian: Metode SAW dioptimalkan untuk usia produktif (15 - 60 tahun). Rekomendasi di luar rentang ini mungkin kurang relevan.');
+        } else {
+            setAgeWarning('');
+        }
+    }, [data.age]);
+
+    useEffect(() => {
+        if (data.physical_condition === 'knee_injury') {
+            setConditionInfo('💡 Cedera Lutut Terdeteksi: Sistem akan membatasi olahraga beban sendi tinggi (High-Impact) seperti Lari & Basket, serta menyarankan olahraga beban sendi rendah (Low-Impact) seperti Renang & Yoga.');
+        } else if (data.physical_condition === 'asthma') {
+            setConditionInfo('💡 Gangguan Asma Terdeteksi: Sistem akan menandai olahraga intensitas kardio tinggi dengan penanda peringatan, dan merekomendasikan olahraga bernapas stabil (Low-Impact) seperti Yoga atau Berjalan.');
+        } else if (data.physical_condition === 'heart') {
+            setConditionInfo('💡 Masalah Jantung Terdeteksi: Dianjurkan berkonsultasi dengan dokter. Sistem akan menyaring olahraga berintensitas tinggi (High-Impact).');
+        } else {
+            setConditionInfo('');
+        }
+    }, [data.physical_condition]);
 
     const scrollToForm = () => formRef.current?.scrollIntoView({ behavior: 'smooth' });
 
@@ -125,13 +165,16 @@ export default function Index({ formData, histories = [], stats = {} }) {
                     <div className="flex items-center gap-3 md:gap-4">
                         {auth?.user ? (
                             <>
-                                {auth.user.role === 'admin' && (
-                                    <>
-                                        <a href={route('admin.dashboard')} className="hidden md:inline-block py-2 px-4 rounded-xl text-xs font-bold transition hover:opacity-80 border"
-                                            style={{ borderColor: green, color: green }}>
-                                            Dashboard Admin
-                                        </a>
-                                    </>
+                                {auth.user.role === 'admin' ? (
+                                    <a href={route('admin.dashboard')} className="py-2 px-4 rounded-xl text-xs font-bold transition hover:opacity-80 border"
+                                        style={{ borderColor: green, color: green }}>
+                                        Dashboard Admin
+                                    </a>
+                                ) : (
+                                    <Link href={route('workspace.index')} className="py-2 px-4 rounded-xl text-xs font-bold transition hover:opacity-85 border"
+                                        style={{ borderColor: green, color: green, backgroundColor: dew }}>
+                                        Personal Workspace
+                                    </Link>
                                 )}
                                 <Link href={route('logout')} method="post" as="button" className="ml-2 text-xs font-bold transition hover:opacity-60"
                                     style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>
@@ -403,25 +446,121 @@ export default function Index({ formData, histories = [], stats = {} }) {
                     <div className="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto items-start">
                         {/* Form */}
                         <div className="p-8 md:p-10 rounded-3xl" style={{ backgroundColor: ice, border: `1px solid ${moss}`, boxShadow: '0 8px 40px rgba(32,59,20,0.08)' }}>
-                            <form onSubmit={submit} className="space-y-5">
-                                {FIELDS.map(({ key, label, weight, opts }) => (
-                                    <div key={key} className="space-y-1.5">
-                                        <div className="flex items-center justify-between">
-                                            <label className="text-sm font-bold">{label}</label>
-                                            <span className="text-xs font-mono px-2 py-0.5 rounded-full" style={{ backgroundColor: moss, color: green }}>
-                                                Bobot {weight}
-                                            </span>
-                                        </div>
-                                        <select value={data[key]} onChange={e => setData(key, e.target.value)}
-                                            className="w-full rounded-xl text-sm py-3 px-4 border focus:outline-none transition"
-                                            style={{ borderColor: moss, backgroundColor: ice, color: ink }}>
-                                            {opts.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
-                                        </select>
-                                        {errors[key] && <div className="text-red-500 text-xs">{errors[key]}</div>}
+                            <form onSubmit={submit} className="space-y-4">
+                                {/* Gender */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-bold">Jenis Kelamin</label>
+                                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full" style={{ backgroundColor: moss, color: green }}>Bobot 10%</span>
                                     </div>
-                                ))}
+                                    <select value={data.gender} onChange={e => setData('gender', e.target.value)}
+                                        className="w-full rounded-xl text-sm py-3 px-4 border focus:outline-none transition"
+                                        style={{ borderColor: moss, backgroundColor: ice, color: ink }}>
+                                        <option value="Male">Laki-laki</option>
+                                        <option value="Female">Perempuan</option>
+                                    </select>
+                                    {errors.gender && <div className="text-red-500 text-xs">{errors.gender}</div>}
+                                </div>
+
+                                {/* Age */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-bold">Usia (Tahun)</label>
+                                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full" style={{ backgroundColor: moss, color: green }}>Bobot 25%</span>
+                                    </div>
+                                    <input type="number" value={data.age} onChange={e => setData('age', e.target.value)} required min="5" max="100" placeholder="Masukkan usia (angka)..."
+                                        className="w-full rounded-xl text-sm py-3 px-4 border focus:outline-none transition"
+                                        style={{ borderColor: moss, backgroundColor: ice, color: ink }} />
+                                    {ageWarning && <p className="text-xs text-amber-900 font-mono leading-relaxed mt-1 animate-pulse">{ageWarning}</p>}
+                                    {errors.age && <div className="text-red-500 text-xs">{errors.age}</div>}
+                                </div>
+
+                                {/* Height & Weight */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-bold">Tinggi Badan (cm)</label>
+                                        <input type="number" value={data.height} onChange={e => setData('height', e.target.value)} required min="50" max="250" placeholder="cm"
+                                            className="w-full rounded-xl text-sm py-3 px-4 border focus:outline-none transition"
+                                            style={{ borderColor: moss, backgroundColor: ice, color: ink }} />
+                                        {errors.height && <div className="text-red-500 text-xs">{errors.height}</div>}
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-bold">Berat Badan (kg)</label>
+                                        <input type="number" value={data.weight} onChange={e => setData('weight', e.target.value)} required min="10" max="300" placeholder="kg"
+                                            className="w-full rounded-xl text-sm py-3 px-4 border focus:outline-none transition"
+                                            style={{ borderColor: moss, backgroundColor: ice, color: ink }} />
+                                        {errors.weight && <div className="text-red-500 text-xs">{errors.weight}</div>}
+                                    </div>
+                                </div>
+
+                                {/* Physical Condition */}
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-bold">Kondisi Fisik / Batasan</label>
+                                    <select value={data.physical_condition} onChange={e => setData('physical_condition', e.target.value)}
+                                        className="w-full rounded-xl text-sm py-3 px-4 border focus:outline-none transition"
+                                        style={{ borderColor: moss, backgroundColor: ice, color: ink }}>
+                                        <option value="none">Tidak Ada Batasan (Fit)</option>
+                                        <option value="knee_injury">Cedera Lutut</option>
+                                        <option value="asthma">Gangguan Asma</option>
+                                        <option value="heart">Masalah Jantung</option>
+                                    </select>
+                                    {conditionInfo && <p className="text-xs text-valley-green font-mono leading-relaxed mt-1">{conditionInfo}</p>}
+                                    {errors.physical_condition && <div className="text-red-500 text-xs">{errors.physical_condition}</div>}
+                                </div>
+
+                                {/* Fitness Level */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-bold">Tingkat Kebugaran</label>
+                                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full" style={{ backgroundColor: moss, color: green }}>Bobot 30%</span>
+                                    </div>
+                                    <select value={data.fitness_level} onChange={e => setData('fitness_level', e.target.value)}
+                                        className="w-full rounded-xl text-sm py-3 px-4 border focus:outline-none transition"
+                                        style={{ borderColor: moss, backgroundColor: ice, color: ink }}>
+                                        <option value="Unfit">Tidak Bugar</option>
+                                        <option value="Average">Rata-rata</option>
+                                        <option value="Good">Bugar</option>
+                                        <option value="Very good">Sangat Bugar</option>
+                                        <option value="Excellent">Prima</option>
+                                    </select>
+                                    {errors.fitness_level && <div className="text-red-500 text-xs">{errors.fitness_level}</div>}
+                                </div>
+
+                                {/* Exercise Frequency */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-bold">Frekuensi Olahraga</label>
+                                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full" style={{ backgroundColor: moss, color: green }}>Bobot 25%</span>
+                                    </div>
+                                    <select value={data.exercise_frequency} onChange={e => setData('exercise_frequency', e.target.value)}
+                                        className="w-full rounded-xl text-sm py-3 px-4 border focus:outline-none transition"
+                                        style={{ borderColor: moss, backgroundColor: ice, color: ink }}>
+                                        <option value="Never">Tidak Pernah</option>
+                                        <option value="1 to 2 times a week">1–2x seminggu</option>
+                                        <option value="3 to 4 times a week">3–4x seminggu</option>
+                                        <option value="Everyday">Setiap Hari</option>
+                                    </select>
+                                    {errors.exercise_frequency && <div className="text-red-500 text-xs">{errors.exercise_frequency}</div>}
+                                </div>
+
+                                {/* Diet */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-bold">Pola Makan Sehat</label>
+                                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full" style={{ backgroundColor: moss, color: green }}>Bobot 10%</span>
+                                    </div>
+                                    <select value={data.diet} onChange={e => setData('diet', e.target.value)}
+                                        className="w-full rounded-xl text-sm py-3 px-4 border focus:outline-none transition"
+                                        style={{ borderColor: moss, backgroundColor: ice, color: ink }}>
+                                        <option value="No">Tidak</option>
+                                        <option value="Not always">Kadang-kadang</option>
+                                        <option value="Yes">Ya, Selalu</option>
+                                    </select>
+                                    {errors.diet && <div className="text-red-500 text-xs">{errors.diet}</div>}
+                                </div>
+
                                 <button type="submit" disabled={processing}
-                                    className="w-full py-4 rounded-xl font-bold text-sm transition mt-2"
+                                    className="w-full py-4 rounded-xl font-bold text-sm transition mt-2 cursor-pointer hover:opacity-90"
                                     style={{ backgroundColor: ink, color: ice, opacity: processing ? 0.6 : 1 }}>
                                     {processing ? 'Menghitung Skor SAW...' : 'Proses Analisis SAW'}
                                 </button>
@@ -431,46 +570,104 @@ export default function Index({ formData, histories = [], stats = {} }) {
                         {/* Result */}
                         <div>
                             {recommendations ? (
-                                <div className="space-y-3">
-                                    <div className="mb-5">
-                                        <h3 className="font-bold text-lg mb-1" style={{ letterSpacing: '-0.03em' }}>Hasil Peringkat SAW</h3>
-                                        <p className="text-xs" style={{ opacity: 0.5 }}>Skor dinormalisasi ke rentang 40–100% agar perbedaan antar olahraga terlihat jelas.</p>
-                                    </div>
-                                    {recommendations.map(item => {
-                                        const rs = rankStyle(item.rank);
-                                        return (
-                                            <div key={item.rank} className="flex items-center gap-4 p-4 rounded-2xl border"
-                                                style={{ backgroundColor: ice, borderColor: moss }}>
-                                                <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0"
-                                                    style={{ backgroundColor: rs.bg, color: rs.text }}>
-                                                    {item.rank}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="font-bold text-sm truncate">{item.sport}</div>
-                                                    <div className="text-xs mt-0.5" style={{ opacity: 0.45 }}>
-                                                        {item.rank === 1 ? 'Rekomendasi Utama' : `Alternatif ke-${item.rank - 1}`}
-                                                    </div>
-                                                </div>
-                                                <div className="shrink-0 text-right">
-                                                    <div className="text-sm font-mono font-bold" style={{ color: green }}>{item.score}%</div>
-                                                    <div className="w-20 h-1.5 rounded-full mt-1" style={{ backgroundColor: moss }}>
-                                                        <div className="h-full rounded-full" style={{ width: `${item.score}%`, backgroundColor: green }} />
-                                                    </div>
+                                <div className="space-y-5 animate-fade-in">
+                                    
+                                    {/* BMI Display Card (Trigger 1) */}
+                                    {bmi && (
+                                        <div className="p-5 rounded-3xl border border-stone-moss flex items-center justify-between shadow-xs bg-white">
+                                            <div>
+                                                <p className="text-[10px] text-stone-400 font-mono uppercase tracking-wider">Kalkulasi Indeks Massa Tubuh (IMT / BMI)</p>
+                                                <div className="flex items-baseline gap-2 mt-1">
+                                                    <span className="text-2xl font-black">{bmi}</span>
+                                                    <span className="text-xs text-stone-500">Normal (18.5 - 24.9)</span>
                                                 </div>
                                             </div>
-                                        );
-                                    })}
-                                    <p className="text-xs p-4 rounded-xl font-mono mt-4" style={{ backgroundColor: moss, opacity: 0.75 }}>
-                                        Skor dihitung dengan SAW 5 kriteria berbobot. Nilai merepresentasikan rata-rata kemiripan profil Anda terhadap responden yang melakukan olahraga yang sama.
-                                    </p>
+                                            <span className="px-3.5 py-1 rounded-full text-xs font-bold bg-[#d7e8b5] text-[#203b14]">
+                                                {bmiCategory || 'Normal'}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <h3 className="font-bold text-lg mb-1" style={{ letterSpacing: '-0.03em' }}>Hasil Peringkat SAW</h3>
+                                        <p className="text-xs" style={{ opacity: 0.5 }}>Skor dinormalisasi ke rentang 40–100% berdasarkan rata-rata kemiripan dataset.</p>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        {recommendations.map(item => {
+                                            const rs = rankStyle(item.rank);
+                                            return (
+                                                <div key={item.rank} className={`flex flex-col p-4 rounded-2xl border transition-all hover:shadow-xs ${
+                                                    item.warning ? 'bg-amber-50/30 border-amber-200' : 'bg-white border-stone-moss'
+                                                }`}>
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0"
+                                                            style={{ backgroundColor: rs.bg, color: rs.text }}>
+                                                            {item.rank}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="font-bold text-sm truncate flex items-center gap-2">
+                                                                <span>{item.sport}</span>
+                                                                {item.low_impact && (
+                                                                    <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-green-50 text-green-700 border border-green-200">
+                                                                        Low-Impact
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="text-xs mt-0.5" style={{ opacity: 0.45 }}>
+                                                                {item.rank === 1 ? 'Rekomendasi Utama' : `Alternatif ke-${item.rank - 1}`}
+                                                            </div>
+                                                        </div>
+                                                        <div className="shrink-0 text-right">
+                                                            <div className="text-sm font-mono font-bold" style={{ color: green }}>{item.score}%</div>
+                                                            <div className="w-20 h-1.5 rounded-full mt-1" style={{ backgroundColor: moss }}>
+                                                                <div className="h-full rounded-full" style={{ width: `${item.score}%`, backgroundColor: green }} />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Warning Banner inside card (Trigger 3) */}
+                                                    {item.warning && (
+                                                        <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2 text-[10px] text-amber-900 leading-snug">
+                                                            <span className="shrink-0 w-4 h-4 rounded-full bg-amber-200 text-amber-900 font-bold flex items-center justify-center text-[9px] font-mono select-none">!</span>
+                                                            <p>High-impact: Kurang disarankan untuk kondisi fisik lutut/asma/jantung Anda saat ini.</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Action Register Option */}
+                                    <div className="mt-6 p-6 rounded-3xl border border-stone-moss bg-stone-50/50 flex flex-col items-center text-center shadow-xs">
+                                        <h4 className="font-extrabold text-sm mb-1">Simpan Rencana Olahraga & Rutin Berlatih!</h4>
+                                        <p className="text-xs text-stone-500 max-w-sm mb-4 leading-relaxed">
+                                            Simpan data profil kebugaran Anda, status BMI, dan otomatis generate to-do list harian olahraga di Notion-style Personal Workspace.
+                                        </p>
+                                        
+                                        {auth?.user ? (
+                                            <Link href={route('workspace.index')} className="inline-flex items-center gap-1.5 py-3 px-8 rounded-full font-bold text-xs bg-adaline-ink text-canvas-ice hover:opacity-90 transition shadow-sm">
+                                                Buka Personal Workspace Anda ↗
+                                            </Link>
+                                        ) : (
+                                            <div className="flex gap-2.5 w-full max-w-xs">
+                                                <Link href={route('register')} className="flex-1 py-3 px-4 rounded-full font-bold text-xs text-center bg-adaline-ink text-canvas-ice hover:opacity-90 transition shadow-sm">
+                                                    Daftar Akun Baru
+                                                </Link>
+                                                <Link href={route('login')} className="flex-1 py-3 px-4 rounded-full font-bold text-xs text-center border border-stone-moss bg-white hover:bg-stone-50 transition shadow-sm">
+                                                    Masuk (Login)
+                                                </Link>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             ) : (
-                                <div className="min-h-80 flex flex-col items-center justify-center text-center rounded-3xl border-2 border-dashed p-10"
+                                <div className="min-h-80 flex flex-col items-center justify-center text-center rounded-3xl border-2 border-dashed p-10 bg-white"
                                     style={{ borderColor: 'var(--color-mist-gray)' }}>
-                                    <div className="w-10 h-10 rounded-full border-2 mb-5" style={{ borderColor: 'var(--color-mist-gray)' }} />
-                                    <h3 className="font-bold mb-2">Hasil Analisis Muncul di Sini</h3>
-                                    <p className="text-sm max-w-xs" style={{ opacity: 0.45 }}>
-                                        Isi formulir dan tekan "Proses Analisis SAW" untuk melihat rekomendasi olahraga berbasis perhitungan bobot.
+                                    <div className="w-10 h-10 rounded-full border-2 mb-5 flex items-center justify-center text-stone-300 font-bold" style={{ borderColor: 'var(--color-mist-gray)' }}>?</div>
+                                    <h3 className="font-bold mb-2 text-adaline-ink">Hasil Analisis Muncul di Sini</h3>
+                                    <p className="text-sm max-w-xs text-stone-400">
+                                        Isi formulir data tubuh di samping dan klik "Proses Analisis SAW" untuk melacak skor BMI dan rekomendasi olahraga terbaik.
                                     </p>
                                 </div>
                             )}

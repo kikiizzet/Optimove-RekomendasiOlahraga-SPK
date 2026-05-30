@@ -23,7 +23,26 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'age',
+        'height',
+        'weight',
+        'bmi',
+        'physical_condition',
+        'workout_streak',
+        'last_workout_date',
+        'last_recommendation',
+        'pending_recommendation',
     ];
+
+    public function workoutTodos(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(WorkoutTodo::class);
+    }
+
+    public function workoutJournals(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(WorkoutJournal::class);
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -43,8 +62,10 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'email_verified_at'      => 'datetime',
+            'password'               => 'hashed',
+            'last_workout_date'      => 'date',
+            'pending_recommendation' => 'array',
         ];
     }
 }
