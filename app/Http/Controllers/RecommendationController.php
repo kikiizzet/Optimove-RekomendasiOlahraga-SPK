@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use App\Models\FitnessDataset;
 use App\Models\RecommendationHistory;
 use App\Models\WorkoutTodo;
+use App\Models\Testimonial;
 use Carbon\Carbon;
 
 class RecommendationController extends Controller
@@ -16,11 +17,11 @@ class RecommendationController extends Controller
      * Bobot kriteria SAW — total = 1.0
      */
     private array $weights = [
-        'age_group'          => 0.25,
+        'age_group'          => 0.15,
         'gender'             => 0.10,
-        'fitness_level'      => 0.30,
-        'exercise_frequency' => 0.25,
-        'diet'               => 0.10,
+        'fitness_level'      => 0.35,
+        'exercise_frequency' => 0.20,
+        'diet'               => 0.20,
     ];
 
     private array $ageOrder     = ['15 to 18', '19 to 25', '26 to 30', '31 to 40', '40 and above'];
@@ -100,9 +101,30 @@ class RecommendationController extends Controller
         $histories = RecommendationHistory::latest()->take(10)->get();
         $stats     = $this->datasetStats();
 
+        $testimonials = Testimonial::with('user:id,name,email,profile_photo')
+            ->where('is_published', true)
+            ->latest()
+            ->get()
+            ->map(function ($item) {
+                if ($item->user && $item->user->profile_photo) {
+                    $item->user->profile_photo_url = asset('storage/' . $item->user->profile_photo);
+                } else {
+                    if ($item->user) {
+                        $item->user->profile_photo_url = null;
+                    }
+                }
+                return $item;
+            });
+
         return Inertia::render('Recommendation/Index', [
-            'histories' => $histories,
-            'stats'     => $stats,
+            'histories'          => $histories,
+            'stats'              => $stats,
+            'recommendations'    => session('recommendation_results'),
+            'formData'           => session('formData'),
+            'bmi'                => session('bmi'),
+            'bmiCategory'        => session('bmiCategory'),
+            'physicalCondition'  => session('physicalCondition'),
+            'testimonials'       => $testimonials,
         ]);
     }
 
@@ -261,18 +283,15 @@ class RecommendationController extends Controller
             ]);
         }
 
-        $histories = RecommendationHistory::latest()->take(10)->get();
-        $stats     = $this->datasetStats();
-
-        return Inertia::render('Recommendation/Index', [
-            'recommendations'    => $topSports,
-            'formData'           => $validated,
-            'bmi'                => $bmi,
-            'bmiCategory'        => $bmiCategory,
-            'physicalCondition'  => $physicalCondition,
-            'histories'          => $histories,
-            'stats'              => $stats,
+        session([
+            'recommendation_results' => $topSports,
+            'formData'               => $validated,
+            'bmi'                    => $bmi,
+            'bmiCategory'            => $bmiCategory,
+            'physicalCondition'      => $physicalCondition,
         ]);
+
+        return redirect()->route('home');
     }
 
     /** Statistik distribusi dataset */

@@ -21,6 +21,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'profile_photo',
         'password',
         'role',
         'age',
@@ -32,7 +33,23 @@ class User extends Authenticatable
         'last_workout_date',
         'last_recommendation',
         'pending_recommendation',
+        'weekly_checklist',
     ];
+
+    protected $appends = [
+        'profile_photo_url',
+    ];
+
+    /**
+     * URL foto profil user (dari storage) atau null jika tidak ada.
+     */
+    public function getProfilePhotoUrlAttribute(): ?string
+    {
+        if ($this->profile_photo) {
+            return asset('storage/' . $this->profile_photo);
+        }
+        return null;
+    }
 
     public function workoutTodos(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
@@ -42,6 +59,11 @@ class User extends Authenticatable
     public function workoutJournals(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(WorkoutJournal::class);
+    }
+
+    public function testimonials(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Testimonial::class);
     }
 
     /**
@@ -66,6 +88,7 @@ class User extends Authenticatable
             'password'               => 'hashed',
             'last_workout_date'      => 'date',
             'pending_recommendation' => 'array',
+            'weekly_checklist'       => 'array',
         ];
     }
 }

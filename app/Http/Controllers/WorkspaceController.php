@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Carbon\Carbon;
 use App\Models\WorkoutTodo;
 use App\Models\WorkoutJournal;
+use App\Models\Testimonial;
 
 class WorkspaceController extends Controller
 {
@@ -38,12 +40,18 @@ class WorkspaceController extends Controller
             ->latest()
             ->get();
 
+        // Semua testimoni user (untuk status persetujuan)
+        $testimonials = Testimonial::where('user_id', $user->id)
+            ->latest()
+            ->get();
+
         return Inertia::render('Workspace/Index', [
             'user'         => $user,
             'todayTodos'   => $todayTodos,
             'journals'     => $journals,
             'inactiveDays' => $inactiveDays,
             'inactiveAlert'=> $inactiveAlert,
+            'testimonials' => $testimonials,
         ]);
     }
 
@@ -178,5 +186,50 @@ class WorkspaceController extends Controller
         if ($journal->user_id !== Auth::id()) abort(403);
         $journal->delete();
         return back()->with('success', 'Jurnal dihapus.');
+    }
+
+    /**
+     * Upload foto profil baru.
+     */
+    public function uploadPhoto(Request $request)
+    {
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $user = Auth::user();
+
+        if ($request->hasFile('photo')) {
+            // Hapus foto lama jika ada
+            if ($user->profile_photo) {
+                Storage::disk('public')->delete($user->profile_photo);
+            }
+
+            // Simpan foto baru
+            $path = $request->file('photo')->store('avatars', 'public');
+
+            $user->profile_photo = $path;
+            $user->save();
+
+            return back()->with('success', 'Foto profil berhasil diperbarui!');
+        }
+
+        return back()->withErrors(['photo' => 'Gagal mengupload foto profil.']);
+    }
+
+    /**
+     * Simpan status checklist jadwal mingguan.
+     */
+    public function updateChecklist(Request $request)
+    {
+        $request->validate([
+            'checklist' => 'required|array',
+        ]);
+
+        $user = Auth::user();
+        $user->weekly_checklist = $request->checklist;
+        $user->save();
+
+        return back();
     }
 }

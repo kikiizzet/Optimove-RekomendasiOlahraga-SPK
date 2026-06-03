@@ -63,6 +63,14 @@ export default function AdminLayout({ children, activeTab = 'dashboard' }) {
                         }`}>
                         Automasi & Log Audit
                     </Link>
+                    <Link href={route('admin.testimonials.index')} onClick={() => setShowingMobileMenu(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                            activeTab === 'testimonials' 
+                            ? 'bg-[#d7e8b5] text-[#203b14]' 
+                            : 'hover:bg-[#e0e5d5]/30'
+                        }`}>
+                        Manajemen Testimoni
+                    </Link>
                     <div className="border-t my-2" style={{ borderColor: THEME.moss }} />
                     <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold hover:bg-[#e0e5d5]/30" style={{ color: THEME.green }}>
                         Kembali ke Beranda
@@ -127,6 +135,19 @@ export default function AdminLayout({ children, activeTab = 'dashboard' }) {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                         Automasi & Log Audit
+                    </Link>
+
+                    <Link href={route('admin.testimonials.index')}
+                        className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 group hover:-translate-y-0.5 ${
+                            activeTab === 'testimonials' 
+                            ? 'bg-[#d7e8b5] shadow-sm translate-x-1' 
+                            : 'hover:bg-[#e0e5d5]/30'
+                        }`}
+                        style={{ color: activeTab === 'testimonials' ? THEME.green : THEME.ink }}>
+                        <svg className="w-5 h-5 shrink-0 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        Manajemen Testimoni
                     </Link>
                 </nav>
 
