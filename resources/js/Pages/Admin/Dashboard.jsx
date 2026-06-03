@@ -50,7 +50,7 @@ export default function Dashboard({ stats = {}, topSports = [], recentRecommenda
     return (
         <AdminLayout activeTab="dashboard">
             <div className="space-y-8">
-                {/* Header Title */}
+                {/* Header Titlee */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-5" style={{ borderColor: THEME.moss }}>
                     <div>
                         <h2 className="text-2xl font-bold tracking-tight" style={{ color: THEME.ink, letterSpacing: '-0.03em' }}>Dashboard Overview</h2>
