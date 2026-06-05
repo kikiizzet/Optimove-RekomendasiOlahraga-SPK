@@ -47,6 +47,9 @@ Route::middleware('auth')->group(function () {
 
     // Weekly Checklist
     Route::patch('/workspace/checklist', [WorkspaceController::class, 'updateChecklist'])->name('workspace.checklist.update');
+
+    // Profile Update (inline from workspace)
+    Route::patch('/workspace/profile', [WorkspaceController::class, 'updateProfile'])->name('workspace.profile.update');
 });
 
 // ─── Admin Routes ─────────────────────────────────────────────────────────────

@@ -9,7 +9,7 @@ const WEEKLY_PROGRAMS = {
         sport: 'Jogging',
         tag: 'Cardio & Endurance',
         duration: '4 Minggu',
-        duration_sub: '12 Mei - 8 Juni 2026',
+        duration_sub: '20 Mei - 16 Juni 2026',
         target: '3 Sesi',
         target_sub: 'Minimal olahraga per minggu',
         duration_per_sesi: '30-45 Menit',
@@ -121,13 +121,7 @@ const WEEKLY_PROGRAMS = {
     }
 };
 
-// Historical Workout Programs Mock data matching mockup exactly
-const HISTORICAL_PROGRAMS = [
-    { period: '12 Mei - 8 Juni 2026', duration: '4 Minggu', type: 'Cardio & Endurance', sport: 'Jogging', progress: 100, status: 'Selesai', statusColor: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-    { period: '10 April - 8 Mei 2026', duration: '4 Minggu', type: 'Flexibility & Balance', sport: 'Yoga', progress: 85, status: 'Selesai', statusColor: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-    { period: '1 Maret - 30 Maret 2026', duration: '4 Minggu', type: 'Cardio & Strength', sport: 'Bersepeda', progress: 70, status: 'Dihentikan', statusColor: 'bg-amber-50 text-amber-700 border-amber-200' },
-    { period: '1 Februari - 28 Februari 2026', duration: '4 Minggu', type: 'Strength Building', sport: 'Gym', progress: 100, status: 'Selesai', statusColor: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-];
+// Historical Workout Programs now handled dynamically
 
 // Weight tracking chart data
 const weightHistoryData = [
@@ -139,6 +133,64 @@ const weightHistoryData = [
     { month: 'Jun', weight: 68.0 },
 ];
 
+const SPORT_RECOMMENDATION_DETAILS = {
+    'Jogging': {
+        name: 'Jogging',
+        suitability: 'Sangat Cocok untuk Anda',
+        stars: 3,
+        intensityLabel: '(Sedang)',
+        duration: '30 - 45 Menit',
+        frequency: '3 - 4 kali/minggu',
+        calories: '300 - 500 kkal',
+        desc: 'Olahraga terbaik untuk meningkatkan kebugaran kardiovaskular dan menjaga kesehatan jantung.',
+        score: 92,
+    },
+    'Bersepeda': {
+        name: 'Bersepeda',
+        suitability: 'Sangat Cocok untuk Anda',
+        stars: 3,
+        intensityLabel: '(Sedang)',
+        duration: '30 - 50 Menit',
+        frequency: '3 - 4 kali/minggu',
+        calories: '250 - 450 kkal',
+        desc: 'Meningkatkan daya tahan tubuh dan memperkuat otot kaki serta jantung.',
+        score: 80,
+    },
+    'Yoga': {
+        name: 'Yoga',
+        suitability: 'Sangat Cocok untuk Anda',
+        stars: 2,
+        intensityLabel: '(Rendah)',
+        duration: '30 - 40 Menit',
+        frequency: '4 kali/minggu',
+        calories: '150 - 250 kkal',
+        desc: 'Meningkatkan fleksibilitas tubuh, keseimbangan, dan kesehatan mental.',
+        score: 78,
+    },
+    'Renang': {
+        name: 'Renang',
+        suitability: 'Sangat Cocok untuk Anda',
+        stars: 4,
+        intensityLabel: '(Tinggi)',
+        duration: '25 - 45 Menit',
+        frequency: '3 kali/minggu',
+        calories: '400 - 600 kkal',
+        desc: 'Melatih seluruh tubuh dan sistem pernapasan tanpa tekanan sendi berlebih.',
+        score: 74,
+    },
+    'Gym / Fitness': {
+        name: 'Gym / Fitness',
+        suitability: 'Sangat Cocok untuk Anda',
+        stars: 4,
+        intensityLabel: '(Tinggi)',
+        duration: '45 Menit',
+        frequency: '4 kali/minggu',
+        calories: '300 - 600 kkal',
+        desc: 'Latihan beban untuk kekuatan otot, kepadatan tulang, dan metabolisme prima.',
+        score: 60,
+    }
+};
+
 export default function Index({ user, todayTodos = [], journals = [], inactiveDays = 0, inactiveAlert = false, testimonials = [] }) {
     const { flash } = usePage().props;
 
@@ -146,9 +198,184 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
     const [activeTab, setActiveTab] = useState('dashboard');
     const [showBadgeModal, setShowBadgeModal] = useState(false);
     const [badgeName, setBadgeName] = useState('');
+    const [showWeeklyAchievementModal, setShowWeeklyAchievementModal] = useState(false);
     
     // Profil page sub-tab state
     const [profileSubTab, setProfileSubTab] = useState('pribadi');
+
+    // Profile inline edit states
+    const [isEditingProfile, setIsEditingProfile] = useState(false);
+    const [profileSaving, setProfileSaving] = useState(false);
+    const [profileForm, setProfileForm] = useState({
+        name:           user.name || '',
+        gender:         user.gender || '',
+        date_of_birth:  user.date_of_birth ? String(user.date_of_birth).split('T')[0] : '',
+        age:            user.age || '',
+        phone:          user.phone || '',
+        address:        user.address || '',
+        job:            user.job || '',
+        activity_level: user.activity_level || '',
+    });
+
+    const handleProfileSave = (e) => {
+        e.preventDefault();
+        setProfileSaving(true);
+        router.patch(route('workspace.profile.update'), profileForm, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setIsEditingProfile(false);
+                setProfileSaving(false);
+            },
+            onError: () => setProfileSaving(false),
+        });
+    };
+
+    // ── Language / i18n ────────────────────────────────────────────────────
+    const [lang, setLang] = useState(() => localStorage.getItem('optimove_lang') || 'id');
+
+    const handleLangChange = (newLang) => {
+        setLang(newLang);
+        localStorage.setItem('optimove_lang', newLang);
+    };
+
+    const translations = {
+        id: {
+            // Sidebar nav
+            nav_dashboard: 'Dashboard',
+            nav_analisis: 'Analisis SAW',
+            nav_rekomendasi: 'Hasil Rekomendasi',
+            nav_program: 'Program Latihan',
+            nav_riwayat: 'Riwayat',
+            nav_testimoni: 'Testimoni Saya',
+            nav_profil: 'Profil Saya',
+            nav_logout: 'Logout',
+            nav_konsisten: 'Tetap Konsisten!',
+            nav_konsisten_sub: 'Konsistensi kecil hari ini membawa perubahan besar untuk masa depan.',
+            // Header titles
+            h_dashboard: 'Dashboard Utama',
+            h_analisis: 'Hasil Analisis SAW',
+            h_program: 'Program Latihan Personal',
+            h_riwayat: 'Riwayat Aktivitas',
+            h_testimoni: 'Testimoni Saya',
+            h_profil: 'Profil Saya',
+            // Dashboard
+            greeting: `Halo, ${user.name}!`,
+            greeting_sub: 'Pantau progres rencana kebugaran dan catat kemajuan Anda di sini.',
+            progress_today: 'Progres Hari Ini',
+            done: 'Selesai',
+            program_aktif: 'Program Aktif',
+            streak_label: 'Streak Aktif',
+            streak_unit: 'Hari',
+            total_analisis: 'Total Analisis',
+            kali: 'Kali',
+            // Profile
+            informasi_pribadi: 'Informasi Pribadi',
+            ringkasan_statistik: 'Ringkasan Statistik',
+            pengaturan_akun: 'Pengaturan Akun',
+            pengaturan_sub: 'Atur preferensi dasar akun Anda.',
+            bahasa_aplikasi: 'Bahasa Aplikasi',
+            bahasa_sub: 'Bahasa yang digunakan di aplikasi',
+            satuan: 'Satuan Pengukuran',
+            satuan_sub: 'Satuan untuk tinggi badan dan berat badan',
+            hapus_akun: 'Hapus Akun',
+            hapus_sub: 'Hapus akun dan semua data secara permanen. Tindakan ini tidak dapat dibatalkan.',
+            hapus_btn: 'Hapus Akun Saya',
+            edit_btn: 'Edit',
+            batal: 'Batal',
+            simpan: 'Simpan',
+            menyimpan: 'Menyimpan...',
+            nama_lengkap: 'Nama Lengkap',
+            jenis_kelamin: 'Jenis Kelamin',
+            tanggal_lahir: 'Tanggal Lahir',
+            usia: 'Usia',
+            email: 'Email',
+            no_telepon: 'Nomor Telepon',
+            alamat: 'Alamat',
+            pekerjaan: 'Pekerjaan',
+            target_aktivitas: 'Target Aktivitas',
+            laki: 'Laki-laki',
+            perempuan: 'Perempuan',
+            pilih: '-- Pilih --',
+            bergabung: 'Bergabung sejak',
+            aktif: 'Aktif',
+            // Stats labels
+            stat_total: 'Total Analisis',
+            stat_selesai: 'Program Selesai',
+            stat_konsisten: 'Hari Konsisten',
+            stat_progress: 'Rata - rata Progress',
+            stat_kalori: 'Kalori Terbakar',
+            // Chip labels
+            chip_usia: 'Usia',
+            chip_tinggi: 'Tinggi',
+            chip_berat: 'Berat',
+        },
+        en: {
+            nav_dashboard: 'Dashboard',
+            nav_analisis: 'SAW Analysis',
+            nav_rekomendasi: 'Recommendation',
+            nav_program: 'Training Program',
+            nav_riwayat: 'History',
+            nav_testimoni: 'My Testimonials',
+            nav_profil: 'My Profile',
+            nav_logout: 'Logout',
+            nav_konsisten: 'Stay Consistent!',
+            nav_konsisten_sub: 'Small consistency today brings big changes for the future.',
+            h_dashboard: 'Main Dashboard',
+            h_analisis: 'SAW Analysis Result',
+            h_program: 'Personal Training Program',
+            h_riwayat: 'Activity History',
+            h_testimoni: 'My Testimonials',
+            h_profil: 'My Profile',
+            greeting: `Hello, ${user.name}!`,
+            greeting_sub: 'Track your fitness plan progress and record your achievements here.',
+            progress_today: "Today's Progress",
+            done: 'Completed',
+            program_aktif: 'Active Program',
+            streak_label: 'Active Streak',
+            streak_unit: 'Days',
+            total_analisis: 'Total Analysis',
+            kali: 'Times',
+            informasi_pribadi: 'Personal Information',
+            ringkasan_statistik: 'Statistics Summary',
+            pengaturan_akun: 'Account Settings',
+            pengaturan_sub: 'Manage your basic account preferences.',
+            bahasa_aplikasi: 'Application Language',
+            bahasa_sub: 'Language used in the application',
+            satuan: 'Measurement Unit',
+            satuan_sub: 'Unit for height and weight measurements',
+            hapus_akun: 'Delete Account',
+            hapus_sub: 'Permanently delete your account and all data. This action cannot be undone.',
+            hapus_btn: 'Delete My Account',
+            edit_btn: 'Edit',
+            batal: 'Cancel',
+            simpan: 'Save',
+            menyimpan: 'Saving...',
+            nama_lengkap: 'Full Name',
+            jenis_kelamin: 'Gender',
+            tanggal_lahir: 'Date of Birth',
+            usia: 'Age',
+            email: 'Email',
+            no_telepon: 'Phone Number',
+            alamat: 'Address',
+            pekerjaan: 'Occupation',
+            target_aktivitas: 'Activity Target',
+            laki: 'Male',
+            perempuan: 'Female',
+            pilih: '-- Select --',
+            bergabung: 'Joined since',
+            aktif: 'Active',
+            stat_total: 'Total Analysis',
+            stat_selesai: 'Programs Completed',
+            stat_konsisten: 'Consistent Days',
+            stat_progress: 'Average Progress',
+            stat_kalori: 'Calories Burned',
+            chip_usia: 'Age',
+            chip_tinggi: 'Height',
+            chip_berat: 'Weight',
+        },
+    };
+
+    const t = (key) => translations[lang]?.[key] ?? translations['id'][key] ?? key;
 
     // Notion-style journal states
     const [activeJournalTab, setActiveJournalTab] = useState('list');
@@ -194,12 +421,155 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
         return 'Walking or jogging';
     };
 
+    const getSportIcon = (sportName) => {
+        const name = (sportName || '').toLowerCase();
+        if (name.includes('walk') || name.includes('jog') || name.includes('running') || name.includes('lari')) {
+            return (
+                <div className="w-10 h-10 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0">
+                    <img src="/images/running (1).png" alt="Running" className="w-6 h-6 object-contain" />
+                </div>
+            );
+        }
+        if (name.includes('yoga') || name.includes('stretch') || name.includes('peregangan') || name.includes('medit')) {
+            return (
+                <div className="w-10 h-10 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0">
+                    <img src="/images/running (2).png" alt="Meditation" className="w-6 h-6 object-contain" />
+                </div>
+            );
+        }
+        if (name.includes('swim') || name.includes('renang')) {
+            return (
+                <div className="w-10 h-10 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0">
+                    <img src="/images/running (3).png" alt="Swimming" className="w-6 h-6 object-contain" />
+                </div>
+            );
+        }
+        if (name.includes('cycle') || name.includes('sepeda')) {
+            return (
+                <div className="w-10 h-10 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0 text-lg">
+                    🚴
+                </div>
+            );
+        }
+        if (name.includes('gym') || name.includes('fitness') || name.includes('angkat') || name.includes('beban')) {
+            return (
+                <div className="w-10 h-10 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0">
+                    <img src="/images/dumbbell 2.png" alt="Gym" className="w-6 h-6 object-contain" />
+                </div>
+            );
+        }
+        return (
+            <div className="w-10 h-10 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0 text-lg">
+                💪
+            </div>
+        );
+    };
+
+    const getSportImage = (key) => {
+        switch(key) {
+            case 'Walking or jogging': return '/images/Gambar Lari.png';
+            case 'Cycling': return '/images/cycle.png';
+            case 'Yoga': return '/images/yoga.png';
+            case 'Swimming': return '/images/swimming.png';
+            case 'Gym': return '/images/gym.png';
+            default: return '/images/Gambar Lari.png';
+        }
+    };
+
+    const getSportIconPath = (sportName) => {
+        if (!sportName) return '/images/running (1).png';
+        if (/walk|jog/i.test(sportName)) return '/images/running (1).png';
+        if (/yoga/i.test(sportName)) return '/images/running (2).png';
+        if (/swimming|renang/i.test(sportName)) return '/images/running (3).png';
+        if (/cycle|sepeda/i.test(sportName)) return '/images/bicycle 3.png';
+        if (/gym|fitness/i.test(sportName)) return '/images/dumbbell 2.png';
+        return '/images/running (1).png';
+    };
+
+    const getDynamicDateRange = () => {
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(startDate.getDate() + 28); // 4 weeks later
+        
+        const months = [
+            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        ];
+        
+        const startDay = startDate.getDate();
+        const startMonth = months[startDate.getMonth()];
+        const startYear = startDate.getFullYear();
+        
+        const endDay = endDate.getDate();
+        const endMonth = months[endDate.getMonth()];
+        const endYear = endDate.getFullYear();
+        
+        if (startYear === endYear) {
+            if (startMonth === endMonth) {
+                return `${startDay} - ${endDay} ${startMonth} ${startYear}`;
+            }
+            return `${startDay} ${startMonth} - ${endDay} ${endMonth} ${startYear}`;
+        }
+        return `${startDay} ${startMonth} ${startYear} - ${endDay} ${endMonth} ${endYear}`;
+    };
+
+    const getWeekdayDateStr = (dayName) => {
+        const dayMap = { Senin: 1, Selasa: 2, Rabu: 3, Kamis: 4, Jumat: 5, Sabtu: 6, Minggu: 0 };
+        const targetDayOfWeek = dayMap[dayName];
+        
+        const today = new Date();
+        const todayDayOfWeek = today.getDay(); // 0 is Sunday, 1 is Monday...
+        
+        // Find Monday of the current week
+        const daysToSubtract = todayDayOfWeek === 0 ? 6 : todayDayOfWeek - 1;
+        const mondayOfThisWeek = new Date(today);
+        mondayOfThisWeek.setDate(today.getDate() - daysToSubtract);
+        
+        // Find the target day of the current week
+        const dayOffsetMap = { Senin: 0, Selasa: 1, Rabu: 2, Kamis: 3, Jumat: 4, Sabtu: 5, Minggu: 6 };
+        const dayOffset = dayOffsetMap[dayName];
+        
+        const targetDate = new Date(mondayOfThisWeek);
+        const weekOffsetDays = (currentWeek - 1) * 7;
+        targetDate.setDate(mondayOfThisWeek.getDate() + weekOffsetDays + dayOffset);
+        
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        return `${targetDate.getDate()} ${months[targetDate.getMonth()]}`;
+    };
+
     const activeProgramKey = getProgramKey(user.last_recommendation);
     const [selectedProgramKey, setSelectedProgramKey] = useState(activeProgramKey);
 
+    const normalizeSportName = (name) => {
+        if (!name) return 'Jogging';
+        if (/walk|jog/i.test(name)) return 'Jogging';
+        if (/cycle|sepeda/i.test(name)) return 'Bersepeda';
+        if (/yoga/i.test(name)) return 'Yoga';
+        if (/swimming|renang/i.test(name)) return 'Renang';
+        if (/gym|fitness/i.test(name)) return 'Gym / Fitness';
+        return 'Jogging';
+    };
+
+    const [selectedRecommendSport, setSelectedRecommendSport] = useState(normalizeSportName(user.last_recommendation));
+
+    const handleSelectRecommendSport = (sportName) => {
+        setSelectedRecommendSport(sportName);
+        
+        // Map back to WEEKLY_PROGRAMS keys: 'Walking or jogging', 'Cycling', 'Yoga', 'Swimming', 'Gym'
+        let progKey = 'Walking or jogging';
+        if (sportName === 'Bersepeda') progKey = 'Cycling';
+        else if (sportName === 'Yoga') progKey = 'Yoga';
+        else if (sportName === 'Renang') progKey = 'Swimming';
+        else if (sportName === 'Gym / Fitness') progKey = 'Gym';
+        
+        setSelectedProgramKey(progKey);
+    };
+
     // Reset selected program if user recommendation changes
     useEffect(() => {
+        const normalized = normalizeSportName(user.last_recommendation);
         setSelectedProgramKey(activeProgramKey);
+        setSelectedRecommendSport(normalized);
     }, [user.last_recommendation]);
 
     // Handle badge & flash trigger
@@ -321,23 +691,75 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
     };
 
     // Workout checklist states for week schedule — persisted from DB
-    const defaultChecklist = { Senin: false, Selasa: false, Rabu: false, Kamis: false, Jumat: false, Sabtu: false, Minggu: false };
+    const defaultChecklist = { Senin: false, Selasa: false, Rabu: false, Kamis: false, Jumat: false, Sabtu: false, Minggu: false, current_week: 1 };
     const [weeklyChecklist, setWeeklyChecklist] = useState(() => ({
         ...defaultChecklist,
         ...(user.weekly_checklist || {})
     }));
 
+    // Calculate if the streak is broken/active
+    const isStreakActive = () => {
+        if (!user.last_workout_date) return false;
+        const lastDate = new Date(user.last_workout_date);
+        lastDate.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        yesterday.setHours(0, 0, 0, 0);
+        return lastDate.getTime() === today.getTime() || lastDate.getTime() === yesterday.getTime();
+    };
+
+    const activeStreak = isStreakActive() ? (user.workout_streak || 0) : 0;
+
+    const currentWeek = weeklyChecklist.current_week || 1;
+    const checklistDays = {
+        Senin: !!weeklyChecklist.Senin,
+        Selasa: !!weeklyChecklist.Selasa,
+        Rabu: !!weeklyChecklist.Rabu,
+        Kamis: !!weeklyChecklist.Kamis,
+        Jumat: !!weeklyChecklist.Jumat,
+        Sabtu: !!weeklyChecklist.Sabtu,
+        Minggu: !!weeklyChecklist.Minggu,
+    };
+    const checkedDaysCount = Object.values(checklistDays).filter(Boolean).length;
+    const completedWeeks = currentWeek - 1;
+    const currentProgress = Math.min(100, Math.round(((completedWeeks * 7 + checkedDaysCount) / 28) * 100));
+    const currentWeekProgress = Math.round((checkedDaysCount / 7) * 100);
+
+    const activeProgramsCount = (user.last_recommendation || currentProgress > 0) && currentProgress < 100 ? 1 : 0;
+    const totalCompletedWorkouts = journals.length + todayTodos.filter(t => t.is_completed).length;
+    const totalAnalisisCount = user.last_recommendation ? 1 : 0;
+
+    const displayedHistory = currentProgress === 100 ? [{
+        period: getDynamicDateRange(),
+        duration: '4 Minggu',
+        type: WEEKLY_PROGRAMS[selectedProgramKey]?.tag || 'Cardio & Endurance',
+        sport: WEEKLY_PROGRAMS[selectedProgramKey]?.sport || normalizeSportName(user.last_recommendation),
+        progress: 100,
+        status: 'SELESAI',
+        statusColor: 'bg-[#edf6ed] text-[#166534] border-emerald-200/50'
+    }] : [];
+
     const toggleWeekDay = (day) => {
         const updated = { ...weeklyChecklist, [day]: !weeklyChecklist[day] };
         setWeeklyChecklist(updated);
         router.patch(route('workspace.checklist.update'), { checklist: updated }, { preserveScroll: true });
+
+        // Cek jika baru saja mencentang semua hari di minggu ini
+        const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+        const wasAllDone = days.every(d => weeklyChecklist[d]);
+        const isAllDoneNow = days.every(d => updated[d]);
+        if (!wasAllDone && isAllDoneNow) {
+            setShowWeeklyAchievementModal(true);
+        }
     };
 
     // Download workout schedule plan (.txt blob)
     const handleDownloadSchedule = () => {
         const prog = WEEKLY_PROGRAMS[selectedProgramKey];
         let content = `PROGRAM LATIHAN PERSONAL - ${prog.name.toUpperCase()}\n`;
-        content += `Durasi Program: ${prog.duration} (${prog.duration_sub || '12 Mei - 8 Juni 2026'})\n`;
+        content += `Durasi Program: ${prog.duration} (${getDynamicDateRange()})\n`;
         content += `Target Mingguan: ${prog.target} (${prog.target_sub})\n`;
         content += `Durasi Per Sesi: ${prog.duration_per_sesi} (${prog.duration_per_sesi_sub})\n`;
         content += `Fokus Program: ${prog.focus} (${prog.focus_sub})\n\n`;
@@ -398,14 +820,20 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                 </svg>
                             )},
                             { id: 'rekomendasi', label: 'Hasil Rekomendasi', icon: (
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                                <img 
+                                    src="/images/heart-beat 2.png" 
+                                    className="w-[18px] h-[18px] object-contain transition-all duration-200" 
+                                    style={{ filter: activeTab === 'rekomendasi' ? 'none' : 'grayscale(100%) brightness(0.6) opacity(0.6)' }}
+                                    alt="Hasil Rekomendasi" 
+                                />
                             )},
                             { id: 'program', label: 'Program Latihan', icon: (
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
+                                <img 
+                                    src="/images/running (1).png" 
+                                    className="w-[18px] h-[18px] object-contain transition-all duration-200" 
+                                    style={{ filter: activeTab === 'program' ? 'none' : 'grayscale(100%) brightness(0.6) opacity(0.6)' }}
+                                    alt="Program Latihan" 
+                                />
                             )},
                             { id: 'riwayat', label: 'Riwayat', icon: (
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -478,7 +906,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
             <div className="flex-1 flex flex-col min-w-0 overflow-y-auto h-screen">
                 
                 {/* Header navbar */}
-                <header className="sticky top-0 z-30 bg-canvas-ice/90 backdrop-blur-xs border-b border-stone-200/50 py-4 px-6 md:px-10 flex justify-between items-center shrink-0">
+                <header className="sticky top-0 z-30 bg-canvas-ice/90 backdrop-blur-md border-b border-stone-200/50 py-4 px-6 md:px-10 flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-3">
                         <h2 className="font-extrabold text-base capitalize text-valley-green">
                             {activeTab === 'dashboard' && 'Dashboard Utama'}
@@ -539,57 +967,141 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                     
                     {/* TAB 1: DASHBOARD TAB */}
                     {activeTab === 'dashboard' && (
-                        <div className="space-y-8 animate-fade-in">
-                            {/* Top Greeting card */}
-                            <div className="bg-white border border-stone-200/80 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-                                <div className="absolute right-0 bottom-0 w-44 h-44 bg-forest-dew/10 rounded-full blur-2xl"></div>
-                                <div className="space-y-2 relative z-10">
-                                    <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-valley-green">Halo, {user.name}!</h1>
-                                    <p className="text-sm text-stone-500 font-medium">Pantau progres rencana kebugaran dan catat kemajuan Anda di sini.</p>
+                        <div className="space-y-6 animate-fade-in">
+                            
+                            {/* Row 1: Greeting & Progress */}
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                {/* Welcome Banner */}
+                                <div className="lg:col-span-2 bg-white border border-stone-200/80 rounded-3xl p-6 md:p-8 shadow-sm flex items-center justify-between gap-6 relative h-[180px]">
+                                    <div className="space-y-2 relative z-10 max-w-[60%] text-left">
+                                        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#203b14]">Halo, {user.name}!</h1>
+                                        <p className="text-xs md:text-sm text-stone-500 font-semibold leading-relaxed">Pantau progres rencana kebugaran dan catat kemajuan Anda di sini.</p>
+                                    </div>
+                                    <div className="absolute right-4 bottom-0 top-[-35px] flex items-end justify-end w-[40%] pointer-events-none select-none z-20">
+                                        <img 
+                                            src="/images/dashboard.png" 
+                                            alt="Waving guy illustration" 
+                                            className="h-[215px] max-h-[215px] object-contain object-bottom"
+                                        />
+                                    </div>
                                 </div>
+                                
+                                {/* Progres Hari Ini Card */}
                                 {(() => {
                                     const totalToday = todayTodos.length;
                                     const doneToday = todayTodos.filter(t => t.is_completed).length;
+                                    const percentage = totalToday > 0 ? Math.round((doneToday / totalToday) * 100) : 0;
+                                    const strokeDashoffset = 113.09 - (113.09 * percentage) / 100;
                                     return (
-                                        <div className="flex items-center gap-4 bg-forest-dew/10 border border-valley-green/10 px-5 py-4 rounded-2xl shrink-0 relative z-10">
-                                            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center border border-emerald-300 text-lg">📈</div>
-                                            <div>
-                                                <span className="text-[9px] uppercase font-mono tracking-widest text-stone-400 block font-bold">Progres Hari Ini</span>
-                                                <span className="text-base font-black text-valley-green">{totalToday > 0 ? `${doneToday} dari ${totalToday} Selesai` : 'Belum ada tugas'}</span>
+                                        <div className="bg-white border border-stone-200/80 rounded-3xl p-6 shadow-sm flex items-center justify-center gap-6 h-[180px]">
+                                            <div className="relative w-20 h-20 shrink-0">
+                                                {/* Circle Ring */}
+                                                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 42 42">
+                                                    <circle className="text-stone-100" strokeWidth="4" stroke="currentColor" fill="none" cx="21" cy="21" r="18" />
+                                                    <circle className="text-[#075e3d]" strokeDasharray="113.09" strokeDashoffset={strokeDashoffset} strokeWidth="4" strokeLinecap="round" stroke="currentColor" fill="none" cx="21" cy="21" r="18" />
+                                                </svg>
+                                                {/* Dumbbell Icon in center */}
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <img src="/images/dumbbell 2.png" alt="Dumbbell" className="w-7 h-7 object-contain translate-y-1.5" />
+                                                </div>
+                                            </div>
+                                            <div className="text-left">
+                                                <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 block">Progres Hari Ini</span>
+                                                <span className="text-2xl font-black text-valley-green block mt-0.5">{totalToday > 0 ? `${doneToday} dari ${totalToday}` : '0 dari 0'}</span>
+                                                <span className="text-xs font-bold text-emerald-600 block mt-0.5">Selesai</span>
                                             </div>
                                         </div>
                                     );
                                 })()}
                             </div>
 
-                            {/* To-Dos & Notion Journal side by side */}
-                            <div className="grid lg:grid-cols-2 gap-8 items-start">
+                            {/* Row 2: Four Metric Cards */}
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                {/* Card 1: Program Aktif */}
+                                <div className="bg-white border border-stone-200/80 rounded-2xl p-4 flex items-center gap-3 shadow-2xs text-left">
+                                    <div className="w-12 h-12 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0">
+                                        <img src="/images/Calendar.png" alt="Calendar" className="w-6 h-6 object-contain" />
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">Program Aktif</span>
+                                        <span className="text-lg font-black text-valley-green mt-0.5 block leading-none">
+                                            {activeProgramsCount}
+                                        </span>
+                                        <span className="text-[10px] text-stone-400 font-semibold block mt-1">
+                                            {activeProgramsCount > 0 ? 'Program berjalan' : 'Belum ada program'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Card 2: Latihan Selesai */}
+                                <div className="bg-white border border-stone-200/80 rounded-2xl p-4 flex items-center gap-3 shadow-2xs text-left">
+                                    <div className="w-12 h-12 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0">
+                                        <img src="/images/Check circle.png" alt="Check circle" className="w-6 h-6 object-contain" />
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">Latihan Selesai</span>
+                                        <span className="text-lg font-black text-valley-green mt-0.5 block leading-none font-bold">
+                                            {totalCompletedWorkouts}
+                                        </span>
+                                        <span className="text-[10px] text-stone-400 font-semibold block mt-1">Sesi latihan</span>
+                                    </div>
+                                </div>
+
+                                {/* Card 3: Streak */}
+                                <div className="bg-white border border-stone-200/80 rounded-2xl p-4 flex items-center gap-3 shadow-2xs text-left">
+                                    <div className="w-12 h-12 rounded-full bg-[#fef7e0] flex items-center justify-center shrink-0 text-xl">
+                                        🔥
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">Streak</span>
+                                        <span className="text-lg font-black text-valley-green mt-0.5 block leading-none font-bold">
+                                            {activeStreak} hari
+                                        </span>
+                                        <span className="text-[10px] text-stone-400 font-semibold block mt-1">
+                                            {activeStreak > 0 ? 'Konsistensi luar biasa!' : 'Mulai olahraga hari ini!'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Card 4: Rata-rata Progress */}
+                                <div className="bg-white border border-stone-200/80 rounded-2xl p-4 flex items-center gap-3 shadow-2xs text-left">
+                                    <div className="w-12 h-12 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0">
+                                        <img src="/images/Icon Rentang Usia.png" alt="Rata-rata progress" className="w-6 h-6 object-contain" />
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">Rata - rata Progress</span>
+                                        <span className="text-lg font-black text-valley-green mt-0.5 block leading-none">
+                                            {currentProgress}%
+                                        </span>
+                                        <span className="text-[10px] text-stone-400 font-semibold block mt-1">Seminggu terakhir</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Row 3: Workout To-Dos & Stacked Journal/Progress */}
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                                 
-                                {/* Workout To-Dos */}
-                                <div className="bg-white border border-stone-200 rounded-3xl p-6 shadow-sm">
-                                    <h3 className="text-xs font-mono uppercase tracking-widest text-valley-green mb-4 pb-2 border-b border-stone-100 font-bold">Latihan Hari Ini</h3>
+                                {/* Left Side: Workout To-Dos (takes 7 columns) */}
+                                <div className="lg:col-span-7 bg-white border border-stone-200 rounded-3xl p-6 shadow-sm text-left">
+                                    <div className="mb-4">
+                                        <h3 className="text-xs font-mono uppercase tracking-widest text-[#203b14] font-bold">LATIHAN HARI INI</h3>
+                                        <p className="text-xs text-stone-400 font-medium mt-1">Rencanakan dan selesaikan latihan Anda hari ini</p>
+                                    </div>
                                     
-                                    <form onSubmit={handleTodoSubmit} className="mb-6 space-y-3">
-                                        <input 
-                                            type="text" 
-                                            value={todoForm.data.task_name}
-                                            onChange={e => todoForm.setData('task_name', e.target.value)}
-                                            placeholder="Tambahkan tugas latihan baru hari ini..."
-                                            required
-                                            className="w-full text-xs py-3 px-4 rounded-xl border border-stone-200 bg-canvas-ice/50 focus:border-valley-green outline-none transition"
-                                        />
+                                    <form onSubmit={handleTodoSubmit} className="mb-6">
                                         <div className="flex gap-2">
                                             <input 
                                                 type="text" 
-                                                value={todoForm.data.sport_name}
-                                                onChange={e => todoForm.setData('sport_name', e.target.value)}
-                                                placeholder="Nama cabang olahraga (opsional)..."
-                                                className="flex-1 text-[11px] py-2 px-3 rounded-lg border border-stone-200 bg-canvas-ice/50 focus:border-valley-green outline-none"
+                                                value={todoForm.data.task_name}
+                                                onChange={e => todoForm.setData('task_name', e.target.value)}
+                                                placeholder="Tambahkan tugas latihan baru hari ini..."
+                                                required
+                                                className="flex-grow text-xs py-2.5 px-4 rounded-xl border border-stone-200 bg-stone-50/50 focus:border-valley-green outline-none transition"
                                             />
                                             <button 
                                                 type="submit" 
                                                 disabled={todoForm.processing}
-                                                className="py-2 px-4 rounded-lg bg-valley-green hover:opacity-90 text-white font-bold text-xs transition disabled:opacity-50">
+                                                className="py-2.5 px-5 rounded-xl bg-[#203b14] hover:opacity-90 text-white font-bold text-xs transition disabled:opacity-50 cursor-pointer">
                                                 Tambah
                                             </button>
                                         </div>
@@ -601,302 +1113,275 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                             <p className="text-xs text-stone-400 font-medium">Belum ada latihan hari ini.</p>
                                         </div>
                                     ) : (
-                                        <div className="space-y-2.5">
+                                        <div className="space-y-3">
                                             {todayTodos.map(todo => (
-                                                <div key={todo.id} className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all ${
+                                                <div key={todo.id} className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
                                                     todo.is_completed ? 'bg-stone-50/70 border-stone-200 opacity-60' : 'bg-white border-stone-200 hover:shadow-xs'
                                                 }`}>
-                                                    <div className="flex items-center gap-3 min-w-0">
-                                                        <button 
-                                                            type="button" 
-                                                            onClick={() => toggleTodo(todo.id)}
-                                                            className={`w-5.5 h-5.5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all cursor-pointer ${
-                                                                todo.is_completed ? 'bg-valley-green border-valley-green text-white' : 'border-stone-300 bg-white hover:border-valley-green'
-                                                            }`}>
-                                                            {todo.is_completed && (
-                                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                                                </svg>
-                                                            )}
-                                                        </button>
+                                                    <div className="flex items-center gap-3.5 min-w-0">
+                                                        {getSportIcon(todo.sport_name || todo.task_name)}
                                                         <div className="min-w-0">
                                                             <p className={`text-xs font-bold leading-tight ${todo.is_completed ? 'line-through text-stone-400' : 'text-adaline-ink'}`}>
                                                                 {todo.task_name}
                                                             </p>
-                                                            {todo.sport_name && (
-                                                                <span className="inline-block text-[8px] font-bold uppercase font-mono bg-forest-dew/40 text-valley-green px-1.5 py-0.5 rounded mt-1">
-                                                                    {todo.sport_name}
-                                                                </span>
-                                                            )}
+                                                            <span className="inline-block text-[8px] font-bold uppercase font-mono text-stone-400 mt-1.5">
+                                                                {todo.sport_name || 'LATIHAN'}
+                                                            </span>
                                                         </div>
                                                     </div>
-                                                    <button onClick={() => deleteTodo(todo.id)} className="p-1.5 text-stone-400 hover:text-red-500 rounded transition">
-                                                        ✕
-                                                    </button>
+                                                    <div className="flex items-center gap-2">
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => toggleTodo(todo.id)}
+                                                            className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                                                                todo.is_completed ? 'bg-[#203b14] border-[#203b14] text-white' : 'border-stone-300 bg-white hover:border-valley-green'
+                                                            }`}>
+                                                            {todo.is_completed && (
+                                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                            )}
+                                                        </button>
+                                                        <button onClick={() => deleteTodo(todo.id)} className="p-1.5 text-stone-300 hover:text-red-500 rounded transition cursor-pointer">
+                                                            ✕
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
                                     )}
                                 </div>
 
-                                {/* Workout Journal */}
-                                <div className="bg-white border border-stone-200 rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[400px]">
-                                    <div>
-                                        <div className="flex justify-between items-center border-b border-stone-100 pb-3 mb-4">
-                                            <h3 className="text-xs font-mono uppercase tracking-widest text-valley-green font-bold">Catatan Jurnal</h3>
-                                            {activeJournalTab === 'list' ? (
-                                                <button onClick={() => { journalForm.reset(); setActiveJournalTab('create'); }} className="text-[10px] font-bold bg-forest-dew/50 text-valley-green px-3 py-1 rounded-full hover:bg-forest-dew transition">
-                                                    + Baru
-                                                </button>
-                                            ) : (
-                                                <button onClick={() => { setActiveJournalTab('list'); journalForm.reset(); }} className="text-[10px] text-stone-400 hover:text-adaline-ink font-bold">
-                                                    Batal
-                                                </button>
-                                            )}
-                                        </div>
-
-                                        {activeJournalTab === 'list' ? (
-                                            <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1">
-                                                {journals.length === 0 ? (
-                                                    <div className="text-center py-10 border border-dashed border-stone-200 rounded-2xl bg-stone-50/50">
-                                                        <p className="text-xs text-stone-400 font-medium">Jurnal latihan kosong.</p>
-                                                    </div>
+                                {/* Right Side: Journal & Weekly Progress (takes 5 columns) */}
+                                <div className="lg:col-span-5 space-y-6 text-left">
+                                    
+                                    {/* Catatan Jurnal */}
+                                    <div className="bg-white border border-stone-200 rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[260px]">
+                                        <div>
+                                            <div className="flex justify-between items-center border-b border-stone-100 pb-3 mb-4">
+                                                <h3 className="text-xs font-mono uppercase tracking-widest text-[#203b14] font-bold">CATATAN JURNAL</h3>
+                                                {activeJournalTab === 'list' ? (
+                                                    <button onClick={() => { journalForm.reset(); setActiveJournalTab('create'); }} className="text-[10px] font-bold bg-[#203b14] text-white px-3 py-1 rounded-lg hover:opacity-90 transition cursor-pointer">
+                                                        + Baru
+                                                    </button>
                                                 ) : (
-                                                    journals.map(j => (
-                                                        <div key={j.id} className="p-4 bg-stone-50/50 border border-stone-200/70 rounded-2xl flex flex-col justify-between gap-3 hover:border-stone-300 transition">
-                                                            <div className="flex justify-between items-start gap-2">
-                                                                <h4 className="font-bold text-xs text-adaline-ink">{j.title}</h4>
-                                                                <div className="flex gap-1 shrink-0">
-                                                                    <button onClick={() => startEditJournal(j)} className="p-0.5 text-stone-400 hover:text-valley-green transition">✏️</button>
-                                                                    <button onClick={() => deleteJournal(j.id)} className="p-0.5 text-stone-400 hover:text-red-500 transition">✕</button>
-                                                                </div>
-                                                            </div>
-                                                            <p className="text-[11px] text-stone-500 leading-relaxed line-clamp-2">{j.content}</p>
-                                                            <div className="flex justify-between items-center text-[9px] font-mono text-stone-400 mt-2 border-t border-stone-100 pt-2">
-                                                                <span>{new Date(j.created_at).toLocaleDateString('id-ID')}</span>
-                                                                {j.mood && moodMap[j.mood] && (
-                                                                    <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold ${moodMap[j.mood].bg}`}>
-                                                                        {moodMap[j.mood].icon} {moodMap[j.mood].label}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    ))
+                                                    <button onClick={() => { setActiveJournalTab('list'); journalForm.reset(); }} className="text-[10px] text-stone-400 hover:text-adaline-ink font-bold cursor-pointer">
+                                                        Batal
+                                                    </button>
                                                 )}
                                             </div>
-                                        ) : (
-                                            <form onSubmit={handleJournalSubmit} className="space-y-4">
-                                                <div className="space-y-1">
-                                                    <label className="text-[10px] font-bold text-stone-400 uppercase">Judul Jurnal</label>
-                                                    <input type="text" required value={journalForm.data.title} onChange={e => journalForm.setData('title', e.target.value)} placeholder="Refleksi hari ini..." className="w-full text-xs py-2.5 px-3 rounded-xl border border-stone-200 bg-canvas-ice/30 outline-none focus:border-valley-green" />
+
+                                            {activeJournalTab === 'list' ? (
+                                                <div className="space-y-4 max-h-[180px] overflow-y-auto pr-1">
+                                                    {journals.length === 0 ? (
+                                                        <div className="text-center py-8">
+                                                            <p className="text-xs text-stone-400 font-medium">Jurnal latihan kosong.</p>
+                                                            <p className="text-[10px] text-stone-400 mt-1">Mulai catat latihan dan percakapan Anda hari ini.</p>
+                                                        </div>
+                                                    ) : (
+                                                        journals.map(j => (
+                                                            <div key={j.id} className="p-4 bg-stone-50/50 border border-stone-200/70 rounded-2xl flex flex-col justify-between gap-3 hover:border-stone-300 transition">
+                                                                <div className="flex justify-between items-start gap-2">
+                                                                    <h4 className="font-bold text-xs text-adaline-ink">{j.title}</h4>
+                                                                    <div className="flex gap-1 shrink-0">
+                                                                        <button onClick={() => startEditJournal(j)} className="p-0.5 text-stone-400 hover:text-valley-green transition cursor-pointer">✏️</button>
+                                                                        <button onClick={() => deleteJournal(j.id)} className="p-0.5 text-stone-400 hover:text-red-500 transition cursor-pointer">✕</button>
+                                                                    </div>
+                                                                </div>
+                                                                <p className="text-[11px] text-stone-500 leading-relaxed line-clamp-2">{j.content}</p>
+                                                                <div className="flex justify-between items-center text-[9px] font-mono text-stone-400 mt-2 border-t border-stone-100 pt-2">
+                                                                    <span>{new Date(j.created_at).toLocaleDateString('id-ID')}</span>
+                                                                    {j.mood && moodMap[j.mood] && (
+                                                                        <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold ${moodMap[j.mood].bg}`}>
+                                                                            {moodMap[j.mood].icon} {moodMap[j.mood].label}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    )}
                                                 </div>
-                                                <div className="space-y-1">
-                                                    <label className="text-[10px] font-bold text-stone-400 uppercase">Isi Catatan</label>
-                                                    <textarea required rows="4" value={journalForm.data.content} onChange={e => journalForm.setData('content', e.target.value)} placeholder="Tulis progres latihan Anda..." className="w-full text-xs py-2.5 px-3 rounded-xl border border-stone-200 bg-canvas-ice/30 outline-none focus:border-valley-green resize-none" />
-                                                </div>
-                                                <div className="space-y-1.5">
-                                                    <label className="text-[10px] font-bold text-stone-400 uppercase block">Suasana Hati</label>
-                                                    <div className="grid grid-cols-4 gap-2">
-                                                        {Object.entries(moodMap).map(([key, data]) => (
-                                                            <button key={key} type="button" onClick={() => journalForm.setData('mood', key)} className={`py-1.5 rounded-xl border text-[10px] flex flex-col items-center gap-1 transition ${
-                                                                journalForm.data.mood === key ? 'border-valley-green bg-forest-dew/40 text-valley-green font-bold' : 'border-stone-200 text-stone-400'
-                                                            }`}>
-                                                                <span>{data.icon}</span>
-                                                                <span className="scale-90">{data.label}</span>
-                                                            </button>
-                                                        ))}
+                                            ) : (
+                                                <form onSubmit={handleJournalSubmit} className="space-y-4">
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-bold text-stone-400 uppercase">Judul Jurnal</label>
+                                                        <input type="text" required value={journalForm.data.title} onChange={e => journalForm.setData('title', e.target.value)} placeholder="Refleksi hari ini..." className="w-full text-xs py-2.5 px-3 rounded-xl border border-stone-200 bg-canvas-ice/30 outline-none focus:border-valley-green" />
                                                     </div>
-                                                </div>
-                                                <button type="submit" disabled={journalForm.processing} className="w-full py-3 bg-valley-green hover:opacity-90 text-white rounded-full font-bold text-xs transition">
-                                                    {activeJournalTab === 'edit' ? 'Perbarui' : 'Simpan Jurnal'}
-                                                </button>
-                                            </form>
-                                        )}
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-bold text-stone-400 uppercase">Isi Catatan</label>
+                                                        <textarea required rows="3" value={journalForm.data.content} onChange={e => journalForm.setData('content', e.target.value)} placeholder="Tulis progres latihan Anda..." className="w-full text-xs py-2.5 px-3 rounded-xl border border-stone-200 bg-canvas-ice/30 outline-none focus:border-valley-green resize-none" />
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <label className="text-[10px] font-bold text-stone-400 uppercase block">Suasana Hati</label>
+                                                        <div className="grid grid-cols-4 gap-2">
+                                                            {Object.entries(moodMap).map(([key, data]) => (
+                                                                <button key={key} type="button" onClick={() => journalForm.setData('mood', key)} className={`py-1.5 rounded-xl border text-[10px] flex flex-col items-center gap-1 transition cursor-pointer ${
+                                                                    journalForm.data.mood === key ? 'border-valley-green bg-forest-dew/40 text-valley-green font-bold' : 'border-stone-200 text-stone-400'
+                                                                }`}>
+                                                                    <span>{data.icon}</span>
+                                                                    <span className="scale-90">{data.label}</span>
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    <button type="submit" disabled={journalForm.processing} className="w-full py-2.5 bg-valley-green hover:opacity-90 text-white rounded-xl font-bold text-xs transition cursor-pointer">
+                                                        {activeJournalTab === 'edit' ? 'Perbarui' : 'Simpan Jurnal'}
+                                                    </button>
+                                                </form>
+                                            )}
+                                        </div>
                                     </div>
+
+                                    {/* Progress Minggu Ini */}
+                                    <div className="bg-white border border-stone-200 rounded-3xl p-6 shadow-sm">
+                                        <div className="border-b border-stone-100 pb-3 mb-4">
+                                            <h3 className="text-xs font-mono uppercase tracking-widest text-[#203b14] font-bold">PROGRESS MINGGU INI</h3>
+                                        </div>
+                                        
+                                        <div className="flex justify-between items-end h-32 px-1 mt-4 relative">
+                                            {/* Y-Axis Lines (Grid lines) */}
+                                            <div className="absolute inset-x-0 bottom-[120px] border-t border-stone-100"></div>
+                                            <div className="absolute inset-x-0 bottom-[90px] border-t border-stone-100"></div>
+                                            <div className="absolute inset-x-0 bottom-[60px] border-t border-stone-100"></div>
+                                            <div className="absolute inset-x-0 bottom-[30px] border-t border-stone-100"></div>
+                                            <div className="absolute inset-x-0 bottom-0 border-t border-stone-200"></div>
+
+                                            {/* Chart Bars */}
+                                            {[
+                                                { day: 'Sen', pct: 60, color: 'bg-emerald-600' },
+                                                { day: 'Sel', pct: 50, color: 'bg-emerald-600' },
+                                                { day: 'Rab', pct: 95, color: 'bg-emerald-600' },
+                                                { day: 'Kam', pct: 35, color: 'bg-emerald-600' },
+                                                { day: 'Jum', pct: 15, color: 'bg-emerald-600' },
+                                                { day: 'Sab', pct: 0, color: 'bg-emerald-100' },
+                                                { day: 'Min', pct: 0, color: 'bg-emerald-100' },
+                                            ].map((item, idx) => (
+                                                <div key={idx} className="flex flex-col items-center gap-1.5 flex-1 relative z-10">
+                                                    <span className="text-[8px] font-mono font-bold text-stone-400 leading-none">{item.pct}%</span>
+                                                    <div className="w-5.5 bg-stone-50 rounded-t-md h-20 flex items-end overflow-hidden border border-stone-100/50">
+                                                        <div className={`w-full ${item.color} rounded-t-sm transition-all duration-500`} style={{ height: `${item.pct}%` }}></div>
+                                                    </div>
+                                                    <span className="text-[10px] font-bold text-stone-400 mt-0.5 leading-none">{item.day}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
                                 </div>
 
                             </div>
                         </div>
                     )}
 
-                    {/* TAB 2: PROGRAM LATIHAN TAB (Rebuilt matching mockup page 2 exactly) */}
+                    {/* TAB 2: PROGRAM LATIHAN TAB */}
                     {activeTab === 'program' && (
-                        <div className="space-y-8 animate-fade-in">
+                        <div className="space-y-6 animate-fade-in pb-12 text-left">
                             
-                            {/* Main banner card with custom grids and graphic */}
-                            <div className="bg-white border border-stone-200 rounded-3xl p-6 md:p-8 shadow-md relative overflow-hidden flex flex-col gap-6">
-                                
-                                {/* Background design runner illustration */}
-                                <div className="absolute right-4 bottom-0 top-0 w-[220px] hidden lg:flex items-center justify-center select-none pointer-events-none">
-                                    <svg className="w-full h-full" viewBox="0 0 200 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        {/* Background Hills */}
-                                        <path d="M -10,140 Q 60,110 130,130 T 210,100 L 210,180 L -10,180 Z" fill="#166534" opacity="0.06" />
-                                        <path d="M -10,155 Q 70,135 140,145 T 210,125 L 210,180 L -10,180 Z" fill="#4ade80" opacity="0.08" />
-                                        
-                                        {/* Background Trees (Circular Foliage) */}
-                                        <rect x="165" y="100" width="3" height="50" fill="#203b14" opacity="0.2" />
-                                        <circle cx="166" cy="95" r="18" fill="#166534" opacity="0.8" />
-                                        <circle cx="172" cy="90" r="14" fill="#22c55e" opacity="0.75" />
+                            {/* Header */}
+                            <div>
+                                <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">Program Latihan Personal</span>
+                                <h1 className="text-2xl font-black text-adaline-ink mt-0.5">Program Latihan Personal Anda</h1>
+                                <p className="text-xs text-stone-400 mt-1">
+                                    Program ini dibuat berdasarkan pilihan Anda dari hasil rekomendasi.
+                                </p>
+                            </div>
 
-                                        <rect x="40" y="115" width="2.5" height="40" fill="#203b14" opacity="0.2" />
-                                        <circle cx="41" cy="110" r="13" fill="#4ade80" opacity="0.8" />
-                                        <circle cx="38" cy="107" r="10" fill="#15803d" opacity="0.7" />
-
-                                        <rect x="140" y="110" width="2.5" height="45" fill="#203b14" opacity="0.2" />
-                                        <circle cx="141" cy="103" r="15" fill="#86efac" opacity="0.85" />
-                                        <circle cx="145" cy="99" r="11" fill="#166534" opacity="0.6" />
-
-                                        {/* Sun / Soft Glow */}
-                                        <circle cx="110" cy="45" r="24" fill="#d7e8b5" opacity="0.25" />
-                                        <circle cx="110" cy="45" r="16" fill="#ffffff" opacity="0.3" />
-
-                                        {/* Winding Track/Road */}
-                                        <path d="M -10,165 Q 60,140 120,155 T 210,140" stroke="#e0e5d5" strokeWidth="6" fill="none" strokeLinecap="round" opacity="0.6" />
-                                        <path d="M -10,165 Q 60,140 120,155 T 210,140" stroke="#166534" strokeWidth="1" fill="none" strokeLinecap="round" opacity="0.1" />
-
-                                        {/* Premium Detailed Runner Character */}
-                                        <g transform="translate(45, 45)">
-                                            {/* Back Arm */}
-                                            <path d="M 42,42 L 31,48 L 22,43" stroke="#fcd34d" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.85" />
-                                            <circle cx="22" cy="43" r="1.5" fill="#fcd34d" />
-
-                                            {/* Back Leg */}
-                                            <path d="M 45,68 L 30,76 L 19,70" stroke="#e0e5d5" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                                            <path d="M 19,70 L 14,73" stroke="#166534" strokeWidth="5.5" strokeLinecap="round" fill="none" /> {/* Shoe */}
-
-                                            {/* Torso & Shorts */}
-                                            {/* Hip/Shorts (black/charcoal) */}
-                                            <path d="M 41,61 L 52,61 L 50,70 L 39,70 Z" fill="#1f2937" />
-                                            <path d="M 40,61 L 43,72" stroke="#1f2937" strokeWidth="5" strokeLinecap="round" />
-                                            <path d="M 49,61 L 47,71" stroke="#1f2937" strokeWidth="5" strokeLinecap="round" />
-
-                                            {/* Shirt (green) */}
-                                            <path d="M 40,43 L 53,41 L 53,61 L 41,61 Z" fill="#22c55e" />
-                                            <path d="M 43,45 L 49,44 L 49,52 L 43,52 Z" fill="#4ade80" opacity="0.8" /> {/* Shirt highlight */}
-
-                                            {/* Neck & Head */}
-                                            <rect x="44" y="37" width="4" height="6" fill="#fcd34d" />
-                                            <circle cx="46" cy="32" r="7.5" fill="#fcd34d" />
-                                            {/* Hair */}
-                                            <path d="M 39,32 C 39,24 51,24 52,31 C 52,28 47,27 45,27 C 42,27 40,28 39,32 Z" fill="#111827" />
-
-                                            {/* Front Leg */}
-                                            <path d="M 48,68 L 58,78 L 53,92" stroke="#fcd34d" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                                            <path d="M 53,92 L 62,94" stroke="#166534" strokeWidth="5.5" strokeLinecap="round" fill="none" /> {/* Shoe */}
-
-                                            {/* Front Arm */}
-                                            <path d="M 50,42 L 63,48 L 68,60" stroke="#fcd34d" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                                            <circle cx="68" cy="60" r="1.8" fill="#fcd34d" />
-                                        </g>
-                                    </svg>
-                                </div>
-
-                                <div>
-                                    <h1 className="text-2xl font-black text-adaline-ink flex items-center gap-2">
-                                        Program Latihan <span className="text-valley-green">Personal</span>
-                                    </h1>
-                                    <p className="text-xs text-stone-400 mt-1 leading-snug">
-                                        Program latihan ini disusun khusus untuk Anda berdasarkan hasil analisis dan rekomendasi sistem.
+                            {/* Main Illustration and Description (No Card Wrapper) */}
+                            <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 max-w-4xl relative">
+                                <img 
+                                    src={getSportImage(selectedProgramKey)} 
+                                    alt={WEEKLY_PROGRAMS[selectedProgramKey].sport} 
+                                    className="w-72 h-56 object-contain shrink-0 md:w-[340px] md:h-[260px] relative z-10 pointer-events-none" 
+                                />
+                                <div className="space-y-2.5">
+                                    <h2 className="text-4xl font-black text-adaline-ink">
+                                        {WEEKLY_PROGRAMS[selectedProgramKey].sport}
+                                    </h2>
+                                    <div>
+                                        <span className="inline-block bg-[#166534] text-white text-xs font-semibold px-3.5 py-1 rounded-full">
+                                            Program Terpilih
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-stone-500 leading-relaxed max-w-xl">
+                                        {WEEKLY_PROGRAMS[selectedProgramKey].desc}
                                     </p>
                                 </div>
+                            </div>
 
-                                {/* Recommended Sport Badge Card */}
-                                <div className="bg-[#fcfdfa] border border-stone-200/70 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 max-w-2xl relative z-10 shadow-3xs">
-                                    <div className="flex items-start gap-4">
-                                        {/* Dynamic Sport Icon */}
-                                        <div className="w-12 h-12 rounded-full bg-forest-dew/40 text-valley-green flex items-center justify-center shrink-0 border border-valley-green/10 shadow-xs">
-                                            {selectedProgramKey === 'Walking or jogging' && (
-                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                                    <circle cx="18" cy="5" r="2" />
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 9h5l11-4M9 9v5L6 20M12 14v4l5 4" />
-                                                </svg>
-                                            )}
-                                            {selectedProgramKey === 'Gym' && (
-                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18h12M6 6h12M3 12h18M3 9v6M21 9v6" />
-                                                </svg>
-                                            )}
-                                            {selectedProgramKey === 'Yoga' && (
-                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                                    <circle cx="12" cy="5" r="2" />
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 7v10M8 11h8M6 21c3-1 9-1 12 0" />
-                                                </svg>
-                                            )}
-                                            {selectedProgramKey === 'Cycling' && (
-                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                                    <circle cx="5.5" cy="17.5" r="2.5" />
-                                                    <circle cx="18.5" cy="17.5" r="2.5" />
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 6h2M6.5 17.5l3-7h5.5l3 7M9.5 10.5l2.5-4.5h3" />
-                                                </svg>
-                                            )}
-                                            {selectedProgramKey === 'Swimming' && (
-                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2 10a4 4 0 0 1 8 0 4 4 0 0 1 8 0 4 4 0 0 1 4 0M2 14a4 4 0 0 1 8 0 4 4 0 0 1 8 0 4 4 0 0 1 4 0" />
-                                                </svg>
-                                            )}
+                            {/* Details summary row (4 grid cards) */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl">
+                                {[
+                                    { lbl: 'Durasi Program', val: WEEKLY_PROGRAMS[selectedProgramKey].duration, sub: getDynamicDateRange(), icon: '/images/Calendar.png' },
+                                    { lbl: 'Target Mingguan', val: WEEKLY_PROGRAMS[selectedProgramKey].target, sub: WEEKLY_PROGRAMS[selectedProgramKey].target_sub, icon: '/images/Target.png' },
+                                    { lbl: 'Durasi per Sesi', val: WEEKLY_PROGRAMS[selectedProgramKey].duration_per_sesi, sub: WEEKLY_PROGRAMS[selectedProgramKey].duration_per_sesi_sub, icon: '/images/Clock.png' },
+                                    { lbl: 'Fokus Program', val: WEEKLY_PROGRAMS[selectedProgramKey].focus, sub: WEEKLY_PROGRAMS[selectedProgramKey].focus_sub, icon: '/images/Activity.png' },
+                                ].map((card, idx) => (
+                                    <div key={idx} className="bg-white border border-stone-200 rounded-2xl p-4 flex items-center gap-3.5 shadow-3xs text-left">
+                                        <div className="w-12 h-12 rounded-full bg-[#edf6ed] flex items-center justify-center shrink-0">
+                                            <img src={card.icon} alt={card.lbl} className="w-6 h-6 object-contain" />
                                         </div>
-                                        <div>
-                                            <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">Rekomendasi Utama Anda</span>
-                                            <span className="text-base font-extrabold text-valley-green block mt-0.5">
-                                                {WEEKLY_PROGRAMS[selectedProgramKey].sport}
-                                            </span>
-                                            <span className="text-[11px] text-stone-500 mt-1 block leading-relaxed max-w-lg">
-                                                {WEEKLY_PROGRAMS[selectedProgramKey].desc}
-                                            </span>
+                                        <div className="min-w-0">
+                                            <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block leading-none">{card.lbl}</span>
+                                            <span className="text-sm font-black text-valley-green block mt-2 leading-none">{card.val}</span>
+                                            <span className="text-[9px] text-stone-400 block mt-1 leading-normal truncate">{card.sub}</span>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4 flex-wrap sm:flex-nowrap self-end sm:self-center shrink-0">
-                                        <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 px-4 py-3 rounded-2xl">
-                                            <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center border border-amber-300 text-base">🔥</div>
-                                            <div>
-                                                <span className="text-[9px] uppercase font-mono tracking-widest text-amber-800 block font-bold">Workout Streak</span>
-                                                <span className="text-sm font-black text-amber-900">{user.workout_streak || 0} Hari</span>
-                                            </div>
-                                        </div>
-                                        <button 
-                                            onClick={() => {
-                                                setActiveTab('rekomendasi');
-                                            }}
-                                            className="py-2.5 px-4 rounded-xl bg-valley-green hover:opacity-90 text-white text-xs font-bold transition flex items-center gap-1 shadow-3xs shrink-0">
-                                            Lihat Detail Rekomendasi <span>→</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Details summary row (4 grid cards) */}
-                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 relative z-10 mt-2">
-                                    {[
-                                        { lbl: 'Durasi Program', val: WEEKLY_PROGRAMS[selectedProgramKey].duration, sub: WEEKLY_PROGRAMS[selectedProgramKey].duration_sub, icon: '📅' },
-                                        { lbl: 'Target Mingguan', val: WEEKLY_PROGRAMS[selectedProgramKey].target, sub: WEEKLY_PROGRAMS[selectedProgramKey].target_sub, icon: '🎯' },
-                                        { lbl: 'Durasi Per Sesi', val: WEEKLY_PROGRAMS[selectedProgramKey].duration_per_sesi, sub: WEEKLY_PROGRAMS[selectedProgramKey].duration_per_sesi_sub, icon: '⏱️' },
-                                        { lbl: 'Fokus Program', val: WEEKLY_PROGRAMS[selectedProgramKey].focus, sub: WEEKLY_PROGRAMS[selectedProgramKey].focus_sub, icon: '🔥' },
-                                    ].map((card, idx) => (
-                                        <div key={idx} className="bg-stone-50/50 border border-stone-200/60 p-4 rounded-2xl flex flex-col justify-between gap-1 shadow-3xs">
-                                            <div className="flex justify-between items-center text-stone-400">
-                                                <span className="text-[10px] font-bold uppercase tracking-wider block">{card.lbl}</span>
-                                                <span className="text-xs">{card.icon}</span>
-                                            </div>
-                                            <div className="mt-2">
-                                                <span className="text-base font-black text-valley-green block leading-tight">{card.val}</span>
-                                                <span className="text-[9px] text-stone-400 block font-semibold mt-0.5 leading-none">{card.sub}</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                                ))}
                             </div>
 
                             {/* Jadwal Mingguan Table matching page 2 exactly */}
                             <div className="bg-white border border-stone-200 rounded-3xl p-6 shadow-md space-y-4">
                                 <div className="flex items-center justify-between border-b border-stone-100 pb-3">
                                     <div>
-                                        <h3 className="font-extrabold text-sm text-valley-green">Jadwal Mingguan</h3>
+                                        <h3 className="font-extrabold text-sm text-valley-green">Jadwal Mingguan (Minggu {currentWeek} dari 4)</h3>
                                         <p className="text-[10px] text-stone-400 leading-normal mt-0.5">Ikuti jadwal latihan berikut secara konsisten untuk hasil yang optimal.</p>
                                     </div>
-                                    <button 
-                                        onClick={handleDownloadSchedule}
-                                        className="py-2.5 px-4 rounded-xl border border-stone-200 hover:border-valley-green text-stone-600 hover:text-valley-green bg-white hover:bg-stone-50 font-bold text-xs transition flex items-center gap-1.5 shadow-3xs">
-                                        <span>📥</span> Unduh Jadwal
-                                    </button>
+                                    <div className="flex gap-2">
+                                        {checkedDaysCount === 7 && currentWeek < 4 && (
+                                            <button 
+                                                onClick={() => {
+                                                    if (confirm(`Apakah Anda yakin ingin menyelesaikan Minggu ${currentWeek} dan lanjut ke Minggu ${currentWeek + 1}?`)) {
+                                                        const nextWeekChecklist = { Senin: false, Selasa: false, Rabu: false, Kamis: false, Jumat: false, Sabtu: false, Minggu: false, current_week: currentWeek + 1 };
+                                                        setWeeklyChecklist(nextWeekChecklist);
+                                                        router.patch(route('workspace.checklist.update'), { checklist: nextWeekChecklist }, { preserveScroll: true });
+                                                    }
+                                                }}
+                                                className="py-2.5 px-4 rounded-xl border border-emerald-200 hover:border-emerald-600 text-emerald-700 hover:bg-emerald-50/50 font-bold text-xs transition flex items-center gap-1.5 shadow-3xs cursor-pointer bg-white">
+                                                <span>⏭️</span> Lanjut ke Minggu {currentWeek + 1}
+                                            </button>
+                                        )}
+                                        {checkedDaysCount === 7 && currentWeek === 4 && (
+                                            <button 
+                                                onClick={() => {
+                                                    if (confirm('Selamat! Anda telah menyelesaikan seluruh program latihan 4 minggu. Klik OK untuk menyelesaikan dan mereset program.')) {
+                                                        const resetChecklist = { Senin: false, Selasa: false, Rabu: false, Kamis: false, Jumat: false, Sabtu: false, Minggu: false, current_week: 1 };
+                                                        setWeeklyChecklist(resetChecklist);
+                                                        router.patch(route('workspace.checklist.update'), { checklist: resetChecklist }, { preserveScroll: true });
+                                                    }
+                                                }}
+                                                className="py-2.5 px-4 rounded-xl border border-emerald-200 hover:border-emerald-600 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 font-bold text-xs transition flex items-center gap-1.5 shadow-3xs cursor-pointer animate-pulse">
+                                                <span>🎉</span> Selesaikan Program
+                                            </button>
+                                        )}
+                                        {checkedDaysCount > 0 && checkedDaysCount < 7 && (
+                                            <button 
+                                                onClick={() => {
+                                                    if (confirm(`Apakah Anda yakin ingin mereset progres latihan Minggu ${currentWeek} ini?`)) {
+                                                        const resetChecklist = { Senin: false, Selasa: false, Rabu: false, Kamis: false, Jumat: false, Sabtu: false, Minggu: false, current_week: currentWeek };
+                                                        setWeeklyChecklist(resetChecklist);
+                                                        router.patch(route('workspace.checklist.update'), { checklist: resetChecklist }, { preserveScroll: true });
+                                                    }
+                                                }}
+                                                className="py-2.5 px-4 rounded-xl border border-red-200 hover:border-red-600 text-red-600 hover:text-red-700 bg-white hover:bg-red-50/50 font-bold text-xs transition flex items-center gap-1.5 shadow-3xs cursor-pointer">
+                                                <span>🔄</span> Reset Progres Minggu Ini
+                                            </button>
+                                        )}
+                                        <button 
+                                            onClick={handleDownloadSchedule}
+                                            className="py-2.5 px-4 rounded-xl border border-stone-200 hover:border-valley-green text-stone-600 hover:text-valley-green bg-white hover:bg-stone-50 font-bold text-xs transition flex items-center gap-1.5 shadow-3xs cursor-pointer">
+                                            <span>📥</span> Unduh Jadwal
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="overflow-x-auto">
@@ -915,9 +1400,9 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                 const isCompleted = weeklyChecklist[row.day];
                                                 return (
                                                     <tr key={row.day} className={`hover:bg-stone-50/40 transition ${isCompleted ? 'bg-emerald-50/10 opacity-75' : ''}`}>
-                                                        <td className="px-5 py-4 font-bold text-valley-green flex items-center gap-2">
-                                                            <span className="w-5.5 h-5.5 rounded-lg bg-stone-50 border border-stone-100 flex items-center justify-center shrink-0">📅</span>
-                                                            {row.day}
+                                                        <td className="px-5 py-4 font-bold text-valley-green">
+                                                            <div>{row.day}</div>
+                                                            <div className="text-[10px] text-stone-400 font-semibold mt-0.5">{getWeekdayDateStr(row.day)}</div>
                                                         </td>
                                                         <td className={`px-5 py-4 font-bold ${isCompleted ? 'line-through text-stone-400' : 'text-adaline-ink'}`}>{row.activity}</td>
                                                         <td className="px-5 py-4 text-stone-500 font-medium">{row.duration}</td>
@@ -931,14 +1416,14 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                         <td className="px-5 py-4">
                                                             <button 
                                                                 onClick={() => toggleWeekDay(row.day)}
-                                                                className={`inline-flex items-center gap-1.5 cursor-pointer text-left select-none text-[10px] font-bold ${
+                                                                className={`inline-flex items-center gap-1.5 cursor-pointer text-left select-none text-[11px] font-bold ${
                                                                     isCompleted ? 'text-emerald-600' : 'text-stone-400 hover:text-stone-600'
                                                                 }`}>
-                                                                <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
-                                                                    isCompleted ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-stone-300 bg-white'
-                                                                }`}>
-                                                                    {isCompleted && '✓'}
-                                                                </span>
+                                                                {isCompleted ? (
+                                                                    <img src="/images/Check circle.png" alt="Selesai" className="w-4.5 h-4.5 object-contain" />
+                                                                ) : (
+                                                                    <span className="w-4 h-4 rounded-full border border-stone-300 bg-white flex items-center justify-center" />
+                                                                )}
                                                                 {isCompleted ? 'Selesai' : 'Belum'}
                                                             </button>
                                                         </td>
@@ -955,7 +1440,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
 
                     {/* TAB 3: RIWAYAT TAB (Redesigned matching page 1 exactly) */}
                     {activeTab === 'riwayat' && (
-                        <div className="space-y-8 animate-fade-in">
+                        <div className="space-y-8 animate-fade-in text-left">
                             {/* Top statistics card */}
                             <div className="bg-white border border-stone-200 rounded-3xl p-6 shadow-sm relative overflow-hidden">
                                 <div className="absolute right-0 top-0 w-32 h-32 bg-forest-dew/10 rounded-full blur-2xl"></div>
@@ -1022,17 +1507,39 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                 {/* 4 Stats counters row */}
                                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 divide-y lg:divide-y-0 lg:divide-x divide-stone-100 mt-6 pt-6 border-t border-stone-100">
                                     {[
-                                        { label: 'Total Analisis', value: '12', change: '+2 dari bulan lalu', icon: '📈' },
-                                        { label: 'Program Aktif', value: '2', change: 'Sedang berjalan', icon: '📋' },
-                                        { label: 'Latihan Selesai', value: '24', change: 'Sesi latihan selesai', icon: '🏆' },
-                                        { label: 'Konsistensi', value: '86%', change: 'Bagus sekali! 🔥', icon: '🎯' },
+                                        { 
+                                            label: 'Total Analisis', 
+                                            value: totalAnalisisCount.toString(), 
+                                            change: totalAnalisisCount > 0 ? 'Analisis berhasil dilakukan' : 'Belum ada analisis', 
+                                            icon: '/images/Activity.png' 
+                                        },
+                                        { 
+                                            label: 'Program Aktif', 
+                                            value: activeProgramsCount.toString(), 
+                                            change: activeProgramsCount > 0 ? 'Sedang Berjalan' : 'Tidak ada program aktif', 
+                                            icon: '/images/Clipboard.png' 
+                                        },
+                                        { 
+                                            label: 'Latihan Selesai', 
+                                            value: totalCompletedWorkouts.toString(), 
+                                            change: 'Sesi latihan selesai', 
+                                            icon: '/images/Award.png' 
+                                        },
+                                        { 
+                                            label: 'Konsistensi', 
+                                            value: `${currentProgress}%`, 
+                                            change: currentProgress >= 80 ? 'Sangat bagus!' : currentProgress >= 50 ? 'Bagus!' : 'Tingkatkan lagi!', 
+                                            icon: '/images/Target.png' 
+                                        },
                                     ].map((stat, idx) => (
                                         <div key={idx} className={`flex items-center gap-4 ${idx > 0 ? 'pt-4 lg:pt-0 lg:pl-6' : ''}`}>
-                                            <div className="w-10 h-10 rounded-full bg-stone-50 flex items-center justify-center text-lg">{stat.icon}</div>
+                                            <div className="w-11 h-11 rounded-full bg-[#edf6ed] flex items-center justify-center shrink-0">
+                                                <img src={stat.icon} alt={stat.label} className="w-5.5 h-5.5 object-contain" />
+                                            </div>
                                             <div>
-                                                <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">{stat.label}</span>
-                                                <span className="text-xl font-extrabold text-adaline-ink mt-0.5 block">{stat.value}</span>
-                                                <span className="text-[9px] text-stone-400 block font-medium mt-0.5">{stat.change}</span>
+                                                <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block leading-none">{stat.label}</span>
+                                                <span className="text-xl font-extrabold text-adaline-ink mt-2.5 block leading-none">{stat.value}</span>
+                                                <span className="text-[9px] text-stone-400 block font-medium mt-1.5 leading-normal">{stat.change}</span>
                                             </div>
                                         </div>
                                     ))}
@@ -1041,56 +1548,68 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
 
                             {/* Riwayat Program Latihan card */}
                             <div className="bg-white border border-stone-200 rounded-3xl p-6 shadow-sm">
-                                <h3 className="text-xs font-mono uppercase tracking-widest text-valley-green mb-4 pb-2 border-b border-stone-100 font-bold">Riwayat Program Latihan</h3>
+                                <h3 className="font-extrabold text-sm text-valley-green mb-4 pb-2 border-b border-stone-100">Riwayat Program Latihan</h3>
                                 
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-xs md:text-sm text-left">
                                         <thead>
-                                            <tr className="bg-stone-50 border-b border-stone-100 text-stone-400 font-bold uppercase tracking-wider text-[10px]">
+                                            <tr className="bg-[#edf6ed]/70 text-valley-green font-bold uppercase tracking-wider text-[10px]">
                                                 <th className="px-5 py-4">Periode</th>
                                                 <th className="px-5 py-4">Program</th>
                                                 <th className="px-5 py-4">Rekomendasi</th>
                                                 <th className="px-5 py-4">Progress</th>
                                                 <th className="px-5 py-4">Status</th>
-                                                <th className="px-5 py-4 text-right">Aksi</th>
+                                                <th className="px-5 py-4">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-stone-100">
-                                            {HISTORICAL_PROGRAMS.map((prog, i) => (
-                                                <tr key={i} className="hover:bg-stone-50/50 transition">
-                                                    <td className="px-5 py-3.5 font-mono text-stone-400 text-[10px]">
-                                                        {prog.period} <span className="block text-[9px] font-sans">({prog.duration})</span>
-                                                    </td>
-                                                    <td className="px-5 py-3.5 font-bold text-valley-green">{prog.type}</td>
-                                                    <td className="px-5 py-3.5 text-stone-600 font-medium flex items-center gap-1.5">
-                                                        <span className="text-xs">🏃</span> {prog.sport}
-                                                    </td>
-                                                    <td className="px-5 py-3.5">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-20 h-1.5 bg-stone-100 rounded-full overflow-hidden shrink-0">
-                                                                <div className="h-full bg-emerald-500" style={{ width: `${prog.progress}%` }}></div>
-                                                            </div>
-                                                            <span className="font-mono text-[10px] text-stone-500">{prog.progress}%</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-5 py-3.5">
-                                                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wider ${prog.statusColor}`}>
-                                                            {prog.status}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-5 py-3.5 text-right">
-                                                        <button 
-                                                            onClick={() => { 
-                                                                const key = getProgramKey(prog.sport);
-                                                                setSelectedProgramKey(key); 
-                                                                setActiveTab('program'); 
-                                                            }} 
-                                                            className="py-2.5 px-4 border border-stone-200 hover:border-valley-green rounded-xl text-[10px] font-bold text-stone-600 hover:text-valley-green bg-white hover:bg-stone-50 transition shadow-3xs">
-                                                            Lihat Detail
-                                                        </button>
+                                            {displayedHistory.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="6" className="px-5 py-8 text-center text-stone-400 font-semibold text-xs">
+                                                        Belum ada riwayat program latihan. Selesaikan 100% target mingguan program latihan Anda untuk memunculkannya di sini.
                                                     </td>
                                                 </tr>
-                                            ))}
+                                            ) : (
+                                                displayedHistory.map((prog, i) => (
+                                                    <tr key={i} className="hover:bg-stone-50/50 transition">
+                                                        <td className="px-5 py-4 text-left">
+                                                            <span className="text-xs font-bold text-adaline-ink block">{prog.period}</span>
+                                                            <span className="text-[10px] text-stone-400 font-semibold block mt-0.5">({prog.duration})</span>
+                                                        </td>
+                                                        <td className="px-5 py-4 font-bold text-adaline-ink text-left">{prog.type}</td>
+                                                        <td className="px-5 py-4 text-left">
+                                                            <div className="flex items-center gap-2">
+                                                                <img src={getSportIconPath(prog.sport)} className="w-5.5 h-5.5 object-contain shrink-0" alt={prog.sport} />
+                                                                <span className="text-xs font-bold text-adaline-ink">{prog.sport}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-5 py-4 text-left">
+                                                            <div className="flex items-center gap-2.5">
+                                                                <div className="w-20 h-1.5 bg-stone-100 rounded-full overflow-hidden shrink-0">
+                                                                    <div className="h-full bg-valley-green rounded-full" style={{ width: `${prog.progress}%` }}></div>
+                                                                </div>
+                                                                <span className="font-bold text-[10px] text-stone-600">{prog.progress}%</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-5 py-4 text-left">
+                                                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wider ${prog.statusColor}`}>
+                                                                {prog.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-5 py-4 text-left">
+                                                            <button 
+                                                                onClick={() => { 
+                                                                    const key = getProgramKey(prog.sport);
+                                                                    setSelectedProgramKey(key); 
+                                                                    setActiveTab('program'); 
+                                                                }} 
+                                                                className="text-xs font-bold text-stone-500 hover:text-valley-green transition cursor-pointer">
+                                                                Lihat Detail
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
@@ -1099,380 +1618,569 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                     )}
 
                     {/* TAB 4: PROFIL TAB */}
-                    {activeTab === 'profil' && (
-                        <div className="space-y-8 animate-fade-in">
-                            {/* Top profile summary card */}
-                            <div className="bg-white border border-stone-200/80 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-                                <div className="absolute right-0 top-0 w-36 h-36 bg-forest-dew/20 rounded-full blur-2xl"></div>
-                                <div className="flex items-center gap-4 relative z-10">
-                                    <div className="relative group shrink-0">
-                                        <img className="w-16 h-16 rounded-full border-2 border-forest-dew object-cover" src={user.profile_photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&color=166534&background=f0fdf4`} alt={user.name} />
-                                        <label className="absolute inset-0 rounded-full bg-black/45 flex flex-col items-center justify-center text-white text-[9px] font-bold opacity-0 group-hover:opacity-100 cursor-pointer transition select-none">
-                                            <span>📷 UBAH</span>
-                                            <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-                                        </label>
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <h2 className="text-xl font-extrabold text-valley-green">{user.name}</h2>
-                                            <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[8px] uppercase tracking-wider">Aktif</span>
+                    {activeTab === 'profil' && (() => {
+
+                        // BMI category
+                        const getBmiCategory = (bmi) => {
+                            if (!bmi) return { label: '-', color: 'text-stone-400' };
+                            const b = parseFloat(bmi);
+                            if (b < 17)   return { label: 'Sangat Kurus', color: 'text-blue-500' };
+                            if (b < 18.5) return { label: 'Kurus',        color: 'text-sky-500' };
+                            if (b < 25)   return { label: 'Normal',       color: 'text-emerald-600' };
+                            if (b < 30)   return { label: 'Overweight',   color: 'text-amber-500' };
+                            return              { label: 'Obesitas',       color: 'text-red-500' };
+                        };
+                        const bmiCat = getBmiCategory(user.bmi);
+
+                        // Stats for ringkasan
+                        const statsData = [
+                            { icon: '🔥', label: 'Total Analisis',       val: `${totalAnalisisCount} Kali`,    color: 'bg-orange-50 text-orange-500' },
+                            { icon: '✅', label: 'Program Selesai',       val: `${displayedHistory.length} Program`, color: 'bg-emerald-50 text-emerald-600' },
+                            { icon: '📅', label: 'Hari Konsisten',        val: `${activeStreak} Hari`,          color: 'bg-blue-50 text-blue-500' },
+                            { icon: '📈', label: 'Rata - rata Progress',  val: `${currentProgress}%`,           color: 'bg-violet-50 text-violet-500' },
+                            { icon: '🔥', label: 'Kalori Terbakar',       val: totalCompletedWorkouts > 0 ? `${(totalCompletedWorkouts * 350).toLocaleString('id-ID')} kkal` : '-', color: 'bg-red-50 text-red-500' },
+                        ];
+
+                        // Join date from created_at
+                        const joinDate = user.created_at
+                            ? new Date(user.created_at).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
+                            : 'Mei 2026';
+
+                        return (
+                            <div className="space-y-5 animate-fade-in text-left pb-10">
+
+                                {/* ── HEADER CARD ──────────────────────────────── */}
+                                <div className="bg-white border border-stone-200/80 rounded-3xl p-6 shadow-sm relative overflow-hidden">
+                                    <div className="absolute right-0 top-0 w-48 h-48 bg-forest-dew/10 rounded-full blur-3xl pointer-events-none" />
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-5 relative z-10">
+
+                                        {/* Avatar */}
+                                        <div className="relative group shrink-0">
+                                            <img
+                                                className="w-20 h-20 rounded-full border-2 border-forest-dew/60 object-cover shadow-md"
+                                                src={user.profile_photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&color=166534&background=edf6ed&size=160`}
+                                                alt={user.name}
+                                            />
+                                            <label className="absolute inset-0 rounded-full bg-black/50 flex flex-col items-center justify-center text-white text-[9px] font-bold opacity-0 group-hover:opacity-100 cursor-pointer transition-all select-none">
+                                                <span className="text-lg">📷</span>
+                                                <span className="mt-0.5">UBAH</span>
+                                                <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+                                            </label>
                                         </div>
-                                        <p className="text-xs text-stone-400 mt-1">{user.email} · bergabung Mei 2025</p>
-                                    </div>
-                                </div>
 
-                                <div className="grid grid-cols-4 gap-4 relative z-10 shrink-0 divide-x divide-stone-100">
-                                    <div className="text-center px-3">
-                                        <span className="text-[9px] text-stone-400 font-bold uppercase tracking-wider block">Usia</span>
-                                        <span className="text-sm font-black text-valley-green mt-0.5 block">{user.age || 22} Thn</span>
-                                    </div>
-                                    <div className="text-center px-3">
-                                        <span className="text-[9px] text-stone-400 font-bold uppercase tracking-wider block">Tinggi</span>
-                                        <span className="text-sm font-black text-valley-green mt-0.5 block">{user.height ? `${Math.round(user.height)} cm` : '-'}</span>
-                                    </div>
-                                    <div className="text-center px-3">
-                                        <span className="text-[9px] text-stone-400 font-bold uppercase tracking-wider block">Berat</span>
-                                        <span className="text-sm font-black text-valley-green mt-0.5 block">{user.weight ? `${Math.round(user.weight)} kg` : '-'}</span>
-                                    </div>
-                                    <div className="text-center px-3">
-                                        <span className="text-[9px] text-stone-400 font-bold uppercase tracking-wider block">IMT (BMI)</span>
-                                        <span className="text-sm font-black text-emerald-600 mt-0.5 block">{user.bmi || '22.2'} <span className="text-[9px] font-medium text-stone-400 block font-sans">(Normal)</span></span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Sub-tabs Selection bar */}
-                            <div className="flex border-b border-stone-200 gap-6 text-sm shrink-0 overflow-x-auto">
-                                {[
-                                    { id: 'pribadi', label: 'Informasi Pribadi' },
-                                    { id: 'preferensi', label: 'Preferensi Kesehatan' },
-                                    { id: 'keamanan', label: 'Keamanan Akun' },
-                                    { id: 'notifikasi', label: 'Setelan Akun' },
-                                ].map(tab => (
-                                    <button 
-                                        key={tab.id} 
-                                        onClick={() => setProfileSubTab(tab.id)}
-                                        className={`pb-2.5 font-bold transition border-b-2 outline-none cursor-pointer ${
-                                            profileSubTab === tab.id 
-                                            ? 'border-valley-green text-valley-green' 
-                                            : 'border-transparent text-stone-400 hover:text-stone-600'
-                                        }`}>
-                                        {tab.label}
-                                    </button>
-                                ))}
-                            </div>
-
-                            {/* Sub-tab Content Panels */}
-                            <div className="animate-fade-in">
-                                
-                                {/* SUB-TAB: INFORMASI PRIBADI */}
-                                {profileSubTab === 'pribadi' && (
-                                    <div className="grid lg:grid-cols-12 gap-8 items-start">
-                                        {/* Left: Info Card */}
-                                        <div className="lg:col-span-8 bg-white border border-stone-200 rounded-3xl p-6 shadow-sm">
-                                            <div className="flex justify-between items-center mb-4 border-b border-stone-100 pb-3">
-                                                <h4 className="font-bold text-xs text-valley-green uppercase font-mono">Informasi Pribadi</h4>
-                                                <button className="text-[10px] font-bold border border-stone-200 hover:border-valley-green px-3 py-1 rounded-full text-stone-600 hover:text-valley-green transition">Edit</button>
+                                        {/* Name + meta */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <h1 className="text-2xl font-extrabold text-valley-green">{user.name}</h1>
+                                                <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[9px] uppercase tracking-wider">Aktif</span>
                                             </div>
-                                            <div className="grid sm:grid-cols-2 gap-4 text-xs">
-                                                {[
-                                                    { lbl: 'Nama Lengkap', val: user.name },
-                                                    { lbl: 'Jenis Kelamin', val: user.gender === 'Male' || !user.gender ? 'Laki-laki' : 'Perempuan' },
-                                                    { lbl: 'Tanggal Lahir', val: '15 Maret 2003' },
-                                                    { lbl: 'Usia', val: `${user.age || 22} Tahun` },
-                                                    { lbl: 'Email', val: user.email },
-                                                    { lbl: 'Nomor Telepon', val: '0812-3456-7890' },
-                                                    { lbl: 'Alamat', val: 'Jl. Merdeka No. 25, Malang, Jawa Timur' },
-                                                    { lbl: 'Pekerjaan', val: 'Mahasiswa' },
-                                                    { lbl: 'Tingkat Aktivitas', val: 'Sedang' },
-                                                ].map((row, idx) => (
-                                                    <div key={idx} className="border-b border-stone-50 pb-2.5">
-                                                        <span className="text-[10px] text-stone-400 font-bold block">{row.lbl}</span>
-                                                        <span className="text-adaline-ink font-semibold mt-0.5 block">{row.val || '-'}</span>
+                                            <p className="text-xs text-stone-400 mt-0.5">{user.email}</p>
+                                            <p className="text-[10px] text-stone-400 mt-0.5">Bergabung sejak {joinDate}</p>
+                                        </div>
+
+                                        {/* Stat chips */}
+                                        <div className="flex flex-wrap sm:flex-nowrap gap-3 shrink-0">
+                                            {[
+                                                { icon: '/images/Icon Rentang Usia.png', label: 'Usia',   val: user.age ? `${user.age} Tahun` : '-' },
+                                                { icon: '/images/Icon Tinggi.png',       label: 'Tinggi', val: user.height ? `${Math.round(user.height)} cm` : '-' },
+                                                { icon: '/images/Icon Usia.png',         label: 'Berat',  val: user.weight ? `${Math.round(user.weight)} kg` : '-' },
+                                            ].map((chip, idx) => (
+                                                <div key={idx} className="flex items-center gap-2 bg-stone-50 border border-stone-200/70 rounded-xl px-3 py-2 min-w-[80px]">
+                                                    <div className="w-7 h-7 rounded-full bg-[#edf6ed] flex items-center justify-center shrink-0">
+                                                        <img src={chip.icon} alt={chip.label} className="w-4 h-4 object-contain" onError={e => { e.target.style.display = 'none'; }} />
                                                     </div>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        {/* Right: Stats Summary Card */}
-                                        <div className="lg:col-span-4 bg-white border border-stone-200 rounded-3xl p-6 shadow-sm space-y-4">
-                                            <h4 className="font-bold text-xs text-valley-green uppercase font-mono border-b border-stone-100 pb-2">Ringkasan Statistik</h4>
-                                            
-                                            <div className="space-y-3.5">
-                                                {[
-                                                    { lbl: 'Total Analisis', val: '12 Kali' },
-                                                    { lbl: 'Program Selesai', val: '4 Program' },
-                                                    { lbl: 'Hari Konsisten', val: '18 Hari' },
-                                                    { lbl: 'Rata-rata Progress', val: '82%' },
-                                                    { lbl: 'Kalori Terbakar', val: '3.245 kkal' },
-                                                ].map((stat, idx) => (
-                                                    <div key={idx} className="flex justify-between items-center text-xs pb-1 border-b border-stone-50">
-                                                        <span className="text-stone-400 font-medium">{stat.lbl}</span>
-                                                        <span className="font-extrabold text-valley-green">{stat.val}</span>
+                                                    <div>
+                                                        <span className="text-[9px] text-stone-400 font-bold uppercase tracking-wider block leading-none">{chip.label}</span>
+                                                        <span className="text-xs font-extrabold text-valley-green leading-tight block mt-0.5">{chip.val}</span>
                                                     </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* SUB-TAB: PREFERENSI KESEHATAN */}
-                                {profileSubTab === 'preferensi' && (
-                                    <div className="grid lg:grid-cols-12 gap-8 items-start">
-                                        {/* Left: Preferences Card */}
-                                        <div className="lg:col-span-6 bg-white border border-stone-200 rounded-3xl p-6 shadow-sm space-y-4">
-                                            <div className="flex justify-between items-center border-b border-stone-100 pb-3 mb-1">
-                                                <h4 className="font-bold text-xs text-valley-green uppercase font-mono">Preferensi Kesehatan</h4>
-                                                <button className="text-[10px] font-bold border border-stone-200 hover:border-valley-green px-3 py-1 rounded-full text-stone-600 hover:text-valley-green transition">Edit</button>
-                                            </div>
-                                            
-                                            <div className="space-y-3.5 text-xs">
-                                                {[
-                                                    { lbl: 'Tujuan Utama', val: 'Menjaga Kesehatan Jantung' },
-                                                    { lbl: 'Preferensi Olahraga', val: 'Cardio, Outdoor, Low Impact' },
-                                                    { lbl: 'Frekuensi Olahraga', val: '3 - 4 kali per minggu' },
-                                                    { lbl: 'Durasi Ideal', val: '30 - 45 menit per sesi' },
-                                                    { lbl: 'Waktu Olahraga', val: 'Pagi Hari (06.00 - 09.00)' },
-                                                    { lbl: 'Kondisi Kesehatan', val: user.physical_condition === 'none' ? 'Tidak ada riwayat penyakit serius' : 
-                                                                                         user.physical_condition === 'knee_injury' ? 'Cedera Lutut' :
-                                                                                         user.physical_condition === 'asthma' ? 'Gangguan Asma' : 'Masalah Jantung' },
-                                                    { lbl: 'Pantangan / Alergi', val: 'Tidak ada' },
-                                                ].map((pref, idx) => (
-                                                    <div key={idx} className="flex justify-between items-start gap-4 pb-2.5 border-b border-stone-50">
-                                                        <span className="text-stone-400 font-medium w-36 shrink-0">{pref.lbl}</span>
-                                                        <span className="font-bold text-valley-green text-right">{pref.val}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        {/* Right: Weight Tracking Chart */}
-                                        <div className="lg:col-span-6 bg-white border border-stone-200 rounded-3xl p-6 shadow-sm space-y-4">
-                                            <div className="flex justify-between items-center border-b border-stone-100 pb-2">
-                                                <h4 className="font-bold text-xs text-valley-green uppercase font-mono">Berat Badan (Tracking)</h4>
-                                                <span className="text-[10px] text-stone-400 font-mono">6 Bulan Terakhir</span>
-                                            </div>
-                                            
-                                            {isMounted && (
-                                                <div className="h-44 w-full text-[10px]">
-                                                    <ResponsiveContainer width="100%" height="100%">
-                                                        <LineChart data={weightHistoryData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                                                            <XAxis dataKey="month" stroke="#a3a3a3" />
-                                                            <YAxis domain={[60, 80]} stroke="#a3a3a3" />
-                                                            <Tooltip />
-                                                            <Line type="monotone" dataKey="weight" stroke="var(--color-valley-green)" strokeWidth={2.5} activeDot={{ r: 6 }} dot={{ r: 4 }} />
-                                                        </LineChart>
-                                                    </ResponsiveContainer>
                                                 </div>
-                                            )}
-
-                                            <div className="flex justify-between items-center p-3.5 bg-stone-50 rounded-2xl border border-stone-100 text-xs">
+                                            ))}
+                                            {/* BMI chip — special */}
+                                            <div className="flex items-center gap-2 bg-stone-50 border border-stone-200/70 rounded-xl px-3 py-2 min-w-[80px]">
+                                                <div className="w-7 h-7 rounded-full bg-[#edf6ed] flex items-center justify-center shrink-0 text-[10px] font-black text-valley-green">BMI</div>
                                                 <div>
-                                                    <span className="text-[9px] text-stone-400 uppercase tracking-wider block font-bold">Berat Terakhir</span>
-                                                    <span className="text-base font-extrabold text-valley-green">{user.weight ? `${Math.round(user.weight)} kg` : '68 kg'}</span>
-                                                </div>
-                                                <div className="text-right">
-                                                    <span className="text-[9px] text-stone-400 uppercase tracking-wider block font-bold">Perubahan</span>
-                                                    <span className="text-xs font-black text-emerald-600">- 4.0 kg ↓</span>
+                                                    <span className="text-[9px] text-stone-400 font-bold uppercase tracking-wider block leading-none">BMI</span>
+                                                    <span className={`text-xs font-extrabold leading-tight block mt-0.5 ${bmiCat.color}`}>{user.bmi ? Number(user.bmi).toFixed(1) : '-'}</span>
+                                                    <span className="text-[8px] text-stone-400 block leading-none">{bmiCat.label}</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                )}
+                                </div>
 
-                                {/* SUB-TAB: KEAMANAN AKUN */}
-                                {profileSubTab === 'keamanan' && (
-                                    <div className="max-w-md bg-white border border-stone-200 rounded-3xl p-6 shadow-sm space-y-4">
-                                        <h4 className="font-bold text-xs text-valley-green uppercase font-mono border-b border-stone-100 pb-3">Ubah Password</h4>
-                                        <form className="space-y-4">
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] font-bold text-stone-400 uppercase">Password Saat Ini</label>
-                                                <input type="password" placeholder="••••••••" className="w-full text-xs py-2.5 px-3 rounded-xl border border-stone-200 bg-canvas-ice/30 outline-none focus:border-valley-green" />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] font-bold text-stone-400 uppercase">Password Baru</label>
-                                                <input type="password" placeholder="••••••••" className="w-full text-xs py-2.5 px-3 rounded-xl border border-stone-200 bg-canvas-ice/30 outline-none focus:border-valley-green" />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] font-bold text-stone-400 uppercase">Konfirmasi Password Baru</label>
-                                                <input type="password" placeholder="••••••••" className="w-full text-xs py-2.5 px-3 rounded-xl border border-stone-200 bg-canvas-ice/30 outline-none focus:border-valley-green" />
-                                            </div>
-                                            <button type="button" className="w-full py-2.5 bg-valley-green hover:opacity-90 text-white rounded-full font-bold text-xs transition">
-                                                Simpan Perubahan
-                                            </button>
-                                        </form>
-                                    </div>
-                                )}
+                                {/* ── BODY ROW: Info + Stats ─────────────────── */}
+                                <div className="grid lg:grid-cols-5 gap-5 items-start">
 
-                                {/* SUB-TAB: NOTIFIKASI / SETELAN */}
-                                {profileSubTab === 'notifikasi' && (
-                                    <div className="grid lg:grid-cols-2 gap-8 items-start">
-                                        <div className="bg-white border border-stone-200 rounded-3xl p-6 shadow-sm space-y-4">
-                                            <h4 className="font-bold text-xs text-valley-green uppercase font-mono border-b border-stone-100 pb-3">Pengaturan Akun</h4>
-                                            
-                                            <div className="space-y-4">
-                                                <div className="flex justify-between items-center text-xs">
-                                                    <div>
-                                                        <span className="font-bold text-valley-green block">Bahasa Aplikasi</span>
-                                                        <span className="text-[10px] text-stone-400 block mt-0.5">Bahasa yang digunakan di aplikasi</span>
-                                                    </div>
-                                                    <select className="text-xs border border-stone-200 bg-white rounded-lg p-1.5 focus:border-valley-green outline-none">
-                                                        <option>Bahasa Indonesia</option>
-                                                        <option>English</option>
-                                                    </select>
-                                                </div>
-
-                                                <div className="flex justify-between items-center text-xs pt-4 border-t border-stone-50">
-                                                    <div>
-                                                        <span className="font-bold text-valley-green block">Satuan Pengukuran</span>
-                                                        <span className="text-[10px] text-stone-400 block mt-0.5">Satuan untuk tinggi badan dan berat badan</span>
-                                                    </div>
-                                                    <select className="text-xs border border-stone-200 bg-white rounded-lg p-1.5 focus:border-valley-green outline-none">
-                                                        <option>cm / kg</option>
-                                                        <option>in / lbs</option>
-                                                    </select>
-                                                </div>
-
-                                                <div className="pt-4 border-t border-stone-50 flex flex-col gap-2">
-                                                    <span className="font-bold text-red-500 text-xs block">Hapus Akun</span>
-                                                    <span className="text-[10px] text-stone-400 leading-relaxed">Hapus akun dan semua data secara permanen. Tindakan ini tidak dapat dibatalkan.</span>
-                                                    <button type="button" className="py-2.5 px-4 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 rounded-xl font-bold text-xs transition mt-2 self-start">
-                                                        Hapus Akun Saya
+                                    {/* Left: Informasi Pribadi */}
+                                    <div className="lg:col-span-3 bg-white border border-stone-200 rounded-3xl p-6 shadow-sm">
+                                        <div className="flex justify-between items-center mb-5 pb-3 border-b border-stone-100">
+                                            <h3 className="font-extrabold text-sm text-valley-green">Informasi Pribadi</h3>
+                                            {!isEditingProfile ? (
+                                                <button
+                                                    onClick={() => setIsEditingProfile(true)}
+                                                    className="flex items-center gap-1.5 text-[11px] font-bold border border-stone-200 hover:border-valley-green px-3.5 py-1.5 rounded-xl text-stone-600 hover:text-valley-green transition cursor-pointer bg-white"
+                                                >
+                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                    Edit
+                                                </button>
+                                            ) : (
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => setIsEditingProfile(false)}
+                                                        className="text-[11px] font-bold text-stone-400 hover:text-stone-600 px-3 py-1.5 rounded-xl border border-stone-200 hover:border-stone-300 transition cursor-pointer"
+                                                    >
+                                                        Batal
+                                                    </button>
+                                                    <button
+                                                        form="profile-edit-form"
+                                                        type="submit"
+                                                        disabled={profileSaving}
+                                                        className="text-[11px] font-bold bg-valley-green text-white px-3.5 py-1.5 rounded-xl hover:opacity-90 transition cursor-pointer disabled:opacity-50"
+                                                    >
+                                                        {profileSaving ? 'Menyimpan...' : 'Simpan'}
                                                     </button>
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
 
-                                        <div className="bg-white border border-stone-200 rounded-3xl p-6 shadow-sm space-y-4">
-                                            <h4 className="font-bold text-xs text-valley-green uppercase font-mono border-b border-stone-100 pb-3">Perangkat Terhubung</h4>
-                                            
-                                            <div className="text-center py-10 border border-dashed border-stone-200 rounded-2xl bg-stone-50/50 flex flex-col items-center">
-                                                <span className="text-2xl mb-3">⌚</span>
-                                                <h5 className="font-bold text-xs text-valley-green mb-1">Tidak ada perangkat terhubung</h5>
-                                                <p className="text-[10px] text-stone-400 max-w-xs leading-normal mb-4">Hubungkan smartwatch atau aplikasi lain untuk sinkronisasi data latihan secara otomatis.</p>
-                                                <button className="py-2 px-5 bg-valley-green hover:opacity-90 text-white rounded-lg text-[10px] font-bold transition">Hubungkan Perangkat</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-
-                            </div>
-                        </div>
-                    )}
-
-                    {/* TAB 5: HASIL REKOMENDASI TAB */}
-                    {activeTab === 'rekomendasi' && (
-                        <div className="space-y-8 animate-fade-in">
-                            <div className="bg-white border border-stone-200 rounded-3xl p-6 md:p-8 shadow-md">
-                                <div className="flex justify-between items-center border-b border-stone-100 pb-4 mb-6">
-                                    <div>
-                                        <h3 className="font-extrabold text-lg text-valley-green">Hasil Rekomendasi Olahraga</h3>
-                                        <p className="text-xs text-stone-400 mt-1">Berdasarkan hasil analisis SAW terakhir Anda di landing page.</p>
-                                    </div>
-                                    <a href={route('home') + '#form'} className="py-2.5 px-5 rounded-full bg-valley-green hover:opacity-90 text-white text-xs font-bold transition shadow-3xs">
-                                        Analisis Ulang ↺
-                                    </a>
-                                </div>
-
-                                <div className="grid md:grid-cols-12 gap-8 items-start">
-                                    {/* Left: Summary card */}
-                                    <div className="md:col-span-5 bg-stone-50/50 border border-stone-200/60 p-6 rounded-2xl flex flex-col items-center text-center shadow-3xs">
-                                        <div className="relative w-24 h-24 flex items-center justify-center mb-4">
-                                            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                                                <path className="text-stone-100" strokeWidth="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                                <path className="text-emerald-500" strokeDasharray="92, 100" strokeWidth="3" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                            </svg>
-                                            <div className="absolute font-mono text-xl font-black text-valley-green">92%</div>
-                                        </div>
-                                        
-                                        <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">Rekomendasi Utama</span>
-                                        <h4 className="text-lg font-black text-valley-green mt-1">{WEEKLY_PROGRAMS[activeProgramKey].sport}</h4>
-                                        <p className="text-xs text-stone-500 mt-2 leading-relaxed max-w-xs">{WEEKLY_PROGRAMS[activeProgramKey].desc}</p>
-                                        
-                                        {/* Physical profile stats inside card */}
-                                        <div className="w-full border-t border-stone-200/80 mt-5 pt-4 space-y-2 text-xs text-left">
-                                            <div className="flex justify-between">
-                                                <span className="text-stone-400">BMI / IMT:</span>
-                                                <span className="font-bold text-adaline-ink">{user.bmi || '22.2'} (Normal)</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-stone-400">Kondisi Fisik:</span>
-                                                <span className="font-bold text-adaline-ink">
-                                                    {user.physical_condition === 'knee_injury' ? 'Cedera Lutut' : 
-                                                     user.physical_condition === 'asthma' ? 'Gangguan Asma' : 
-                                                     user.physical_condition === 'heart' ? 'Masalah Jantung' : 'Tidak Ada (Fit)'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Right: Ranking list */}
-                                    <div className="md:col-span-7 space-y-4">
-                                        <h4 className="font-bold text-xs text-stone-400 uppercase tracking-widest font-mono">Peringkat Alternatif Olahraga</h4>
-                                        
-                                        <div className="space-y-3">
-                                            {[
-                                                { rank: 1, name: 'Jogging', pct: 92, active: activeProgramKey === 'Walking or jogging' },
-                                                { rank: 2, name: 'Bersepeda', pct: 80, active: activeProgramKey === 'Cycling' },
-                                                { rank: 3, name: 'Yoga', pct: 78, active: activeProgramKey === 'Yoga' },
-                                                { rank: 4, name: 'Renang', pct: 74, active: activeProgramKey === 'Swimming' },
-                                                { rank: 5, name: 'Gym / Fitness', pct: 60, active: activeProgramKey === 'Gym' },
-                                            ].map((sport) => (
-                                                <div key={sport.rank} className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
-                                                    sport.active ? 'bg-forest-dew/10 border-valley-green/30' : 'bg-white border-stone-100 hover:border-stone-200'
-                                                }`}>
-                                                    <div className="flex items-center gap-3.5 min-w-0">
-                                                        <span className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center shrink-0 ${
-                                                            sport.active ? 'bg-valley-green text-white' : 'bg-stone-50 text-stone-500 border border-stone-200/55'
-                                                        }`}>
-                                                            {sport.rank}
-                                                        </span>
+                                        {/* READ MODE */}
+                                        {!isEditingProfile && (
+                                            <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
+                                                {[
+                                                    { icon: '👤', lbl: 'Nama Lengkap',  val: user.name },
+                                                    { icon: '⚥',  lbl: 'Jenis Kelamin', val: user.gender === 'Male' ? 'Laki-laki' : user.gender === 'Female' ? 'Perempuan' : '-' },
+                                                    { icon: '🎂', lbl: 'Tanggal Lahir', val: user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-' },
+                                                    { icon: '🔢', lbl: 'Usia',           val: user.age ? `${user.age} Tahun` : '-' },
+                                                    { icon: '📧', lbl: 'Email',          val: user.email },
+                                                    { icon: '📞', lbl: 'Nomor Telepon',  val: user.phone || '-' },
+                                                    { icon: '🏠', lbl: 'Alamat',         val: user.address || '-' },
+                                                    { icon: '💼', lbl: 'Pekerjaan',      val: user.job || '-' },
+                                                    { icon: '🎯', lbl: 'Target Aktivitas', val: user.activity_level || '-' },
+                                                ].map((row, idx) => (
+                                                    <div key={idx} className="flex items-start gap-3 pb-3.5 border-b border-stone-50 last:border-0">
+                                                        <div className="w-8 h-8 rounded-full bg-stone-50 border border-stone-100 flex items-center justify-center shrink-0 text-sm">
+                                                            {row.icon}
+                                                        </div>
                                                         <div className="min-w-0">
-                                                            <span className="font-bold text-xs text-adaline-ink block leading-snug">{sport.name}</span>
-                                                            {sport.active && (
-                                                                <span className="inline-block text-[8px] font-bold uppercase font-mono bg-forest-dew/40 text-valley-green px-1.5 py-0.5 rounded mt-0.5">
-                                                                    Rekomendasi Terpilih
-                                                                </span>
-                                                            )}
+                                                            <span className="text-[9px] text-stone-400 font-bold uppercase tracking-wider block leading-none">{row.lbl}</span>
+                                                            <span className="text-xs font-semibold text-adaline-ink mt-1 block break-words">{row.val || '-'}</span>
                                                         </div>
                                                     </div>
-                                                    
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* EDIT MODE */}
+                                        {isEditingProfile && (
+                                            <form id="profile-edit-form" onSubmit={handleProfileSave}>
+                                                <div className="grid sm:grid-cols-2 gap-4">
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-bold text-stone-400 uppercase">Nama Lengkap *</label>
+                                                        <input required type="text" value={profileForm.name} onChange={e => setProfileForm(p => ({...p, name: e.target.value}))} placeholder="Nama lengkap" className="w-full text-xs py-2.5 px-3.5 rounded-xl border border-stone-200 bg-stone-50/50 focus:border-valley-green outline-none transition" />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-bold text-stone-400 uppercase">Jenis Kelamin</label>
+                                                        <select value={profileForm.gender} onChange={e => setProfileForm(p => ({...p, gender: e.target.value}))} className="w-full text-xs py-2.5 px-3.5 rounded-xl border border-stone-200 bg-stone-50/50 focus:border-valley-green outline-none transition">
+                                                            <option value="">-- Pilih --</option>
+                                                            <option value="Male">Laki-laki</option>
+                                                            <option value="Female">Perempuan</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-bold text-stone-400 uppercase">Tanggal Lahir</label>
+                                                        <input type="date" value={profileForm.date_of_birth} onChange={e => setProfileForm(p => ({...p, date_of_birth: e.target.value}))} className="w-full text-xs py-2.5 px-3.5 rounded-xl border border-stone-200 bg-stone-50/50 focus:border-valley-green outline-none transition" />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-bold text-stone-400 uppercase">Usia (Tahun)</label>
+                                                        <input type="number" min="1" max="120" value={profileForm.age} onChange={e => setProfileForm(p => ({...p, age: e.target.value}))} placeholder="22" className="w-full text-xs py-2.5 px-3.5 rounded-xl border border-stone-200 bg-stone-50/50 focus:border-valley-green outline-none transition" />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-bold text-stone-400 uppercase">Nomor Telepon</label>
+                                                        <input type="tel" value={profileForm.phone} onChange={e => setProfileForm(p => ({...p, phone: e.target.value}))} placeholder="+62 812 xxxx xxxx" className="w-full text-xs py-2.5 px-3.5 rounded-xl border border-stone-200 bg-stone-50/50 focus:border-valley-green outline-none transition" />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-bold text-stone-400 uppercase">Pekerjaan</label>
+                                                        <input type="text" value={profileForm.job} onChange={e => setProfileForm(p => ({...p, job: e.target.value}))} placeholder="Pelajar / Mahasiswa..." className="w-full text-xs py-2.5 px-3.5 rounded-xl border border-stone-200 bg-stone-50/50 focus:border-valley-green outline-none transition" />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-bold text-stone-400 uppercase">Target Aktivitas</label>
+                                                        <select value={profileForm.activity_level} onChange={e => setProfileForm(p => ({...p, activity_level: e.target.value}))} className="w-full text-xs py-2.5 px-3.5 rounded-xl border border-stone-200 bg-stone-50/50 focus:border-valley-green outline-none transition">
+                                                            <option value="">-- Pilih --</option>
+                                                            <option value="Rendah">Rendah</option>
+                                                            <option value="Sedang">Sedang</option>
+                                                            <option value="Tinggi">Tinggi</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className="space-y-1 sm:col-span-2">
+                                                        <label className="text-[10px] font-bold text-stone-400 uppercase">Alamat</label>
+                                                        <input type="text" value={profileForm.address} onChange={e => setProfileForm(p => ({...p, address: e.target.value}))} placeholder="Kota / Provinsi..." className="w-full text-xs py-2.5 px-3.5 rounded-xl border border-stone-200 bg-stone-50/50 focus:border-valley-green outline-none transition" />
+                                                    </div>
+                                                </div>
+                                                <p className="text-[9px] text-stone-400 mt-3">* Wajib diisi. Email tidak dapat diubah dari sini.</p>
+                                            </form>
+                                        )}
+                                    </div>
+
+                                    {/* Right: Ringkasan Statistik */}
+                                    <div className="lg:col-span-2 bg-white border border-stone-200 rounded-3xl p-6 shadow-sm">
+                                        <h3 className="font-extrabold text-sm text-valley-green mb-4 pb-3 border-b border-stone-100">Ringkasan Statistik</h3>
+                                        <div className="space-y-3">
+                                            {statsData.map((s, idx) => (
+                                                <div key={idx} className="flex items-center justify-between py-2 border-b border-stone-50 last:border-0">
                                                     <div className="flex items-center gap-3">
-                                                        <span className="font-mono text-xs font-bold text-valley-green">{sport.pct}%</span>
-                                                        <div className="w-16 h-1.5 rounded-full bg-stone-100 overflow-hidden shrink-0">
-                                                            <div className="h-full bg-emerald-500" style={{ width: `${sport.pct}%` }}></div>
+                                                        <div className={`w-8 h-8 rounded-full ${s.color} flex items-center justify-center text-sm shrink-0`}>
+                                                            {s.icon}
                                                         </div>
+                                                        <span className="text-xs text-stone-500 font-medium">{s.label}</span>
                                                     </div>
+                                                    <span className="text-sm font-extrabold text-valley-green">{s.val}</span>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    )}
 
-                    {/* TAB 6: TESTIMONI SAYA (Standalone Sidebar Tab) */}
+                                {/* ── BOTTOM ROW: Pengaturan + Hapus Akun ──── */}
+                                <div className="grid lg:grid-cols-5 gap-5 items-start">
+                                    {/* Pengaturan Akun */}
+                                    <div className="lg:col-span-3 bg-white border border-stone-200 rounded-3xl p-6 shadow-sm">
+                                        <h3 className="font-extrabold text-sm text-valley-green mb-1 pb-3 border-b border-stone-100">Pengaturan Akun</h3>
+                                        <p className="text-[10px] text-stone-400 mb-4 mt-1">Atur preferensi dasar akun Anda.</p>
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between gap-4">
+                                                <div>
+                                                    <span className="text-xs font-bold text-adaline-ink block">Bahasa Aplikasi</span>
+                                                    <span className="text-[10px] text-stone-400 mt-0.5 block">Bahasa yang digunakan di aplikasi</span>
+                                                </div>
+                                                <select className="text-xs border border-stone-200 bg-white rounded-xl px-3 py-2 focus:border-valley-green outline-none cursor-pointer shrink-0">
+                                                    <option>Bahasa Indonesia</option>
+                                                    <option>English</option>
+                                                </select>
+                                            </div>
+                                            <div className="flex items-center justify-between gap-4 pt-4 border-t border-stone-50">
+                                                <div>
+                                                    <span className="text-xs font-bold text-adaline-ink block">Satuan Pengukuran</span>
+                                                    <span className="text-[10px] text-stone-400 mt-0.5 block">Satuan untuk tinggi badan dan berat badan</span>
+                                                </div>
+                                                <select className="text-xs border border-stone-200 bg-white rounded-xl px-3 py-2 focus:border-valley-green outline-none cursor-pointer shrink-0">
+                                                    <option>cm / kg</option>
+                                                    <option>in / lbs</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Hapus Akun */}
+                                    <div className="lg:col-span-2 bg-white border border-red-100 rounded-3xl p-6 shadow-sm">
+                                        <div className="flex items-start gap-3 mb-4">
+                                            <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                                                <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            </div>
+                                            <div>
+                                                <h3 className="font-extrabold text-sm text-red-600">Hapus Akun</h3>
+                                                <p className="text-[10px] text-stone-400 mt-0.5 leading-relaxed">Hapus akun dan semua data secara permanen. Tindakan ini tidak dapat dibatalkan.</p>
+                                            </div>
+                                        </div>
+                                        <Link
+                                            href={route('profile.destroy')}
+                                            method="delete"
+                                            as="button"
+                                            data={{ password: '' }}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                const pw = prompt('Masukkan password Anda untuk mengonfirmasi penghapusan akun:');
+                                                if (pw !== null && pw.trim() !== '') {
+                                                    if (confirm('Apakah Anda benar-benar yakin ingin menghapus akun ini? Semua data akan hilang permanen.')) {
+                                                        router.delete(route('profile.destroy'), { data: { password: pw }, preserveScroll: false });
+                                                    }
+                                                }
+                                            }}
+                                            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-400 text-red-600 rounded-xl font-bold text-xs transition cursor-pointer"
+                                        >
+                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            Hapus Akun Saya
+                                        </Link>
+                                    </div>
+                                </div>
+
+                            </div>
+                        );
+                    })()}
+
+                    {/* TAB 5: HASIL REKOMENDASI TAB */}
+                    {activeTab === 'rekomendasi' && (() => {
+                        const sportDetails = SPORT_RECOMMENDATION_DETAILS[selectedRecommendSport] || SPORT_RECOMMENDATION_DETAILS['Jogging'];
+                        const formattedBmi = user.bmi ? Number(user.bmi).toFixed(2) : '21.75';
+                        const bmiStatus = user.bmi ? (
+                            user.bmi < 18.5 ? 'Kurus' :
+                            user.bmi < 25 ? 'Normal' :
+                            user.bmi < 30 ? 'Overweight' : 'Obesitas'
+                        ) : 'Normal';
+
+                        const translateCondition = (cond) => {
+                            switch(cond) {
+                                case 'knee_injury': return 'Cedera Lutut';
+                                case 'asthma': return 'Gangguan Asma';
+                                case 'heart': return 'Masalah Jantung';
+                                default: return 'Tidak Ada (Fit)';
+                            }
+                        };
+
+                        const renderStars = (count) => {
+                            return (
+                                <div className="flex gap-0.5 justify-center">
+                                    {Array.from({ length: 5 }).map((_, index) => (
+                                        <svg
+                                            key={index}
+                                            className={`w-3.5 h-3.5 ${index < count ? 'text-amber-400 fill-amber-400' : 'text-white/30 fill-none stroke-current stroke-2'}`}
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                        </svg>
+                                    ))}
+                                </div>
+                            );
+                        };
+
+                        return (
+                            <div className="animate-fade-in pb-12 max-w-[850px] text-left">
+                                {/* Header */}
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                    <div>
+                                        <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">Hasil Rekomendasi</span>
+                                        <h1 className="text-2xl font-black text-adaline-ink mt-0.5">Hasil Rekomendasi Olahraga Anda</h1>
+                                        <p className="text-xs text-stone-400 mt-1">
+                                            Berdasarkan data profil dan kebiasaan Anda berikut rekomendasi olahraga yang paling sesuai
+                                        </p>
+                                    </div>
+                                    <a href={route('home') + '#form'} className="py-2.5 px-5 rounded-xl border border-stone-200 hover:border-valley-green text-stone-600 hover:text-valley-green bg-white font-bold text-xs transition self-start sm:self-center shrink-0">
+                                        Analisis Ulang ↺
+                                    </a>
+                                </div>
+
+                                {/* Main Green Card */}
+                                <div className="mt-6 bg-[#0a482e] rounded-[32px] p-6 md:p-8 shadow-lg text-white flex flex-col justify-between gap-6 relative overflow-hidden">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                        {/* Left Side: Badge + Info */}
+                                        <div className="flex items-start gap-4 md:gap-6">
+                                            <img 
+                                                src="/images/badge 1.png" 
+                                                alt="Gold Medal Badge" 
+                                                className="w-16 h-16 md:w-20 md:h-20 object-contain shrink-0 mt-1" 
+                                            />
+                                            
+                                            <div className="space-y-1">
+                                                <span className="inline-block bg-[#e2f3e5] text-[#0a482e] text-[10px] font-extrabold tracking-wider px-3 py-1 rounded-full uppercase">
+                                                    Rekomendasi Utama
+                                                </span>
+                                                
+                                                <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight mt-1 text-white">
+                                                    {sportDetails.name}
+                                                </h2>
+                                                
+                                                <div className="mt-2">
+                                                    <span className="inline-block bg-[#0c5938] text-white text-xs font-semibold px-3.5 py-1 rounded-full border border-white/10">
+                                                        {sportDetails.suitability}
+                                                    </span>
+                                                </div>
+                                                
+                                                <div className="mt-4 pt-2 space-y-1 text-xs text-white/95">
+                                                    <h4 className="font-bold text-xs text-white">Kenapa Direkomendasikan ?</h4>
+                                                    <div className="grid grid-cols-[105px_16px_1fr] gap-y-1 items-center mt-1.5 text-[11px] md:text-xs text-white/80">
+                                                        <span>BMI / IMT</span>
+                                                        <span className="text-center">:</span>
+                                                        <span className="font-semibold text-white">{formattedBmi} ({bmiStatus})</span>
+                                                        
+                                                        <span>Kondisi Fisik</span>
+                                                        <span className="text-center">:</span>
+                                                        <span className="font-semibold text-white">{translateCondition(user.physical_condition)}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Right Side: Circular Progress */}
+                                        <div className="flex flex-col items-center justify-center self-center md:mr-4 shrink-0">
+                                            <div className="relative w-32 h-32 flex items-center justify-center">
+                                                {/* SVG Progress Circle */}
+                                                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                                    {/* Track */}
+                                                    <circle
+                                                        cx="50"
+                                                        cy="50"
+                                                        r="40"
+                                                        className="stroke-white/10"
+                                                        strokeWidth="4"
+                                                        fill="none"
+                                                    />
+                                                    {/* Progress Bar */}
+                                                    <circle
+                                                        cx="50"
+                                                        cy="50"
+                                                        r="40"
+                                                        className="stroke-[#A3E635]"
+                                                        strokeWidth="8"
+                                                        strokeDasharray={2 * Math.PI * 40}
+                                                        strokeDashoffset={2 * Math.PI * 40 * (1 - sportDetails.score / 100)}
+                                                        strokeLinecap="round"
+                                                        fill="none"
+                                                    />
+                                                    
+                                                    {/* Decorative Accent Dot at top-left of circle */}
+                                                    <circle
+                                                        cx={50 + 40 * Math.cos((-105 * Math.PI) / 180)}
+                                                        cy={50 + 40 * Math.sin((-105 * Math.PI) / 180)}
+                                                        r="4"
+                                                        fill="#e2f3e5"
+                                                    />
+                                                </svg>
+                                                
+                                                {/* Content Inside */}
+                                                <div className="absolute text-center flex flex-col items-center justify-center">
+                                                    <span className="text-3xl font-extrabold tracking-tight text-white leading-none">
+                                                        {sportDetails.score}%
+                                                    </span>
+                                                    <span className="text-[9px] text-white/75 font-semibold tracking-wide mt-1 block">
+                                                        Skor Kecocokan
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Bottom Section: 4 outlined boxes */}
+                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mt-2">
+                                        <div className="border border-white/15 rounded-2xl p-4 bg-white/5 flex flex-col items-center justify-center text-center backdrop-blur-3xs">
+                                            <span className="text-[11px] text-white/70 font-semibold block mb-1">
+                                                Intensitas
+                                            </span>
+                                            {renderStars(sportDetails.stars)}
+                                            <span className="text-[10px] text-white font-medium block mt-1.5 leading-none">
+                                                {sportDetails.intensityLabel}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="border border-white/15 rounded-2xl p-4 bg-white/5 flex flex-col items-center justify-center text-center backdrop-blur-3xs">
+                                            <span className="text-[11px] text-white/70 font-semibold block mb-1">
+                                                Durasi Disarankan
+                                            </span>
+                                            <span className="text-xs md:text-sm text-white font-bold mt-1.5 block leading-none">
+                                                {sportDetails.duration}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="border border-white/15 rounded-2xl p-4 bg-white/5 flex flex-col items-center justify-center text-center backdrop-blur-3xs">
+                                            <span className="text-[11px] text-white/70 font-semibold block mb-1">
+                                                Frekuensi
+                                            </span>
+                                            <span className="text-xs md:text-sm text-white font-bold mt-1.5 block leading-none">
+                                                {sportDetails.frequency}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="border border-white/15 rounded-2xl p-4 bg-white/5 flex flex-col items-center justify-center text-center backdrop-blur-3xs">
+                                            <span className="text-[11px] text-white/70 font-semibold block mb-1">
+                                                Kalori Terbakar
+                                            </span>
+                                            <span className="text-xs md:text-sm text-white font-bold mt-1.5 block leading-none">
+                                                {sportDetails.calories}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Pilih Rekomendasi */}
+                                <div className="mt-8 space-y-4">
+                                    <div className="text-left">
+                                        <h3 className="font-extrabold text-lg text-adaline-ink">Pilih Rekomendasi</h3>
+                                        <p className="text-xs text-stone-400">
+                                            Pilih salah satu rekomendasi terbaik yang ingin Anda jadikan dasar program latihan
+                                        </p>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        {[
+                                            { 
+                                                key: 'Jogging', 
+                                                title: 'Jogging', 
+                                                desc: 'Olahraga terbaik untuk meningkatkan kebugaran kardiovaskular dan menjaga kesehatan jantung.',
+                                                pct: 92 
+                                            },
+                                            { 
+                                                key: 'Bersepeda', 
+                                                title: 'Bersepeda', 
+                                                desc: 'Meningkatkan daya tahan tubuh dan memperkuat otot kaki serta jantung.',
+                                                pct: 80 
+                                            },
+                                            { 
+                                                key: 'Yoga', 
+                                                title: 'Yoga', 
+                                                desc: 'Meningkatkan fleksibilitas tubuh, keseimbangan, dan kesehatan mental.',
+                                                pct: 78 
+                                            }
+                                        ].map((item) => {
+                                            const isSelected = selectedRecommendSport === item.key;
+                                            return (
+                                                <div
+                                                    key={item.key}
+                                                    onClick={() => handleSelectRecommendSport(item.key)}
+                                                    className={`bg-white border rounded-[20px] p-5 cursor-pointer transition-all duration-300 flex flex-col justify-between h-full text-left ${
+                                                        isSelected 
+                                                            ? 'border-valley-green ring-2 ring-valley-green/10 shadow-md transform scale-[1.01]' 
+                                                            : 'border-stone-200 hover:border-stone-300 hover:shadow-xs'
+                                                    }`}
+                                                >
+                                                    <div className="space-y-2">
+                                                        <h4 className="font-bold text-sm text-[#0a482e] uppercase tracking-wide">
+                                                            {item.title}
+                                                        </h4>
+                                                        <p className="text-[11px] text-stone-500 leading-relaxed">
+                                                            {item.desc}
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    {/* Compatibility Progress bar at bottom */}
+                                                    <div className="mt-5 space-y-1">
+                                                        <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                                                            <div 
+                                                                className="h-full bg-valley-green rounded-full transition-all duration-500" 
+                                                                style={{ width: `${item.pct}%` }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
                     {activeTab === 'testimoni' && (
-                        <div className="space-y-8 animate-fade-in">
+                        <div className="space-y-8 animate-fade-in text-left">
                             {/* Hero section */}
-                            <div className="bg-white border border-stone-200/80 rounded-3xl p-6 shadow-sm relative overflow-hidden">
-                                <div className="absolute right-0 bottom-0 w-40 h-40 bg-forest-dew/10 rounded-full blur-2xl"></div>
-                                <div className="space-y-2 relative z-10">
-                                    <h1 className="text-xl font-extrabold tracking-tight text-valley-green flex items-center gap-2">💬 Testimoni Saya</h1>
-                                    <p className="text-xs text-stone-400 max-w-lg leading-relaxed">Bagikan pengalaman Anda menggunakan Optimove. Testimoni yang disetujui admin akan ditampilkan di halaman utama untuk memotivasi pengguna lain.</p>
+                            <div className="bg-white border border-stone-200/80 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row items-center gap-6 md:gap-8 max-w-4xl relative overflow-visible">
+                                <img 
+                                    src="/images/halooo.png" 
+                                    alt="Waving guy illustration" 
+                                    className="h-32 md:h-36 object-contain shrink-0"
+                                />
+                                <div className="space-y-1.5 text-left">
+                                    <h1 className="text-xl md:text-2xl font-extrabold text-valley-green">Bagikan Pengalaman Anda</h1>
+                                    <p className="text-xs text-stone-500 font-semibold leading-relaxed max-w-lg">
+                                        Testimoni yang Anda berikan sangat berarti untuk membantu kami terus berkembang dan memotivasi pengguna lain.
+                                    </p>
                                 </div>
                             </div>
 
                             <div className="grid lg:grid-cols-12 gap-8 items-start">
                                 {/* Left: Testimonial Form */}
-                                <div className="lg:col-span-7 bg-white border border-stone-200 rounded-3xl p-6 shadow-sm space-y-5">
+                                <div className="lg:col-span-7 bg-white border border-stone-200 rounded-3xl p-6 shadow-sm space-y-5 text-left">
                                     <div>
-                                        <h4 className="font-bold text-xs text-valley-green uppercase font-mono border-b border-stone-100 pb-3">Kirim Pesan Testimoni</h4>
-                                        <p className="text-[11px] text-stone-400 mt-2 leading-normal">
-                                            Berikan ulasan jujur Anda tentang Optimove untuk membantu kami terus berkembang dan memberikan motivasi bagi pengguna lain.
+                                        <h4 className="font-extrabold text-sm text-valley-green">Kirim Testimoni</h4>
+                                        <p className="text-[11px] text-stone-400 font-semibold mt-1">
+                                            Berikan ulasan jujur Anda tentang Optimove
                                         </p>
                                     </div>
 
@@ -1492,17 +2200,28 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                         <form onSubmit={handleTestimonialSubmit} className="space-y-4">
                                             <div className="space-y-1.5">
                                                 <label className="text-[10px] font-bold text-stone-400 uppercase block">Rating Anda</label>
-                                                <div className="flex gap-1.5">
-                                                    {[1, 2, 3, 4, 5].map((star) => (
-                                                        <button
-                                                            key={star}
-                                                            type="button"
-                                                            onClick={() => testimonialForm.setData('rating', star)}
-                                                            className="text-2xl transition hover:scale-110 outline-none cursor-pointer"
-                                                        >
-                                                            {star <= testimonialForm.data.rating ? '★' : '☆'}
-                                                        </button>
-                                                    ))}
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex gap-1">
+                                                        {[1, 2, 3, 4, 5].map((star) => (
+                                                            <button
+                                                                key={star}
+                                                                type="button"
+                                                                onClick={() => testimonialForm.setData('rating', star)}
+                                                                className="text-2xl transition hover:scale-110 outline-none cursor-pointer"
+                                                            >
+                                                                <span className={star <= testimonialForm.data.rating ? 'text-emerald-700' : 'text-stone-300'}>
+                                                                    ★
+                                                                </span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    <span className="text-xs font-bold text-stone-500">
+                                                        {testimonialForm.data.rating === 1 && 'Sangat Buruk'}
+                                                        {testimonialForm.data.rating === 2 && 'Buruk'}
+                                                        {testimonialForm.data.rating === 3 && 'Cukup'}
+                                                        {testimonialForm.data.rating === 4 && 'Baik'}
+                                                        {testimonialForm.data.rating === 5 && 'Luar biasa'}
+                                                    </span>
                                                 </div>
                                             </div>
 
@@ -1510,7 +2229,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                 <div className="flex justify-between items-center">
                                                     <label className="text-[10px] font-bold text-stone-400 uppercase">Pesan Testimoni</label>
                                                     <span className="text-[9px] text-stone-400">
-                                                        {300 - (testimonialForm.data.content?.length || 0)} karakter tersisa
+                                                        {300 - (testimonialForm.data.content?.length || 0)}/300 karakter
                                                     </span>
                                                 </div>
                                                 <textarea
@@ -1532,9 +2251,9 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                             <button
                                                 type="submit"
                                                 disabled={testimonialForm.processing}
-                                                className="w-full py-3 bg-valley-green hover:opacity-90 text-white rounded-full font-bold text-xs transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                                                className="w-full py-3 bg-[#0a482e] hover:bg-[#0a482e]/90 text-white rounded-xl font-bold text-xs transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
                                             >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                                <svg className="w-3.5 h-3.5 transform rotate-45 -translate-y-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                                                 </svg>
                                                 Kirim Testimoni
@@ -1544,14 +2263,19 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                 </div>
 
                                 {/* Right: Existing Testimonial List & Status */}
-                                <div className="lg:col-span-5 bg-white border border-stone-200 rounded-3xl p-6 shadow-sm space-y-4">
-                                    <h4 className="font-bold text-xs text-valley-green uppercase font-mono border-b border-stone-100 pb-2">Status Testimoni Anda</h4>
+                                <div className="lg:col-span-5 bg-white border border-stone-200 rounded-3xl p-6 shadow-sm space-y-4 text-left">
+                                    <div>
+                                        <h4 className="font-extrabold text-sm text-valley-green">Status Testimoni Anda</h4>
+                                        <p className="text-[11px] text-stone-400 font-semibold mt-1">Lihat status pengiriman Anda di sini</p>
+                                    </div>
 
                                     {testimonials.length === 0 ? (
-                                        <div className="text-center py-12 border border-dashed border-stone-200 rounded-2xl bg-stone-50/50">
-                                            <span className="text-3xl block mb-3">💬</span>
-                                            <p className="text-xs text-stone-400 font-medium">Anda belum mengirimkan testimoni.</p>
-                                            <p className="text-[10px] text-stone-400 mt-1">Kirim pesan testimoni untuk berbagi pengalaman Anda.</p>
+                                        <div className="bg-[#edf6ed]/40 border border-[#edf6ed]/60 rounded-2xl p-6 flex flex-col items-center justify-center text-center space-y-3">
+                                            <img src="/images/image 2.png" alt="No testimonial" className="w-14 h-14 object-contain" />
+                                            <div className="space-y-0.5">
+                                                <p className="text-xs font-bold text-adaline-ink">Anda belum mengirimkan testimoni,</p>
+                                                <p className="text-[10px] text-stone-400 font-semibold leading-relaxed">Kirim pesan testimoni untuk berbagi pengalaman Anda</p>
+                                            </div>
                                         </div>
                                     ) : (
                                         <div className="space-y-4">
@@ -1617,10 +2341,40 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
 
                         <div className="flex flex-col items-center gap-3">
                             <div className="text-[10px] font-mono font-bold text-amber-900 bg-amber-100 px-3.5 py-1.5 rounded-full border border-amber-200">
-                                Streak Anda: {user.workout_streak || 1} Hari
+                                Streak Anda: {user.workout_streak} Hari
                             </div>
                             <button onClick={() => setShowBadgeModal(false)} className="w-full mt-2 py-2.5 rounded-full font-bold text-xs bg-valley-green hover:opacity-90 text-white transition">
                                 Keren, Terima Kasih!
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* WEEKLY ACHIEVEMENT CONGRATS MODAL POP-UP */}
+            {showWeeklyAchievementModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-xs animate-fade-in">
+                    <div className="bg-white border-2 border-[#166534] rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden animate-scale-up">
+                        <div className="absolute -top-12 -left-12 w-32 h-32 bg-[#edf6ed] rounded-full blur-3xl opacity-60" />
+                        <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-forest-dew/40 rounded-full blur-3xl opacity-60" />
+
+                        <div className="w-20 h-20 mx-auto mb-5 bg-[#edf6ed] rounded-full flex items-center justify-center border-4 border-[#d7e8b5] relative z-10 animate-bounce">
+                            <img src="/images/badge 1.png" alt="Gold Medal" className="w-10 h-10 object-contain" />
+                        </div>
+
+                        <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#166534] mb-1 font-bold">Pencapaian Luar Biasa!</h3>
+                        <h2 className="text-xl font-black text-adaline-ink tracking-tight mb-3">Minggu Ini Selesai</h2>
+                        
+                        <p className="text-xs text-stone-500 leading-relaxed mb-6">
+                            Selamat! Anda telah menyelesaikan seluruh aktivitas latihan mingguan Anda secara konsisten. Tubuh Anda berterima kasih atas komitmen luar biasa ini!
+                        </p>
+
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="text-[10px] font-mono font-bold text-[#166534] bg-[#edf6ed] px-3.5 py-1.5 rounded-full border border-[#d7e8b5]/50">
+                                Status: 100% Selesai! 🎉
+                            </div>
+                            <button onClick={() => setShowWeeklyAchievementModal(false)} className="w-full mt-2 py-2.5 rounded-xl font-bold text-xs bg-[#0a482e] hover:bg-[#0a482e]/90 text-white transition">
+                                Mantap, Lanjutkan!
                             </button>
                         </div>
                     </div>

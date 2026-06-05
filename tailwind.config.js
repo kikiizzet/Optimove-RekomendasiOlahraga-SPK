@@ -13,15 +13,15 @@ export default {
     theme: {
         extend: {
             colors: {
-                canvas: { ice: 'var(--color-canvas-ice)' },
-                adaline: { ink: 'var(--color-adaline-ink)' },
-                mist: { gray: 'var(--color-mist-gray)' },
-                deep: { earth: 'var(--color-deep-earth)' },
-                valley: { green: 'var(--color-valley-green)' },
-                stone: { moss: 'var(--color-stone-moss)' },
-                amber: { seed: 'var(--color-amber-seed)' },
-                forest: { dew: 'var(--color-forest-dew)' },
-                blackest: { night: 'var(--color-blackest-night)' },
+                canvas: { ice: '#fbfdf6' },
+                adaline: { ink: '#0a1d08' },
+                mist: { gray: '#c5ccb6' },
+                deep: { earth: '#31200b' },
+                valley: { green: '#203b14' },
+                stone: { moss: '#e0e5d5' },
+                amber: { seed: '#4a3212' },
+                forest: { dew: '#d7e8b5' },
+                blackest: { night: '#000000' },
             },
             fontFamily: {
                 sans: ['var(--font-akkurat)', ...defaultTheme.fontFamily.sans],

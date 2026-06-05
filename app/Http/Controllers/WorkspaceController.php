@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use App\Models\WorkoutTodo;
 use App\Models\WorkoutJournal;
 use App\Models\Testimonial;
+use App\Models\RecommendationHistory;
 
 class WorkspaceController extends Controller
 {
@@ -34,6 +35,50 @@ class WorkspaceController extends Controller
             ->orderBy('is_completed')
             ->orderBy('id')
             ->get();
+
+        if ($todayTodos->isEmpty()) {
+            // Gunakan rekomendasi terbaru user jika ada
+            $topSports = [];
+            if ($user->last_recommendation) {
+                // Ambil top 3 dari riwayat rekomendasi terakhir user
+                $lastHistory = RecommendationHistory::latest()->first();
+                if ($lastHistory && !empty($lastHistory->all_recommendations)) {
+                    $allRecs = is_array($lastHistory->all_recommendations)
+                        ? $lastHistory->all_recommendations
+                        : json_decode($lastHistory->all_recommendations, true);
+                    $topSports = array_slice($allRecs ?? [], 0, 3);
+                }
+            }
+
+            if (!empty($topSports)) {
+                // Buat todo dari top 3 rekomendasi
+                foreach ($topSports as $s) {
+                    WorkoutTodo::create([
+                        'user_id'    => $user->id,
+                        'task_name'  => 'Lakukan ' . $s['sport'] . ' hari ini',
+                        'sport_name' => $s['sport'],
+                        'due_date'   => Carbon::today(),
+                        'is_completed' => false,
+                    ]);
+                }
+            } else {
+                // Fallback: buat 1 todo generik berdasarkan rekomendasi atau default
+                $sport = $user->last_recommendation ?? 'Walking or jogging';
+                WorkoutTodo::create([
+                    'user_id'    => $user->id,
+                    'task_name'  => 'Lakukan ' . $sport . ' hari ini',
+                    'sport_name' => $sport,
+                    'due_date'   => Carbon::today(),
+                    'is_completed' => false,
+                ]);
+            }
+
+            $todayTodos = WorkoutTodo::where('user_id', $user->id)
+                ->whereDate('due_date', Carbon::today())
+                ->orderBy('is_completed')
+                ->orderBy('id')
+                ->get();
+        }
 
         // Semua jurnal (terbaru di atas)
         $journals = WorkoutJournal::where('user_id', $user->id)
@@ -231,5 +276,30 @@ class WorkspaceController extends Controller
         $user->save();
 
         return back();
+    }
+
+    /**
+     * Update profil user (nama, jenis kelamin, dll.) dari halaman workspace.
+     */
+    public function updateProfile(Request $request)
+    {
+        $request->validate([
+            'name'           => 'required|string|max:255',
+            'gender'         => 'nullable|in:Male,Female',
+            'date_of_birth'  => 'nullable|date',
+            'phone'          => 'nullable|string|max:20',
+            'address'        => 'nullable|string|max:500',
+            'job'            => 'nullable|string|max:100',
+            'activity_level' => 'nullable|in:Rendah,Sedang,Tinggi',
+            'age'            => 'nullable|integer|min:1|max:120',
+        ]);
+
+        $user = Auth::user();
+        $user->fill($request->only([
+            'name', 'gender', 'date_of_birth', 'phone', 'address', 'job', 'activity_level', 'age'
+        ]));
+        $user->save();
+
+        return back()->with('success', 'Profil berhasil diperbarui!');
     }
 }

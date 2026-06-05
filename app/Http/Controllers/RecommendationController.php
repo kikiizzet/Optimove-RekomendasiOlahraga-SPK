@@ -178,16 +178,18 @@ class RecommendationController extends Controller
             }
         }
 
-        // Skor Hybrid SAW
+        // Skor rata-rata SAW murni — tidak menggunakan bobot frekuensi agar
+        // olahraga populer (Walking or jogging) tidak selalu mendominasi.
+        // Gunakan pure average SAW agar hasil rekomendasi betul-betul sesuai profil.
         $hybridScores = [];
         foreach ($sportBuckets as $sport => $b) {
             if ($b['count'] < 2) continue;
-            $avgSaw                 = $b['total'] / $b['count'];
-            $hybridScores[$sport]   = $avgSaw * log($b['count'] + 1);
+            // Pure average SAW: ukuran kesesuaian profil tanpa bias jumlah data
+            $hybridScores[$sport] = $b['total'] / $b['count'];
         }
 
         if (empty($hybridScores)) {
-            $hybridScores = ['Walking or jogging' => 1.4, 'Yoga' => 1.2, 'Swimming' => 1.0];
+            $hybridScores = ['Walking or jogging' => 0.7, 'Yoga' => 0.65, 'Swimming' => 0.6];
         }
 
         // Normalisasi relatif ke rentang 40–100%
@@ -199,7 +201,7 @@ class RecommendationController extends Controller
         foreach ($hybridScores as $sport => $h) {
             $scaledScores[$sport] = $range > 0.0001
                 ? round(40.0 + (($h - $minH) / $range) * 60.0, 1)
-                : 70.0;
+                : round(40.0 + ($h * 60.0), 1);
         }
         arsort($scaledScores);
 

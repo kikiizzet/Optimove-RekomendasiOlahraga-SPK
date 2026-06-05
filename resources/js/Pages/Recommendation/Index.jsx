@@ -276,7 +276,7 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
                             </h1>
                             
                             <p className="text-adaline-ink/70 text-base md:text-lg mb-8 max-w-xl leading-relaxed">
-                                Sistem Pendukung Keputusan (SPK) menggunakan metode **Simple Additive Weighting (SAW)** untuk memberikan rekomendasi olahraga terbaik berdasarkan profil tubuh dan kebiasaan Anda secara personal dan berbasis data.
+                                Sistem Pendukung Keputusan menggunakan metode Simple Additive Weighting (SAW) untuk memberikan rekomendasi olahraga terbaik berdasarkan profil tubuh dan kebiasaan Anda secara personal dan berbasis data.
                             </p>
                             
                             <div className="flex flex-wrap gap-4 mb-8">
@@ -1077,87 +1077,6 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
                         </div>
                         
                     </div>
-                </div>
-            </section>
-
-            {/* RIWAYAT ANALISIS TABLE */}
-            <section id="riwayat" className="py-24 bg-canvas-ice">
-                <div className="max-w-7xl mx-auto px-6 md:px-10">
-                    <div className="mb-10 text-center md:text-left">
-                        <span className="text-xs font-bold uppercase tracking-widest text-valley-green bg-forest-dew/40 px-3 py-1 rounded-full mb-3 inline-block">Histori</span>
-                        <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-adaline-ink">Riwayat Analisis Terakhir</h2>
-                        <p className="text-xs text-stone-400 mt-1">10 kalkulasi analisis terakhir yang diproses oleh sistem database kami</p>
-                    </div>
-
-                    {histories.length === 0 ? (
-                        <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-stone-200">
-                            <p className="text-sm text-stone-400">Belum ada riwayat analisis. Silakan lakukan kalkulasi pertama Anda di atas.</p>
-                        </div>
-                    ) : (
-                        <div className="bg-white border border-stone-200/80 rounded-3xl overflow-hidden shadow-xs">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-xs md:text-sm text-left">
-                                    <thead>
-                                        <tr className="bg-stone-50 border-b border-stone-100 text-stone-500 font-bold uppercase tracking-wider text-[10px]">
-                                            <th className="px-5 py-4">Waktu</th>
-                                            <th className="px-5 py-4">Gender</th>
-                                            <th className="px-5 py-4">Usia</th>
-                                            <th className="px-5 py-4">Kebugaran</th>
-                                            <th className="px-5 py-4">Frekuensi</th>
-                                            <th className="px-5 py-4">Pola Makan</th>
-                                            <th className="px-5 py-4 text-center">Rekomendasi Utama</th>
-                                            <th className="px-5 py-4 text-right">Skor</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-stone-100">
-                                        {histories.map((h) => (
-                                            <tr key={h.id} className="hover:bg-stone-50/50 transition">
-                                                <td className="px-5 py-3.5 font-mono text-[10px] text-stone-400">
-                                                    {new Date(h.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                                                </td>
-                                                <td className="px-5 py-3.5 font-bold text-stone-600">
-                                                    {h.gender === 'Male' ? 'Laki-laki' : 'Perempuan'}
-                                                </td>
-                                                <td className="px-5 py-3.5 text-stone-600">
-                                                    {h.age_group === '15 to 18' && '15–18 thn'}
-                                                    {h.age_group === '19 to 25' && '19–25 thn'}
-                                                    {h.age_group === '26 to 30' && '26–30 thn'}
-                                                    {h.age_group === '31 to 40' && '31–40 thn'}
-                                                    {h.age_group === '40 and above' && '40+ thn'}
-                                                </td>
-                                                <td className="px-5 py-3.5 text-stone-600">
-                                                    {h.fitness_level === 'Unfit' && 'Tidak Bugar'}
-                                                    {h.fitness_level === 'Average' && 'Rata-rata'}
-                                                    {h.fitness_level === 'Good' && 'Bugar'}
-                                                    {h.fitness_level === 'Very good' && 'Sangat Bugar'}
-                                                    {h.fitness_level === 'Excellent' && 'Prima'}
-                                                </td>
-                                                <td className="px-5 py-3.5 text-stone-500">
-                                                    {h.exercise_frequency === 'Never' && 'Tidak Pernah'}
-                                                    {h.exercise_frequency === '1 to 2 times a week' && '1–2x/minggu'}
-                                                    {h.exercise_frequency === '3 to 4 times a week' && '3–4x/minggu'}
-                                                    {h.exercise_frequency === 'Everyday' && 'Setiap Hari'}
-                                                </td>
-                                                <td className="px-5 py-3.5 text-stone-500">
-                                                    {h.diet === 'No' && 'Tidak'}
-                                                    {h.diet === 'Not always' && 'Kadang-kadang'}
-                                                    {h.diet === 'Yes' && 'Ya, Selalu'}
-                                                </td>
-                                                <td className="px-5 py-3.5 text-center">
-                                                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-forest-dew/40 text-valley-green border border-valley-green/10">
-                                                        {getSportInfo(h.top_recommendation).name}
-                                                    </span>
-                                                </td>
-                                                <td className="px-5 py-3.5 text-right font-mono font-bold text-emerald-600">
-                                                    {h.top_score}%
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </section>
 

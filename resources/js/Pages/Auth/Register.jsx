@@ -31,39 +31,58 @@ export default function Register() {
     };
 
     return (
-        <GuestLayout title="Buat Akun Baru">
+        <GuestLayout 
+            leftTitle="Mulai Perjalanan Sehat Anda!"
+            leftSubtitle="Daftar sekarang untuk mendapatkan rekomendasi olahraga terbaik yang dirancang khusus untuk Anda."
+            leftImage="/images/Main hp.png"
+            leftHighlights={[
+                "Rekomendasi olahraga personal yang akurat",
+                "Pantau aktivitas fisik mingguan Anda",
+                "Catat jurnal dan to-do list harian Anda"
+            ]}
+        >
             <Head title="Register" />
 
-            <form onSubmit={submit} className="space-y-5">
+            {/* Header inside the Card */}
+            <div className="mb-6 text-left">
+                <h2 className="text-2xl font-extrabold tracking-tight mb-1" style={{ color: THEME.ink }}>
+                    Daftar Optimove
+                </h2>
+                <p className="text-sm font-medium opacity-70" style={{ color: THEME.green }}>
+                    Silahkan lengkapi data di bawah ini untuk membuat akun baru
+                </p>
+            </div>
+
+            <form onSubmit={submit} className="space-y-4">
                 {/* Name */}
                 <div>
-                    <label className="block text-sm font-bold mb-2" style={{ color: THEME.ink }}>
+                    <label className="block text-sm font-bold mb-1.5" style={{ color: THEME.ink }}>
                         Nama Lengkap
                     </label>
                     <input
                         id="name"
                         name="name"
                         value={data.name}
-                        placeholder="Nama Anda"
+                        placeholder="Masukkan nama lengkap Anda"
                         autoComplete="name"
                         autoFocus
                         onChange={(e) => setData('name', e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-offset-2 transition"
+                        className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-1 focus:ring-offset-0 transition"
                         style={{
-                            borderColor: errors.name ? '#ef4444' : THEME.moss,
+                            borderColor: errors.name ? '#ef4444' : '#cbd5e1',
                             color: THEME.ink,
-                            backgroundColor: THEME.ice,
+                            backgroundColor: '#ffffff',
                         }}
                         required
                     />
                     {errors.name && (
-                        <p className="mt-2 text-sm" style={{ color: '#ef4444' }}>{errors.name}</p>
+                        <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{errors.name}</p>
                     )}
                 </div>
 
                 {/* Email */}
                 <div>
-                    <label className="block text-sm font-bold mb-2" style={{ color: THEME.ink }}>
+                    <label className="block text-sm font-bold mb-1.5" style={{ color: THEME.ink }}>
                         Email
                     </label>
                     <input
@@ -71,25 +90,25 @@ export default function Register() {
                         type="email"
                         name="email"
                         value={data.email}
-                        placeholder="nama@example.com"
+                        placeholder="Masukkan email Anda"
                         autoComplete="username"
                         onChange={(e) => setData('email', e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-offset-2 transition"
+                        className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-1 focus:ring-offset-0 transition"
                         style={{
-                            borderColor: errors.email ? '#ef4444' : THEME.moss,
+                            borderColor: errors.email ? '#ef4444' : '#cbd5e1',
                             color: THEME.ink,
-                            backgroundColor: THEME.ice,
+                            backgroundColor: '#ffffff',
                         }}
                         required
                     />
                     {errors.email && (
-                        <p className="mt-2 text-sm" style={{ color: '#ef4444' }}>{errors.email}</p>
+                        <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{errors.email}</p>
                     )}
                 </div>
 
                 {/* Password */}
                 <div>
-                    <label className="block text-sm font-bold mb-2" style={{ color: THEME.ink }}>
+                    <label className="block text-sm font-bold mb-1.5" style={{ color: THEME.ink }}>
                         Password
                     </label>
                     <input
@@ -97,25 +116,25 @@ export default function Register() {
                         type="password"
                         name="password"
                         value={data.password}
-                        placeholder="••••••••"
+                        placeholder="Masukkan password Anda"
                         autoComplete="new-password"
                         onChange={(e) => setData('password', e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-offset-2 transition"
+                        className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-1 focus:ring-offset-0 transition"
                         style={{
-                            borderColor: errors.password ? '#ef4444' : THEME.moss,
+                            borderColor: errors.password ? '#ef4444' : '#cbd5e1',
                             color: THEME.ink,
-                            backgroundColor: THEME.ice,
+                            backgroundColor: '#ffffff',
                         }}
                         required
                     />
                     {errors.password && (
-                        <p className="mt-2 text-sm" style={{ color: '#ef4444' }}>{errors.password}</p>
+                        <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{errors.password}</p>
                     )}
                 </div>
 
                 {/* Confirm Password */}
                 <div>
-                    <label className="block text-sm font-bold mb-2" style={{ color: THEME.ink }}>
+                    <label className="block text-sm font-bold mb-1.5" style={{ color: THEME.ink }}>
                         Konfirmasi Password
                     </label>
                     <input
@@ -123,19 +142,19 @@ export default function Register() {
                         type="password"
                         name="password_confirmation"
                         value={data.password_confirmation}
-                        placeholder="••••••••"
+                        placeholder="Masukkan kembali password Anda"
                         autoComplete="new-password"
                         onChange={(e) => setData('password_confirmation', e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-offset-2 transition"
+                        className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-1 focus:ring-offset-0 transition"
                         style={{
-                            borderColor: errors.password_confirmation ? '#ef4444' : THEME.moss,
+                            borderColor: errors.password_confirmation ? '#ef4444' : '#cbd5e1',
                             color: THEME.ink,
-                            backgroundColor: THEME.ice,
+                            backgroundColor: '#ffffff',
                         }}
                         required
                     />
                     {errors.password_confirmation && (
-                        <p className="mt-2 text-sm" style={{ color: '#ef4444' }}>{errors.password_confirmation}</p>
+                        <p className="mt-1 text-sm" style={{ color: '#ef4444' }}>{errors.password_confirmation}</p>
                     )}
                 </div>
 
@@ -143,27 +162,26 @@ export default function Register() {
                 <button
                     type="submit"
                     disabled={processing}
-                    className="w-full py-3 rounded-xl font-bold text-sm transition hover:opacity-90 disabled:opacity-60"
+                    className="w-full py-3 rounded-xl font-bold text-sm transition hover:opacity-90 disabled:opacity-60 cursor-pointer"
                     style={{
-                        backgroundColor: THEME.brown,
-                        color: THEME.ice,
+                        backgroundColor: THEME.green,
+                        color: '#ffffff',
                     }}
                 >
-                    {processing ? 'Sedang membuat akun...' : 'Buat Akun'}
+                    {processing ? 'Sedang membuat akun...' : 'Daftar'}
                 </button>
 
                 {/* Login Link */}
-                <Link
-                    href={route('login')}
-                    className="block text-center py-3 rounded-xl text-sm font-bold border transition hover:opacity-80"
-                    style={{
-                        borderColor: THEME.moss,
-                        color: THEME.ink,
-                        backgroundColor: THEME.dew,
-                    }}
-                >
-                    Sudah punya akun? Masuk di sini
-                </Link>
+                <div className="text-center mt-6 text-sm" style={{ color: THEME.ink }}>
+                    Sudah memiliki akun?{' '}
+                    <Link
+                        href={route('login')}
+                        className="font-bold hover:underline"
+                        style={{ color: THEME.green }}
+                    >
+                        Masuk Sekarang
+                    </Link>
+                </div>
             </form>
         </GuestLayout>
     );

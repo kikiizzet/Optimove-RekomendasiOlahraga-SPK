@@ -12,7 +12,9 @@
 
         <!-- Scripts -->
         @routes
-        @viteReactRefresh
+        @if(config('app.debug'))
+            @viteReactRefresh
+        @endif
         @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"])
         @inertiaHead
     </head>
