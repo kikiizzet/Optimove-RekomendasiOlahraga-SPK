@@ -40,6 +40,7 @@ class User extends Authenticatable
         'last_recommendation',
         'pending_recommendation',
         'weekly_checklist',
+        'email_reminder',
     ];
 
     protected $appends = [
@@ -72,6 +73,11 @@ class User extends Authenticatable
         return $this->hasMany(Testimonial::class);
     }
 
+    public function pushSubscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -95,6 +101,7 @@ class User extends Authenticatable
             'last_workout_date'      => 'date',
             'pending_recommendation' => 'array',
             'weekly_checklist'       => 'array',
+            'email_reminder'         => 'boolean',
         ];
     }
 }

@@ -16,6 +16,7 @@ const THEME = {
 };
 
 export default function Login({ status, canResetPassword }) {
+    const lang = typeof window !== 'undefined' ? (localStorage.getItem('optimove_lang') || 'id') : 'id';
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
@@ -31,24 +32,30 @@ export default function Login({ status, canResetPassword }) {
 
     return (
         <GuestLayout 
-            leftTitle="Selamat Datang Kembali!"
-            leftSubtitle="Masuk untuk melanjutkan perjalanan sehat Anda bersama Optimove"
+            leftTitle={lang === 'id' ? "Selamat Datang Kembali!" : "Welcome Back!"}
+            leftSubtitle={lang === 'id' ? "Masuk untuk melanjutkan perjalanan sehat Anda bersama Optimove" : "Log in to continue your healthy journey with Optimove"}
             leftImage="/images/Gambar Lari.png"
-            leftHighlights={[
-                "Simpan hasil analisis dan rekomendasi olahraga Anda",
-                "Pantau progress dan jadwal latihan personal",
-                "Dapatkan pengalaman yang lebih personal"
-            ]}
+            leftHighlights={
+                lang === 'id' ? [
+                    "Simpan hasil analisis dan rekomendasi olahraga Anda",
+                    "Pantau progress dan jadwal latihan personal",
+                    "Dapatkan pengalaman yang lebih personal"
+                ] : [
+                    "Save your workout analysis and recommendations",
+                    "Monitor progress and personal training schedule",
+                    "Get a more personalized experience"
+                ]
+            }
         >
             <Head title="Login" />
 
             {/* Header inside the Card */}
             <div className="mb-6 text-left">
                 <h2 className="text-2xl font-extrabold tracking-tight mb-1" style={{ color: THEME.ink }}>
-                    Login Optimove
+                    {lang === 'id' ? 'Login Optimove' : 'Login to Optimove'}
                 </h2>
                 <p className="text-sm font-medium opacity-70" style={{ color: THEME.green }}>
-                    Silahkan masuk ke Akun Anda untuk mengakses dashboard
+                    {lang === 'id' ? 'Silahkan masuk ke Akun Anda untuk mengakses dashboard' : 'Please log in to your account to access the dashboard'}
                 </p>
             </div>
 
@@ -70,7 +77,7 @@ export default function Login({ status, canResetPassword }) {
                         type="email"
                         name="email"
                         value={data.email}
-                        placeholder="Masukkan email Anda"
+                        placeholder={lang === 'id' ? "Masukkan email Anda" : "Enter your email"}
                         autoComplete="username"
                         autoFocus
                         onChange={(e) => setData('email', e.target.value)}
@@ -97,7 +104,7 @@ export default function Login({ status, canResetPassword }) {
                         type="password"
                         name="password"
                         value={data.password}
-                        placeholder="Masukkan password Anda"
+                        placeholder={lang === 'id' ? "Masukkan password Anda" : "Enter your password"}
                         autoComplete="current-password"
                         onChange={(e) => setData('password', e.target.value)}
                         className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-1 focus:ring-offset-0 transition"
@@ -126,7 +133,7 @@ export default function Login({ status, canResetPassword }) {
                             }}
                         />
                         <span className="text-sm font-medium" style={{ color: THEME.ink, opacity: 0.7 }}>
-                            Ingat saya
+                            {lang === 'id' ? 'Ingat saya' : 'Remember me'}
                         </span>
                     </label>
 
@@ -151,19 +158,19 @@ export default function Login({ status, canResetPassword }) {
                         color: '#ffffff',
                     }}
                 >
-                    {processing ? 'Sedang masuk...' : 'Masuk'}
+                    {processing ? (lang === 'id' ? 'Sedang masuk...' : 'Logging in...') : (lang === 'id' ? 'Masuk' : 'Log In')}
                 </button>
 
 
                 {/* Footer Link */}
                 <div className="text-center mt-6 text-sm" style={{ color: THEME.ink }}>
-                    Belum punya akun?{' '}
+                    {lang === 'id' ? 'Belum punya akun? ' : "Don't have an account? "}
                     <Link
                         href={route('register')}
                         className="font-bold hover:underline"
                         style={{ color: THEME.green }}
                     >
-                        Daftar Sekarang
+                        {lang === 'id' ? 'Daftar Sekarang' : 'Register Now'}
                     </Link>
                 </div>
             </form>

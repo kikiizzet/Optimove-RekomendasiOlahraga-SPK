@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\TestimonialController;
+use App\Http\Controllers\PushNotificationController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\DatasetManagementController;
 use App\Http\Controllers\Admin\TriggerController;
@@ -16,7 +17,10 @@ Route::post('/recommend', [RecommendationController::class, 'recommend'])->name(
 Route::get('/recommend', fn() => redirect()->route('home'));
 
 Route::get('/dashboard', function () {
-    return redirect()->route('admin.dashboard');
+    if (auth()->user()->role === 'admin') {
+        return redirect()->route('admin.dashboard');
+    }
+    return redirect()->route('workspace.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // ─── Personal Workspace (User Biasa) ─────────────────────────────────────────
@@ -50,6 +54,18 @@ Route::middleware('auth')->group(function () {
 
     // Profile Update (inline from workspace)
     Route::patch('/workspace/profile', [WorkspaceController::class, 'updateProfile'])->name('workspace.profile.update');
+
+    // Activate/change program
+    Route::post('/workspace/program/activate', [WorkspaceController::class, 'updateActiveProgram'])->name('workspace.program.activate');
+
+    // Toggle Email Reminder
+    Route::post('/workspace/profile/toggle-email-reminder', [WorkspaceController::class, 'toggleEmailReminder'])->name('workspace.profile.toggle-email-reminder');
+
+    // Push Notifications
+    Route::get('/api/push/public-key', [PushNotificationController::class, 'getPublicKey']);
+    Route::post('/api/push/subscribe', [PushNotificationController::class, 'subscribe']);
+    Route::post('/api/push/unsubscribe', [PushNotificationController::class, 'unsubscribe']);
+    Route::post('/api/push/test', [PushNotificationController::class, 'sendTest']);
 });
 
 // ─── Admin Routes ─────────────────────────────────────────────────────────────

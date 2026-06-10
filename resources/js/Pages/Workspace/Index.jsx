@@ -191,7 +191,7 @@ const SPORT_RECOMMENDATION_DETAILS = {
     }
 };
 
-export default function Index({ user, todayTodos = [], journals = [], inactiveDays = 0, inactiveAlert = false, testimonials = [] }) {
+export default function Index({ user, todayTodos = [], journals = [], inactiveDays = 0, inactiveAlert = false, testimonials = [], allRecommendations = [] }) {
     const { flash } = usePage().props;
 
     // Sidebar tab state
@@ -308,6 +308,21 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
             chip_usia: 'Usia',
             chip_tinggi: 'Tinggi',
             chip_berat: 'Berat',
+            // Recommendation tab
+            pilih_rekomendasi: 'Pilih Rekomendasi Olahraga',
+            pilih_rekomendasi_sub: 'Klik salah satu rekomendasi di bawah untuk memilih program latihan Anda.',
+            simpan_pengaturan: 'Simpan Pengaturan',
+            // History section
+            hist_periode: 'Periode',
+            hist_program: 'Program',
+            hist_rekomendasi: 'Rekomendasi',
+            hist_progress: 'Progress',
+            hist_status: 'Status',
+            hist_aksi: 'Aksi',
+            hist_lihat_detail: 'Lihat Detail',
+            hist_no_history: 'Belum ada riwayat program latihan. Selesaikan 100% target mingguan program latihan Anda untuk memunculkannya di sini.',
+            hist_riwayat_program: 'Riwayat Program Latihan',
+            hist_riwayat_aktivitas: 'Riwayat Aktivitas Anda',
         },
         en: {
             nav_dashboard: 'Dashboard',
@@ -372,10 +387,93 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
             chip_usia: 'Age',
             chip_tinggi: 'Height',
             chip_berat: 'Weight',
+            // Recommendation tab
+            pilih_rekomendasi: 'Choose Your Sport Recommendation',
+            pilih_rekomendasi_sub: 'Click one of the recommendations below to select your training program.',
+            simpan_pengaturan: 'Save Settings',
+            // History section
+            hist_periode: 'Period',
+            hist_program: 'Program',
+            hist_rekomendasi: 'Recommendation',
+            hist_progress: 'Progress',
+            hist_status: 'Status',
+            hist_aksi: 'Action',
+            hist_lihat_detail: 'View Details',
+            hist_no_history: 'No training program history. Complete 100% of your weekly targets to see it here.',
+            hist_riwayat_program: 'Workout Program History',
+            hist_riwayat_aktivitas: 'Your Activity History',
         },
     };
 
     const t = (key) => translations[lang]?.[key] ?? translations['id'][key] ?? key;
+    
+    const translateSportName = (sportName) => {
+        if (!sportName) return '';
+        const lower = sportName.toLowerCase();
+        if (lower.includes('walk') || lower.includes('jog') || lower.includes('running')) {
+            return lang === 'en' ? 'Walking or jogging' : 'Jogging';
+        }
+        if (lower.includes('cycle') || lower.includes('sepeda')) {
+            return lang === 'en' ? 'Cycling' : 'Bersepeda';
+        }
+        if (lower.includes('yoga')) {
+            return 'Yoga';
+        }
+        if (lower.includes('swimming') || lower.includes('renang')) {
+            return lang === 'en' ? 'Swimming' : 'Renang';
+        }
+        if (lower.includes('gym') || lower.includes('fitness') || lower.includes('lift') || lower.includes('weight') || lower.includes('beban') || lower.includes('work') || lower.includes('calisthenic')) {
+            return lang === 'en' ? 'Gym / Fitness' : 'Gym / Fitness';
+        }
+        if (lower.includes('basketball')) {
+            return lang === 'en' ? 'Basketball' : 'Bola Basket';
+        }
+        if (lower.includes('football')) {
+            return lang === 'en' ? 'Football' : 'Sepak Bola';
+        }
+        if (lower.includes('volleyball')) {
+            return lang === 'en' ? 'Volleyball' : 'Bola Voli';
+        }
+        if (lower.includes('badminton')) {
+            return 'Badminton';
+        }
+        return sportName;
+    };
+
+    const translateSportRec = (desc) => {
+        if (!desc) return '';
+        if (lang === 'en') {
+            if (desc.includes('kardiovaskular')) {
+                return 'Best exercise to improve cardiovascular fitness and maintain heart health.';
+            }
+            if (desc.includes('daya tahan tubuh')) {
+                return 'Boosts body endurance and strengthens leg muscles and heart.';
+            }
+            if (desc.includes('fleksibilitas')) {
+                return 'Improves body flexibility, balance, and mental health.';
+            }
+            if (desc.includes('pernapasan')) {
+                return 'Trains the whole body and respiratory system without excess joint stress.';
+            }
+            if (desc.includes('Latihan beban')) {
+                return 'Weight training for muscle strength, bone density, and prime metabolism.';
+            }
+        }
+        return desc;
+    };
+
+    // Language settings for profile page
+    const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('optimove_lang') || 'id');
+    const handleLangSave = () => {
+        setLang(selectedLang);
+        localStorage.setItem('optimove_lang', selectedLang);
+        setAlertMessage('Pengaturan bahasa berhasil disimpan!');
+        setAlertType('success');
+        const timer = setTimeout(() => setAlertMessage(null), 4000);
+    };
+
+    // Notification dropdown state
+    const [showNotifDropdown, setShowNotifDropdown] = useState(false);
 
     // Notion-style journal states
     const [activeJournalTab, setActiveJournalTab] = useState('list');
@@ -413,11 +511,12 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
     // Determine the user active program based on their landing page calculation
     const getProgramKey = (sportName) => {
         if (!sportName) return 'Walking or jogging';
-        if (/walk|jog/i.test(sportName)) return 'Walking or jogging';
-        if (/gym|fitness/i.test(sportName)) return 'Gym';
-        if (/yoga/i.test(sportName)) return 'Yoga';
-        if (/cycle|bike/i.test(sportName)) return 'Cycling';
-        if (/swim/i.test(sportName)) return 'Swimming';
+        const name = sportName.toLowerCase();
+        if (/walk|jog|run|foot|soccer|basket|volley|badminton|zumba|jump|rope|aerobic|hiking|softball|skj/i.test(name)) return 'Walking or jogging';
+        if (/gym|fitness|lift|weight|beban|work|calisthenic/i.test(name)) return 'Gym';
+        if (/yoga|martial|golf|tennis|table/i.test(name)) return 'Yoga';
+        if (/cycle|bike|sepeda/i.test(name)) return 'Cycling';
+        if (/swim|renang/i.test(name)) return 'Swimming';
         return 'Walking or jogging';
     };
 
@@ -482,7 +581,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
         if (/yoga/i.test(sportName)) return '/images/running (2).png';
         if (/swimming|renang/i.test(sportName)) return '/images/running (3).png';
         if (/cycle|sepeda/i.test(sportName)) return '/images/bicycle 3.png';
-        if (/gym|fitness/i.test(sportName)) return '/images/dumbbell 2.png';
+        if (/gym|fitness|lift|weight/i.test(sportName)) return '/images/dumbbell 2.png';
         return '/images/running (1).png';
     };
 
@@ -542,17 +641,18 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
 
     const normalizeSportName = (name) => {
         if (!name) return 'Jogging';
-        if (/walk|jog/i.test(name)) return 'Jogging';
-        if (/cycle|sepeda/i.test(name)) return 'Bersepeda';
-        if (/yoga/i.test(name)) return 'Yoga';
-        if (/swimming|renang/i.test(name)) return 'Renang';
-        if (/gym|fitness/i.test(name)) return 'Gym / Fitness';
+        const lower = name.toLowerCase();
+        if (/walk|jog|run|foot|soccer|basket|volley|badminton|zumba|jump|rope|aerobic|hiking|softball|skj/i.test(lower)) return 'Jogging';
+        if (/cycle|sepeda/i.test(lower)) return 'Bersepeda';
+        if (/yoga|martial|golf|tennis|table/i.test(lower)) return 'Yoga';
+        if (/swimming|renang/i.test(lower)) return 'Renang';
+        if (/gym|fitness|lift|weight|beban|work|calisthenic/i.test(lower)) return 'Gym / Fitness';
         return 'Jogging';
     };
 
     const [selectedRecommendSport, setSelectedRecommendSport] = useState(normalizeSportName(user.last_recommendation));
 
-    const handleSelectRecommendSport = (sportName) => {
+    const handleSelectRecommendSport = (sportName, rawSportName) => {
         setSelectedRecommendSport(sportName);
         
         // Map back to WEEKLY_PROGRAMS keys: 'Walking or jogging', 'Cycling', 'Yoga', 'Swimming', 'Gym'
@@ -563,6 +663,11 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
         else if (sportName === 'Gym / Fitness') progKey = 'Gym';
         
         setSelectedProgramKey(progKey);
+
+        const targetSport = rawSportName || progKey;
+        router.post(route('workspace.program.activate'), { sport: targetSport }, {
+            preserveScroll: true
+        });
     };
 
     // Reset selected program if user recommendation changes
@@ -697,6 +802,19 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
         ...(user.weekly_checklist || {})
     }));
 
+    // Sync weeklyChecklist when user props updates
+    useEffect(() => {
+        if (user.weekly_checklist) {
+            setWeeklyChecklist({
+                ...defaultChecklist,
+                ...user.weekly_checklist
+            });
+        }
+    }, [user.weekly_checklist]);
+
+    // Toast Notification State
+    const [toastNotification, setToastNotification] = useState(null);
+
     // Calculate if the streak is broken/active
     const isStreakActive = () => {
         if (!user.last_workout_date) return false;
@@ -731,15 +849,23 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
     const totalCompletedWorkouts = journals.length + todayTodos.filter(t => t.is_completed).length;
     const totalAnalisisCount = user.last_recommendation ? 1 : 0;
 
-    const displayedHistory = currentProgress === 100 ? [{
-        period: getDynamicDateRange(),
-        duration: '4 Minggu',
-        type: WEEKLY_PROGRAMS[selectedProgramKey]?.tag || 'Cardio & Endurance',
-        sport: WEEKLY_PROGRAMS[selectedProgramKey]?.sport || normalizeSportName(user.last_recommendation),
-        progress: 100,
-        status: 'SELESAI',
-        statusColor: 'bg-[#edf6ed] text-[#166534] border-emerald-200/50'
-    }] : [];
+    const displayedHistory = (() => {
+        const history = [];
+        if (user.last_recommendation) {
+            history.push({
+                period: getDynamicDateRange(),
+                duration: lang === 'en' ? '4 Weeks' : '4 Minggu',
+                type: WEEKLY_PROGRAMS[selectedProgramKey]?.tag || 'Cardio & Endurance',
+                sport: WEEKLY_PROGRAMS[selectedProgramKey]?.sport || normalizeSportName(user.last_recommendation),
+                progress: currentProgress,
+                status: currentProgress === 100 ? t('done') : t('aktif'),
+                statusColor: currentProgress === 100 
+                    ? 'bg-[#edf6ed] text-[#166534] border-emerald-200/50' 
+                    : 'bg-sky-50 text-sky-700 border-sky-200/50'
+            });
+        }
+        return history;
+    })();
 
     const toggleWeekDay = (day) => {
         const updated = { ...weeklyChecklist, [day]: !weeklyChecklist[day] };
@@ -752,6 +878,32 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
         const isAllDoneNow = days.every(d => updated[d]);
         if (!wasAllDone && isAllDoneNow) {
             setShowWeeklyAchievementModal(true);
+        }
+
+        // Show progress toast
+        if (updated[day]) {
+            const currentWeekNum = updated.current_week || 1;
+            const completedWeeksNum = currentWeekNum - 1;
+            const checklistDaysLocal = {
+                Senin: !!updated.Senin, Selasa: !!updated.Selasa, Rabu: !!updated.Rabu,
+                Kamis: !!updated.Kamis, Jumat: !!updated.Jumat, Sabtu: !!updated.Sabtu, Minggu: !!updated.Minggu
+            };
+            const checkedDaysCountNum = Object.values(checklistDaysLocal).filter(Boolean).length;
+            const totalCheckedDays = completedWeeksNum * 7 + checkedDaysCountNum;
+            const pct = Math.min(100, Math.round((totalCheckedDays / 28) * 100));
+
+            const msgText = lang === 'en' 
+                ? `Day ${totalCheckedDays} of 28 Days (${pct}%)` 
+                : `Hari ${totalCheckedDays} dari 28 Hari (${pct}%)`;
+
+            setToastNotification({
+                title: lang === 'en' ? 'Progress Updated' : 'Progres Latihan Diperbarui',
+                message: msgText
+            });
+
+            setTimeout(() => {
+                setToastNotification(null);
+            }, 5000);
         }
     };
 
@@ -920,11 +1072,47 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
 
                     <div className="flex items-center gap-4">
                         {/* Notification alert icon */}
-                        <div className="w-9 h-9 rounded-full border border-stone-200 bg-white flex items-center justify-center text-stone-500 relative cursor-pointer hover:bg-stone-50">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
-                            {inactiveAlert && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500"></span>}
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowNotifDropdown(v => !v)}
+                                className="w-9 h-9 rounded-full border border-stone-200 bg-white flex items-center justify-center text-stone-500 relative cursor-pointer hover:bg-stone-50 transition"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                                {inactiveAlert && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500"></span>}
+                            </button>
+                            {showNotifDropdown && (
+                                <div className="absolute right-0 top-12 w-80 bg-white border border-stone-200 rounded-2xl shadow-xl z-50 overflow-hidden animate-fade-in">
+                                    <div className="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
+                                        <span className="text-xs font-bold text-valley-green uppercase tracking-wider">Notifikasi</span>
+                                        <button onClick={() => setShowNotifDropdown(false)} className="text-stone-400 hover:text-stone-700 text-sm font-bold cursor-pointer">✕</button>
+                                    </div>
+                                    <div className="max-h-64 overflow-y-auto">
+                                        {inactiveAlert ? (
+                                            <div className="p-4 flex items-start gap-3 hover:bg-stone-50 transition">
+                                                <span className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-sm shrink-0">⚠️</span>
+                                                <div>
+                                                    <p className="text-xs font-bold text-red-700">Peringatan Inaktif</p>
+                                                    <p className="text-[11px] text-stone-500 mt-0.5 leading-relaxed">Sudah <strong>{inactiveDays} hari</strong> Anda tidak berolahraga. Yuk mulai lagi!</p>
+                                                    <button
+                                                        onClick={() => { setActiveTab('program'); setShowNotifDropdown(false); }}
+                                                        className="mt-2 text-[10px] font-bold text-valley-green hover:underline cursor-pointer"
+                                                    >
+                                                        Buka Program Latihan →
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="p-6 text-center">
+                                                <span className="text-2xl block mb-2">🔔</span>
+                                                <p className="text-xs text-stone-400 font-medium">Tidak ada notifikasi baru.</p>
+                                                <p className="text-[10px] text-stone-300 mt-0.5">Tetap semangat berolahraga!</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                         
                         {/* Profile chip */}
@@ -960,6 +1148,22 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                 <p>{alertMessage}</p>
                             </div>
                             <button onClick={() => setAlertMessage(null)} className="text-stone-400 hover:text-stone-700 text-xs font-bold font-mono cursor-pointer">
+                                ✕
+                            </button>
+                        </div>
+                    )}
+                    
+                    {/* Floating Toast Notification (Top Right) */}
+                    {toastNotification && (
+                        <div className="fixed top-24 right-6 z-[9999] bg-white border border-emerald-200 rounded-2xl p-4 shadow-xl flex items-start gap-3 w-80 animate-fade-in transition-all duration-500">
+                            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-sm shrink-0">
+                                💪
+                            </div>
+                            <div className="flex-1">
+                                <h4 className="font-extrabold text-xs text-valley-green">{toastNotification.title}</h4>
+                                <p className="text-[11px] text-stone-600 mt-0.5 leading-relaxed">{toastNotification.message}</p>
+                            </div>
+                            <button onClick={() => setToastNotification(null)} className="text-stone-400 hover:text-stone-700 text-xs font-bold font-mono shrink-0 cursor-pointer">
                                 ✕
                             </button>
                         </div>
@@ -1190,7 +1394,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                                 </div>
                                                                 <p className="text-[11px] text-stone-500 leading-relaxed line-clamp-2">{j.content}</p>
                                                                 <div className="flex justify-between items-center text-[9px] font-mono text-stone-400 mt-2 border-t border-stone-100 pt-2">
-                                                                    <span>{new Date(j.created_at).toLocaleDateString('id-ID')}</span>
+                                                                    <span>{new Date(j.created_at).toLocaleDateString(lang === 'en' ? 'en-US' : 'id-ID')}</span>
                                                                     {j.mood && moodMap[j.mood] && (
                                                                         <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold ${moodMap[j.mood].bg}`}>
                                                                             {moodMap[j.mood].icon} {moodMap[j.mood].label}
@@ -1548,25 +1752,25 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
 
                             {/* Riwayat Program Latihan card */}
                             <div className="bg-white border border-stone-200 rounded-3xl p-6 shadow-sm">
-                                <h3 className="font-extrabold text-sm text-valley-green mb-4 pb-2 border-b border-stone-100">Riwayat Program Latihan</h3>
+                                <h3 className="font-extrabold text-sm text-valley-green mb-4 pb-2 border-b border-stone-100">{t('hist_riwayat_program')}</h3>
                                 
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-xs md:text-sm text-left">
                                         <thead>
                                             <tr className="bg-[#edf6ed]/70 text-valley-green font-bold uppercase tracking-wider text-[10px]">
-                                                <th className="px-5 py-4">Periode</th>
-                                                <th className="px-5 py-4">Program</th>
-                                                <th className="px-5 py-4">Rekomendasi</th>
-                                                <th className="px-5 py-4">Progress</th>
-                                                <th className="px-5 py-4">Status</th>
-                                                <th className="px-5 py-4">Aksi</th>
+                                                <th className="px-5 py-4">{t('hist_periode')}</th>
+                                                <th className="px-5 py-4">{t('hist_program')}</th>
+                                                <th className="px-5 py-4">{t('hist_rekomendasi')}</th>
+                                                <th className="px-5 py-4">{t('hist_progress')}</th>
+                                                <th className="px-5 py-4">{t('hist_status')}</th>
+                                                <th className="px-5 py-4">{t('hist_aksi')}</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-stone-100">
                                             {displayedHistory.length === 0 ? (
                                                 <tr>
                                                     <td colSpan="6" className="px-5 py-8 text-center text-stone-400 font-semibold text-xs">
-                                                        Belum ada riwayat program latihan. Selesaikan 100% target mingguan program latihan Anda untuk memunculkannya di sini.
+                                                        {t('hist_no_history')}
                                                     </td>
                                                 </tr>
                                             ) : (
@@ -1580,7 +1784,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                         <td className="px-5 py-4 text-left">
                                                             <div className="flex items-center gap-2">
                                                                 <img src={getSportIconPath(prog.sport)} className="w-5.5 h-5.5 object-contain shrink-0" alt={prog.sport} />
-                                                                <span className="text-xs font-bold text-adaline-ink">{prog.sport}</span>
+                                                                <span className="text-xs font-bold text-adaline-ink">{translateSportName(prog.sport)}</span>
                                                             </div>
                                                         </td>
                                                         <td className="px-5 py-4 text-left">
@@ -1604,7 +1808,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                                     setActiveTab('program'); 
                                                                 }} 
                                                                 className="text-xs font-bold text-stone-500 hover:text-valley-green transition cursor-pointer">
-                                                                Lihat Detail
+                                                                {t('hist_lihat_detail')}
                                                             </button>
                                                         </td>
                                                     </tr>
@@ -1634,17 +1838,17 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
 
                         // Stats for ringkasan
                         const statsData = [
-                            { icon: '🔥', label: 'Total Analisis',       val: `${totalAnalisisCount} Kali`,    color: 'bg-orange-50 text-orange-500' },
-                            { icon: '✅', label: 'Program Selesai',       val: `${displayedHistory.length} Program`, color: 'bg-emerald-50 text-emerald-600' },
-                            { icon: '📅', label: 'Hari Konsisten',        val: `${activeStreak} Hari`,          color: 'bg-blue-50 text-blue-500' },
-                            { icon: '📈', label: 'Rata - rata Progress',  val: `${currentProgress}%`,           color: 'bg-violet-50 text-violet-500' },
-                            { icon: '🔥', label: 'Kalori Terbakar',       val: totalCompletedWorkouts > 0 ? `${(totalCompletedWorkouts * 350).toLocaleString('id-ID')} kkal` : '-', color: 'bg-red-50 text-red-500' },
+                            { icon: '/images/Activity.png', label: t('stat_total'),       val: lang === 'en' ? `${totalAnalisisCount} Times` : `${totalAnalisisCount} Kali`,    color: 'bg-orange-50 text-orange-500' },
+                            { icon: '/images/Award.png', label: t('stat_selesai'),       val: lang === 'en' ? `${displayedHistory.length} Programs` : `${displayedHistory.length} Program`, color: 'bg-emerald-50 text-emerald-600' },
+                            { icon: '/images/Calendar.png', label: t('stat_konsisten'),        val: lang === 'en' ? `${activeStreak} Days` : `${activeStreak} Hari`,          color: 'bg-blue-50 text-blue-500' },
+                            { icon: '/images/Target.png', label: t('stat_progress'),  val: `${currentProgress}%`,           color: 'bg-violet-50 text-violet-500' },
+                            { icon: '/images/dumbbell 2.png', label: t('stat_kalori'),       val: totalCompletedWorkouts > 0 ? `${(totalCompletedWorkouts * 350).toLocaleString(lang === 'en' ? 'en-US' : 'id-ID')} ${lang === 'en' ? 'kcal' : 'kkal'}` : '-', color: 'bg-red-50 text-red-500' },
                         ];
 
                         // Join date from created_at
                         const joinDate = user.created_at
-                            ? new Date(user.created_at).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
-                            : 'Mei 2026';
+                            ? new Date(user.created_at).toLocaleDateString(lang === 'en' ? 'en-US' : 'id-ID', { month: 'long', year: 'numeric' })
+                            : (lang === 'en' ? 'May 2026' : 'Mei 2026');
 
                         return (
                             <div className="space-y-5 animate-fade-in text-left pb-10">
@@ -1747,19 +1951,23 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                         {!isEditingProfile && (
                                             <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
                                                 {[
-                                                    { icon: '👤', lbl: 'Nama Lengkap',  val: user.name },
-                                                    { icon: '⚥',  lbl: 'Jenis Kelamin', val: user.gender === 'Male' ? 'Laki-laki' : user.gender === 'Female' ? 'Perempuan' : '-' },
-                                                    { icon: '🎂', lbl: 'Tanggal Lahir', val: user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-' },
-                                                    { icon: '🔢', lbl: 'Usia',           val: user.age ? `${user.age} Tahun` : '-' },
-                                                    { icon: '📧', lbl: 'Email',          val: user.email },
-                                                    { icon: '📞', lbl: 'Nomor Telepon',  val: user.phone || '-' },
-                                                    { icon: '🏠', lbl: 'Alamat',         val: user.address || '-' },
-                                                    { icon: '💼', lbl: 'Pekerjaan',      val: user.job || '-' },
-                                                    { icon: '🎯', lbl: 'Target Aktivitas', val: user.activity_level || '-' },
+                                                    { icon: '/images/Users.png', lbl: t('nama_lengkap'),  val: user.name },
+                                                    { icon: '/images/Users.png',  lbl: t('jenis_kelamin'), val: user.gender === 'Male' ? t('laki') : user.gender === 'Female' ? t('perempuan') : '-' },
+                                                    { icon: '/images/Calendar.png', lbl: t('tanggal_lahir'), val: user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString(lang === 'en' ? 'en-US' : 'id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-' },
+                                                    { icon: '/images/Icon Usia.png', lbl: t('usia'),           val: user.age ? (lang === 'en' ? `${user.age} Years` : `${user.age} Tahun`) : '-' },
+                                                    { icon: '/images/mark_email_unread.png', lbl: t('email'),          val: user.email },
+                                                    { icon: '/images/Phone.png', lbl: t('no_telepon'),  val: user.phone || '-' },
+                                                    { icon: '/images/Target.png', lbl: t('alamat'),         val: user.address || '-' },
+                                                    { icon: '/images/briefcase 1.png', lbl: t('pekerjaan'),      val: user.job || '-' },
+                                                    { icon: '/images/Activity.png', lbl: t('target_aktivitas'), val: user.activity_level || '-' },
                                                 ].map((row, idx) => (
                                                     <div key={idx} className="flex items-start gap-3 pb-3.5 border-b border-stone-50 last:border-0">
                                                         <div className="w-8 h-8 rounded-full bg-stone-50 border border-stone-100 flex items-center justify-center shrink-0 text-sm">
-                                                            {row.icon}
+                                                            {row.icon.endsWith('.png') ? (
+                                                                <img src={row.icon} className="w-4 h-4 object-contain" alt="" />
+                                                            ) : (
+                                                                row.icon
+                                                            )}
                                                         </div>
                                                         <div className="min-w-0">
                                                             <span className="text-[9px] text-stone-400 font-bold uppercase tracking-wider block leading-none">{row.lbl}</span>
@@ -1829,7 +2037,11 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                 <div key={idx} className="flex items-center justify-between py-2 border-b border-stone-50 last:border-0">
                                                     <div className="flex items-center gap-3">
                                                         <div className={`w-8 h-8 rounded-full ${s.color} flex items-center justify-center text-sm shrink-0`}>
-                                                            {s.icon}
+                                                            {s.icon.endsWith('.png') ? (
+                                                                <img src={s.icon} className="w-4.5 h-4.5 object-contain" alt="" />
+                                                            ) : (
+                                                                s.icon
+                                                            )}
                                                         </div>
                                                         <span className="text-xs text-stone-500 font-medium">{s.label}</span>
                                                     </div>
@@ -1844,28 +2056,40 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                 <div className="grid lg:grid-cols-5 gap-5 items-start">
                                     {/* Pengaturan Akun */}
                                     <div className="lg:col-span-3 bg-white border border-stone-200 rounded-3xl p-6 shadow-sm">
-                                        <h3 className="font-extrabold text-sm text-valley-green mb-1 pb-3 border-b border-stone-100">Pengaturan Akun</h3>
-                                        <p className="text-[10px] text-stone-400 mb-4 mt-1">Atur preferensi dasar akun Anda.</p>
+                                        <h3 className="font-extrabold text-sm text-valley-green mb-1 pb-3 border-b border-stone-100">{t('pengaturan_akun')}</h3>
+                                        <p className="text-[10px] text-stone-400 mb-4 mt-1">{t('pengaturan_sub')}</p>
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between gap-4">
                                                 <div>
-                                                    <span className="text-xs font-bold text-adaline-ink block">Bahasa Aplikasi</span>
-                                                    <span className="text-[10px] text-stone-400 mt-0.5 block">Bahasa yang digunakan di aplikasi</span>
+                                                    <span className="text-xs font-bold text-adaline-ink block">{t('bahasa_aplikasi')}</span>
+                                                    <span className="text-[10px] text-stone-400 mt-0.5 block">{t('bahasa_sub')}</span>
                                                 </div>
-                                                <select className="text-xs border border-stone-200 bg-white rounded-xl px-3 py-2 focus:border-valley-green outline-none cursor-pointer shrink-0">
-                                                    <option>Bahasa Indonesia</option>
-                                                    <option>English</option>
+                                                <select 
+                                                    value={selectedLang} 
+                                                    onChange={e => setSelectedLang(e.target.value)}
+                                                    className="text-xs border border-stone-200 bg-white rounded-xl px-3 py-2 focus:border-valley-green outline-none cursor-pointer shrink-0"
+                                                >
+                                                    <option value="id">Bahasa Indonesia</option>
+                                                    <option value="en">English</option>
                                                 </select>
                                             </div>
                                             <div className="flex items-center justify-between gap-4 pt-4 border-t border-stone-50">
                                                 <div>
-                                                    <span className="text-xs font-bold text-adaline-ink block">Satuan Pengukuran</span>
-                                                    <span className="text-[10px] text-stone-400 mt-0.5 block">Satuan untuk tinggi badan dan berat badan</span>
+                                                    <span className="text-xs font-bold text-adaline-ink block">{t('satuan')}</span>
+                                                    <span className="text-[10px] text-stone-400 mt-0.5 block">{t('satuan_sub')}</span>
                                                 </div>
                                                 <select className="text-xs border border-stone-200 bg-white rounded-xl px-3 py-2 focus:border-valley-green outline-none cursor-pointer shrink-0">
                                                     <option>cm / kg</option>
                                                     <option>in / lbs</option>
                                                 </select>
+                                            </div>
+                                            <div className="flex justify-end pt-4 border-t border-stone-50">
+                                                <button
+                                                    onClick={handleLangSave}
+                                                    className="text-[11px] font-bold bg-valley-green text-white px-4 py-2 rounded-xl hover:opacity-90 transition cursor-pointer"
+                                                >
+                                                    {t('simpan_pengaturan')}
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -2092,65 +2316,87 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                 {/* Pilih Rekomendasi */}
                                 <div className="mt-8 space-y-4">
                                     <div className="text-left">
-                                        <h3 className="font-extrabold text-lg text-adaline-ink">Pilih Rekomendasi</h3>
+                                        <h3 className="font-extrabold text-lg text-adaline-ink">{t('pilih_rekomendasi')}</h3>
                                         <p className="text-xs text-stone-400">
-                                            Pilih salah satu rekomendasi terbaik yang ingin Anda jadikan dasar program latihan
+                                            {t('pilih_rekomendasi_sub')}
                                         </p>
                                     </div>
                                     
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        {[
-                                            { 
-                                                key: 'Jogging', 
-                                                title: 'Jogging', 
-                                                desc: 'Olahraga terbaik untuk meningkatkan kebugaran kardiovaskular dan menjaga kesehatan jantung.',
-                                                pct: 92 
-                                            },
-                                            { 
-                                                key: 'Bersepeda', 
-                                                title: 'Bersepeda', 
-                                                desc: 'Meningkatkan daya tahan tubuh dan memperkuat otot kaki serta jantung.',
-                                                pct: 80 
-                                            },
-                                            { 
-                                                key: 'Yoga', 
-                                                title: 'Yoga', 
-                                                desc: 'Meningkatkan fleksibilitas tubuh, keseimbangan, dan kesehatan mental.',
-                                                pct: 78 
-                                            }
-                                        ].map((item) => {
-                                            const isSelected = selectedRecommendSport === item.key;
-                                            return (
-                                                <div
-                                                    key={item.key}
-                                                    onClick={() => handleSelectRecommendSport(item.key)}
-                                                    className={`bg-white border rounded-[20px] p-5 cursor-pointer transition-all duration-300 flex flex-col justify-between h-full text-left ${
-                                                        isSelected 
-                                                            ? 'border-valley-green ring-2 ring-valley-green/10 shadow-md transform scale-[1.01]' 
-                                                            : 'border-stone-200 hover:border-stone-300 hover:shadow-xs'
-                                                    }`}
-                                                >
-                                                    <div className="space-y-2">
-                                                        <h4 className="font-bold text-sm text-[#0a482e] uppercase tracking-wide">
-                                                            {item.title}
-                                                        </h4>
-                                                        <p className="text-[11px] text-stone-500 leading-relaxed">
-                                                            {item.desc}
-                                                        </p>
-                                                    </div>
-                                                    
-                                                    {/* Compatibility Progress bar at bottom */}
-                                                    <div className="mt-5 space-y-1">
-                                                        <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                                                            <div 
-                                                                className="h-full bg-valley-green rounded-full transition-all duration-500" 
-                                                                style={{ width: `${item.pct}%` }}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
+                                        {(() => {
+                                             let itemsToRender = [];
+                                             if (allRecommendations && allRecommendations.length > 0) {
+                                                 itemsToRender = allRecommendations.slice(0, 3).map(rec => {
+                                                     const norm = normalizeSportName(rec.sport);
+                                                     const details = SPORT_RECOMMENDATION_DETAILS[norm] || SPORT_RECOMMENDATION_DETAILS['Jogging'];
+                                                     return {
+                                                         key: norm,
+                                                         title: translateSportName(rec.sport),
+                                                         desc: translateSportRec(details.desc),
+                                                         pct: Math.round(rec.score),
+                                                         rawSport: rec.sport
+                                                     };
+                                                 });
+                                             } else {
+                                                 itemsToRender = [
+                                                     { 
+                                                         key: 'Jogging', 
+                                                         title: translateSportName('Walking or jogging'), 
+                                                         desc: translateSportRec(SPORT_RECOMMENDATION_DETAILS['Jogging'].desc),
+                                                         pct: 92,
+                                                         rawSport: 'Walking or jogging'
+                                                     },
+                                                     { 
+                                                         key: 'Bersepeda', 
+                                                         title: translateSportName('Cycling'), 
+                                                         desc: translateSportRec(SPORT_RECOMMENDATION_DETAILS['Bersepeda'].desc),
+                                                         pct: 80,
+                                                         rawSport: 'Cycling'
+                                                     },
+                                                     { 
+                                                         key: 'Yoga', 
+                                                         title: translateSportName('Yoga'), 
+                                                         desc: translateSportRec(SPORT_RECOMMENDATION_DETAILS['Yoga'].desc),
+                                                         pct: 78,
+                                                         rawSport: 'Yoga'
+                                                     }
+                                                 ];
+                                             }
+                                             
+                                             return itemsToRender.map((item) => {
+                                                 const isSelected = selectedRecommendSport === item.key;
+                                                 return (
+                                                     <div
+                                                         key={item.key}
+                                                         onClick={() => handleSelectRecommendSport(item.key, item.rawSport)}
+                                                         className={`bg-white border rounded-[20px] p-5 cursor-pointer transition-all duration-300 flex flex-col justify-between h-full text-left ${
+                                                             isSelected 
+                                                                 ? 'border-valley-green ring-2 ring-valley-green/10 shadow-md transform scale-[1.01]' 
+                                                                 : 'border-stone-200 hover:border-stone-300 hover:shadow-xs'
+                                                         }`}
+                                                     >
+                                                         <div className="space-y-2">
+                                                             <h4 className="font-bold text-sm text-[#0a482e] uppercase tracking-wide">
+                                                                 {item.title}
+                                                             </h4>
+                                                             <p className="text-[11px] text-stone-500 leading-relaxed">
+                                                                 {item.desc}
+                                                             </p>
+                                                         </div>
+                                                         
+                                                         {/* Compatibility Progress bar at bottom */}
+                                                         <div className="mt-5 space-y-1">
+                                                             <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                                                                 <div 
+                                                                     className="h-full bg-valley-green rounded-full transition-all duration-500" 
+                                                                     style={{ width: `${item.pct}%` }}
+                                                                 />
+                                                             </div>
+                                                         </div>
+                                                     </div>
+                                                 );
+                                             });
+                                         })()}
                                     </div>
                                 </div>
                             </div>
@@ -2299,13 +2545,6 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                     </p>
                                                     <div className="flex justify-between items-center text-[9px] font-mono text-stone-400 mt-2 border-t border-stone-100 pt-2">
                                                         <span>{new Date(testi.created_at).toLocaleDateString('id-ID')}</span>
-                                                        <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold ${
-                                                            testi.is_published 
-                                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
-                                                            : 'bg-amber-50 text-amber-800 border border-amber-100'
-                                                        }`}>
-                                                            {testi.is_published ? 'Diterbitkan' : 'Menunggu Persetujuan'}
-                                                        </span>
                                                     </div>
                                                 </div>
                                             ))}

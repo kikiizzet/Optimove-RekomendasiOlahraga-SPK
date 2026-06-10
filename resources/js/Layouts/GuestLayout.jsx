@@ -18,6 +18,7 @@ export default function GuestLayout({
     leftImage = '',
     leftHighlights = []
 }) {
+    const lang = typeof window !== 'undefined' ? (localStorage.getItem('optimove_lang') || 'id') : 'id';
     const isSplit = !!leftTitle;
 
     if (isSplit) {
@@ -35,8 +36,8 @@ export default function GuestLayout({
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
                         {/* Left Column: Welcome & Info */}
                         <div className="lg:col-span-5 flex flex-col justify-center text-left py-4">
-                            {/* Logo / Brand */}
                             <Link href="/" className="inline-flex items-center gap-2 mb-8 group self-start">
+                                <img src="/images/icon hijau.png" alt="Optimove" className="w-8 h-8 object-contain" />
                                 <span className="text-3xl font-extrabold tracking-tight transition group-hover:opacity-80" style={{ color: THEME.ink }}>
                                     Optimove
                                 </span>
@@ -63,7 +64,7 @@ export default function GuestLayout({
                             {leftHighlights && leftHighlights.length > 0 && (
                                 <div className="space-y-4">
                                     <h3 className="text-lg font-bold tracking-tight" style={{ color: THEME.ink }}>
-                                        Mengapa Login?
+                                        {lang === 'id' ? 'Mengapa Login?' : 'Why Login?'}
                                     </h3>
                                     <ul className="space-y-3.5">
                                         {leftHighlights.map((highlight, index) => (
@@ -106,7 +107,8 @@ export default function GuestLayout({
             <div className="relative z-10 w-full max-w-md">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <Link href="/" className="inline-block mb-4">
+                    <Link href="/" className="inline-flex items-center gap-2 mb-4 justify-center">
+                        <img src="/images/icon hijau.png" alt="Optimove" className="w-8 h-8 object-contain" />
                         <span className="text-3xl font-bold" style={{ color: THEME.ink, letterSpacing: '-0.04em' }}>
                             Optimove
                         </span>
@@ -117,7 +119,7 @@ export default function GuestLayout({
                                 {title}
                             </h1>
                             <p style={{ color: THEME.green, opacity: 0.7, fontSize: '0.875rem' }}>
-                                Sistem Pendukung Keputusan Rekomendasi Olahraga
+                                {lang === 'id' ? 'Sistem Pendukung Keputusan Rekomendasi Olahraga' : 'Sports Recommendation Decision Support System'}
                             </p>
                         </>
                     )}
@@ -132,7 +134,7 @@ export default function GuestLayout({
                 {/* Footer Link */}
                 <p className="text-center text-xs mt-6" style={{ color: THEME.green, opacity: 0.6 }}>
                     <Link href="/" className="hover:opacity-80 transition font-bold" style={{ color: THEME.green }}>
-                        ← Kembali ke Beranda
+                        {lang === 'id' ? '← Kembali ke Beranda' : '← Back to Home'}
                     </Link>
                 </p>
             </div>

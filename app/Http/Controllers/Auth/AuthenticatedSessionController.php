@@ -42,6 +42,13 @@ class AuthenticatedSessionController extends Controller
 
         // Jika ada pending recommendation dari guest, terapkan
         if ($pending) {
+            $lastGuestHistory = \App\Models\RecommendationHistory::whereNull('user_id')
+                ->latest()
+                ->first();
+            if ($lastGuestHistory) {
+                $lastGuestHistory->update(['user_id' => $user->id]);
+            }
+
             $user->update([
                 'age'                 => $pending['age'] ?? $user->age,
                 'height'              => $pending['height'] ?? $user->height,

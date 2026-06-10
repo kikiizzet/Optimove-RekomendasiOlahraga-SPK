@@ -49,6 +49,13 @@ class RegisteredUserController extends Controller
         // Ambil pending recommendation dari session (ditaruh saat guest submit form)
         $pending = session('pending_recommendation');
         if ($pending) {
+            $lastGuestHistory = \App\Models\RecommendationHistory::whereNull('user_id')
+                ->latest()
+                ->first();
+            if ($lastGuestHistory) {
+                $lastGuestHistory->update(['user_id' => $user->id]);
+            }
+
             $user->update([
                 'age'                 => $pending['age'] ?? null,
                 'height'              => $pending['height'] ?? null,

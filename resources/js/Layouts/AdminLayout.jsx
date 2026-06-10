@@ -21,6 +21,7 @@ export default function AdminLayout({ children, activeTab = 'dashboard' }) {
             <header className="md:hidden flex items-center justify-between px-6 py-4 border-b z-50 sticky top-0 backdrop-blur-md bg-opacity-90" 
                 style={{ backgroundColor: THEME.ice, borderColor: THEME.moss }}>
                 <div className="flex items-center gap-2">
+                    <img src="/images/icon hijau.png" alt="Optimove" className="w-6 h-6 object-contain" />
                     <span className="font-bold text-lg tracking-tight" style={{ letterSpacing: '-0.04em', color: THEME.ink }}>Optimove</span>
                     <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold" style={{ backgroundColor: THEME.dew, color: THEME.green }}>ADMIN</span>
                 </div>
@@ -89,6 +90,7 @@ export default function AdminLayout({ children, activeTab = 'dashboard' }) {
                 <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: THEME.moss }}>
                     <div>
                         <div className="flex items-center gap-2 mb-1">
+                            <img src="/images/icon hijau.png" alt="Optimove" className="w-7 h-7 object-contain" />
                             <span className="font-bold text-2xl tracking-tighter" style={{ letterSpacing: '-0.04em', color: THEME.ink }}>Optimove</span>
                             <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold" style={{ backgroundColor: THEME.dew, color: THEME.green }}>ADMIN</span>
                         </div>

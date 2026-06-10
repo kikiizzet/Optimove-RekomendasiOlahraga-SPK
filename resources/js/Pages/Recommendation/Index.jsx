@@ -138,6 +138,13 @@ function AnimatedCounter({ target, duration = 1800 }) {
 export default function Index({ formData, histories = [], stats = {}, testimonials = [] }) {
     const { recommendations, auth, bmi, bmiCategory } = usePage().props;
     const formRef = useRef(null);
+    const [lang, setLang] = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('optimove_lang') || 'id') : 'id');
+
+    const toggleLanguage = () => {
+        const nextLang = lang === 'id' ? 'en' : 'id';
+        setLang(nextLang);
+        localStorage.setItem('optimove_lang', nextLang);
+    };
 
     const { data, setData, post, processing, errors } = useForm({
         age: formData?.age || '',
@@ -219,22 +226,40 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
             <header className="sticky top-0 z-50 border-b border-stone-moss/70 backdrop-blur-md bg-canvas-ice/85">
                 <nav className="max-w-7xl mx-auto px-6 md:px-10 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-12">
-                        <Link href="/" className="font-bold text-2xl tracking-tight text-valley-green hover:opacity-85 transition">
+                        <Link href="/" className="flex items-center gap-2 font-bold text-2xl tracking-tight text-valley-green hover:opacity-85 transition">
+                            <img src="/images/icon hijau.png" alt="Optimove" className="w-7 h-7 object-contain" />
                             Optimove
                         </Link>
                         <div className="hidden md:flex gap-8 text-sm font-medium">
-                            <a href="#statistik" className="transition text-adaline-ink/75 hover:text-valley-green">Statistik Dataset</a>
-                            <a href="#metodologi" className="transition text-adaline-ink/75 hover:text-valley-green">Metodologi</a>
-                            <a href="#form" className="transition text-adaline-ink/75 hover:text-valley-green">Mulai Analisis</a>
-                            <a href="#riwayat" className="transition text-adaline-ink/75 hover:text-valley-green">Riwayat</a>
+                            <a href="#statistik" className="transition text-adaline-ink/75 hover:text-valley-green">
+                                {lang === 'id' ? 'Statistik Dataset' : 'Dataset Statistics'}
+                            </a>
+                            <a href="#metodologi" className="transition text-adaline-ink/75 hover:text-valley-green">
+                                {lang === 'id' ? 'Metodologi' : 'Methodology'}
+                            </a>
+                            <a href="#form" className="transition text-adaline-ink/75 hover:text-valley-green">
+                                {lang === 'id' ? 'Mulai Analisis' : 'Start Analysis'}
+                            </a>
+                            <a href="#riwayat" className="transition text-adaline-ink/75 hover:text-valley-green">
+                                {lang === 'id' ? 'Riwayat' : 'History'}
+                            </a>
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
+                        {/* Language Selector */}
+                        <button
+                            onClick={toggleLanguage}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition text-xs font-semibold cursor-pointer shadow-3xs"
+                        >
+                            <span>🌐</span>
+                            <span>{lang === 'id' ? 'ID' : 'EN'}</span>
+                        </button>
+
                         {auth?.user ? (
                             <>
                                 {auth.user.role === 'admin' ? (
                                     <a href={route('admin.dashboard')} className="py-2.5 px-5 rounded-full text-xs font-bold transition hover:bg-valley-green hover:text-white border border-valley-green text-valley-green">
-                                        Dashboard Admin
+                                        {lang === 'id' ? 'Dashboard Admin' : 'Admin Dashboard'}
                                     </a>
                                 ) : (
                                     <Link href={route('workspace.index')} className="py-2.5 px-5 rounded-full text-xs font-bold transition bg-forest-dew text-valley-green border border-valley-green/30 hover:bg-forest-dew/80">
@@ -242,13 +267,18 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
                                     </Link>
                                 )}
                                 <Link href={route('logout')} method="post" as="button" className="text-xs font-bold text-red-600 hover:text-red-800 transition">
-                                    Logout
+                                    {lang === 'id' ? 'Logout' : 'Log Out'}
                                 </Link>
                             </>
                         ) : (
-                            <button onClick={scrollToForm} className="py-2.5 px-6 rounded-full text-xs md:text-sm font-bold bg-valley-green text-white hover:opacity-90 transition flex items-center gap-1.5 shadow-sm">
-                                Mulai Analisis <span className="text-xs">→</span>
-                            </button>
+                            <div className="flex items-center gap-3">
+                                <Link href={route('login')} className="py-2 px-4.5 rounded-full text-xs font-bold border border-stone-200 text-stone-600 hover:bg-stone-50 bg-white transition shadow-3xs">
+                                    Login
+                                </Link>
+                                <button onClick={scrollToForm} className="py-2.5 px-6 rounded-full text-xs md:text-sm font-bold bg-valley-green text-white hover:opacity-90 transition flex items-center gap-1.5 shadow-sm">
+                                    {lang === 'id' ? 'Mulai Analisis' : 'Start Analysis'} <span className="text-xs">→</span>
+                                </button>
+                            </div>
                         )}
                     </div>
                 </nav>
@@ -316,11 +346,7 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
                                     {/* Sidebar mockup */}
                                     <div className="w-[140px] md:w-[170px] bg-valley-green p-4 flex flex-col gap-4 text-white shrink-0">
                                         <div className="flex items-center gap-1.5">
-                                            <div className="w-6 h-6 rounded-lg bg-forest-dew flex items-center justify-center">
-                                                <svg className="w-4 h-4 text-valley-green" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                                                </svg>
-                                            </div>
+                                            <img src="/images/icon hijau.png" alt="Optimove" className="w-6 h-6 object-contain" />
                                             <span className="font-bold text-xs md:text-sm tracking-tight text-forest-dew">OptiMove</span>
                                         </div>
                                         <div className="flex-1 flex flex-col gap-1.5 mt-2">
@@ -1115,14 +1141,16 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
                         <div>
                             © 2026 Optimove · Sistem Pendukung Keputusan · Hak Cipta Dilindungi.
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Link href={route('admin.dashboard')} className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-white/10 text-stone-400 hover:border-forest-dew hover:text-forest-dew transition uppercase text-[9px] font-bold">
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                                Halaman Admin
-                            </Link>
-                        </div>
+                        {auth?.user?.role === 'admin' && (
+                            <div className="flex items-center gap-2">
+                                <Link href={route('admin.dashboard')} className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-white/10 text-stone-400 hover:border-forest-dew hover:text-forest-dew transition uppercase text-[9px] font-bold">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                    Halaman Admin
+                                </Link>
+                            </div>
+                        )}
                     </div>
                 </div>
             </footer>

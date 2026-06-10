@@ -36,19 +36,21 @@ class WorkspaceController extends Controller
             ->orderBy('id')
             ->get();
 
+        // Ambil riwayat rekomendasi terakhir milik user ini saja
+        $lastHistory = RecommendationHistory::where('user_id', $user->id)
+            ->latest()
+            ->first();
+
+        $allRecommendations = [];
+        if ($lastHistory && !empty($lastHistory->all_recommendations)) {
+            $allRecommendations = is_array($lastHistory->all_recommendations)
+                ? $lastHistory->all_recommendations
+                : json_decode($lastHistory->all_recommendations, true);
+        }
+
         if ($todayTodos->isEmpty()) {
             // Gunakan rekomendasi terbaru user jika ada
-            $topSports = [];
-            if ($user->last_recommendation) {
-                // Ambil top 3 dari riwayat rekomendasi terakhir user
-                $lastHistory = RecommendationHistory::latest()->first();
-                if ($lastHistory && !empty($lastHistory->all_recommendations)) {
-                    $allRecs = is_array($lastHistory->all_recommendations)
-                        ? $lastHistory->all_recommendations
-                        : json_decode($lastHistory->all_recommendations, true);
-                    $topSports = array_slice($allRecs ?? [], 0, 3);
-                }
-            }
+            $topSports = array_slice($allRecommendations, 0, 3);
 
             if (!empty($topSports)) {
                 // Buat todo dari top 3 rekomendasi
@@ -90,13 +92,21 @@ class WorkspaceController extends Controller
             ->latest()
             ->get();
 
+        // Tambah profile_photo_url untuk frontend
+        if ($user->profile_photo) {
+            $user->profile_photo_url = asset('storage/' . $user->profile_photo);
+        } else {
+            $user->profile_photo_url = null;
+        }
+
         return Inertia::render('Workspace/Index', [
-            'user'         => $user,
-            'todayTodos'   => $todayTodos,
-            'journals'     => $journals,
-            'inactiveDays' => $inactiveDays,
-            'inactiveAlert'=> $inactiveAlert,
-            'testimonials' => $testimonials,
+            'user'               => $user,
+            'todayTodos'         => $todayTodos,
+            'journals'           => $journals,
+            'inactiveDays'       => $inactiveDays,
+            'inactiveAlert'      => $inactiveAlert,
+            'testimonials'       => $testimonials,
+            'allRecommendations' => $allRecommendations,
         ]);
     }
 
@@ -301,5 +311,62 @@ class WorkspaceController extends Controller
         $user->save();
 
         return back()->with('success', 'Profil berhasil diperbarui!');
+    }
+
+    /**
+     * Ganti/aktifkan program olahraga terpilih.
+     */
+    public function updateActiveProgram(Request $request)
+    {
+        $request->validate([
+            'sport' => 'required|string',
+        ]);
+
+        $user = Auth::user();
+        $user->last_recommendation = $request->sport;
+        // Reset checklist mingguan saat berganti program
+        $user->weekly_checklist = [
+            'Senin' => false,
+            'Selasa' => false,
+            'Rabu' => false,
+            'Kamis' => false,
+            'Jumat' => false,
+            'Sabtu' => false,
+            'Minggu' => false,
+            'current_week' => 1
+        ];
+        $user->save();
+
+        // Hapus todos hari ini agar tidak bertabrakan dengan program baru,
+        // dan buat todo baru untuk program yang baru diaktifkan.
+        \App\Models\WorkoutTodo::where('user_id', $user->id)
+            ->whereDate('due_date', \Carbon\Carbon::today())
+            ->delete();
+
+        \App\Models\WorkoutTodo::create([
+            'user_id'    => $user->id,
+            'task_name'  => 'Lakukan ' . $request->sport . ' hari ini',
+            'sport_name' => $request->sport,
+            'due_date'   => \Carbon\Carbon::today(),
+            'is_completed' => false,
+        ]);
+
+        return back()->with('success', 'Program latihan ' . $request->sport . ' berhasil diaktifkan!');
+    }
+
+    /**
+     * Toggle email reminder status untuk user.
+     */
+    public function toggleEmailReminder()
+    {
+        $user = Auth::user();
+        $user->email_reminder = !$user->email_reminder;
+        $user->save();
+
+        $statusMessage = $user->email_reminder 
+            ? 'Email reminder berhasil diaktifkan!' 
+            : 'Email reminder berhasil dimatikan!';
+
+        return back()->with('success', $statusMessage);
     }
 }

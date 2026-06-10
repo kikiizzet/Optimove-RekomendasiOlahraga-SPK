@@ -15,6 +15,7 @@ const THEME = {
 };
 
 export default function Register() {
+    const lang = typeof window !== 'undefined' ? (localStorage.getItem('optimove_lang') || 'id') : 'id';
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         email: '',
@@ -32,24 +33,30 @@ export default function Register() {
 
     return (
         <GuestLayout 
-            leftTitle="Mulai Perjalanan Sehat Anda!"
-            leftSubtitle="Daftar sekarang untuk mendapatkan rekomendasi olahraga terbaik yang dirancang khusus untuk Anda."
+            leftTitle={lang === 'id' ? "Mulai Perjalanan Sehat Anda!" : "Start Your Healthy Journey!"}
+            leftSubtitle={lang === 'id' ? "Daftar sekarang untuk mendapatkan rekomendasi olahraga terbaik yang dirancang khusus untuk Anda." : "Register now to get the best workout recommendations specifically designed for you."}
             leftImage="/images/Main hp.png"
-            leftHighlights={[
-                "Rekomendasi olahraga personal yang akurat",
-                "Pantau aktivitas fisik mingguan Anda",
-                "Catat jurnal dan to-do list harian Anda"
-            ]}
+            leftHighlights={
+                lang === 'id' ? [
+                    "Rekomendasi olahraga personal yang akurat",
+                    "Pantau aktivitas fisik mingguan Anda",
+                    "Catat jurnal dan to-do list harian Anda"
+                ] : [
+                    "Accurate personalized workout recommendations",
+                    "Track your weekly physical activity",
+                    "Record daily journals and to-do lists"
+                ]
+            }
         >
             <Head title="Register" />
 
             {/* Header inside the Card */}
             <div className="mb-6 text-left">
                 <h2 className="text-2xl font-extrabold tracking-tight mb-1" style={{ color: THEME.ink }}>
-                    Daftar Optimove
+                    {lang === 'id' ? 'Daftar Optimove' : 'Register to Optimove'}
                 </h2>
                 <p className="text-sm font-medium opacity-70" style={{ color: THEME.green }}>
-                    Silahkan lengkapi data di bawah ini untuk membuat akun baru
+                    {lang === 'id' ? 'Silahkan lengkapi data di bawah ini untuk membuat akun baru' : 'Please complete the details below to create a new account'}
                 </p>
             </div>
 
@@ -57,13 +64,13 @@ export default function Register() {
                 {/* Name */}
                 <div>
                     <label className="block text-sm font-bold mb-1.5" style={{ color: THEME.ink }}>
-                        Nama Lengkap
+                        {lang === 'id' ? 'Nama Lengkap' : 'Full Name'}
                     </label>
                     <input
                         id="name"
                         name="name"
                         value={data.name}
-                        placeholder="Masukkan nama lengkap Anda"
+                        placeholder={lang === 'id' ? "Masukkan nama lengkap Anda" : "Enter your full name"}
                         autoComplete="name"
                         autoFocus
                         onChange={(e) => setData('name', e.target.value)}
@@ -90,7 +97,7 @@ export default function Register() {
                         type="email"
                         name="email"
                         value={data.email}
-                        placeholder="Masukkan email Anda"
+                        placeholder={lang === 'id' ? "Masukkan email Anda" : "Enter your email"}
                         autoComplete="username"
                         onChange={(e) => setData('email', e.target.value)}
                         className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-1 focus:ring-offset-0 transition"
@@ -116,7 +123,7 @@ export default function Register() {
                         type="password"
                         name="password"
                         value={data.password}
-                        placeholder="Masukkan password Anda"
+                        placeholder={lang === 'id' ? "Masukkan password Anda" : "Enter your password"}
                         autoComplete="new-password"
                         onChange={(e) => setData('password', e.target.value)}
                         className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-1 focus:ring-offset-0 transition"
@@ -135,14 +142,14 @@ export default function Register() {
                 {/* Confirm Password */}
                 <div>
                     <label className="block text-sm font-bold mb-1.5" style={{ color: THEME.ink }}>
-                        Konfirmasi Password
+                        {lang === 'id' ? 'Konfirmasi Password' : 'Confirm Password'}
                     </label>
                     <input
                         id="password_confirmation"
                         type="password"
                         name="password_confirmation"
                         value={data.password_confirmation}
-                        placeholder="Masukkan kembali password Anda"
+                        placeholder={lang === 'id' ? "Masukkan kembali password Anda" : "Re-enter your password"}
                         autoComplete="new-password"
                         onChange={(e) => setData('password_confirmation', e.target.value)}
                         className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-1 focus:ring-offset-0 transition"
@@ -168,18 +175,18 @@ export default function Register() {
                         color: '#ffffff',
                     }}
                 >
-                    {processing ? 'Sedang membuat akun...' : 'Daftar'}
+                    {processing ? (lang === 'id' ? 'Sedang membuat akun...' : 'Creating account...') : (lang === 'id' ? 'Daftar' : 'Register')}
                 </button>
 
                 {/* Login Link */}
                 <div className="text-center mt-6 text-sm" style={{ color: THEME.ink }}>
-                    Sudah memiliki akun?{' '}
+                    {lang === 'id' ? 'Sudah memiliki akun? ' : 'Already have an account? '}
                     <Link
                         href={route('login')}
                         className="font-bold hover:underline"
                         style={{ color: THEME.green }}
                     >
-                        Masuk Sekarang
+                        {lang === 'id' ? 'Masuk Sekarang' : 'Log In Now'}
                     </Link>
                 </div>
             </form>

@@ -234,6 +234,7 @@ class RecommendationController extends Controller
 
         // Simpan riwayat ke DB (memicu Trigger DB ke-5)
         RecommendationHistory::create([
+            'user_id'             => Auth::check() ? Auth::id() : null,
             'gender'              => $validated['gender'],
             'age_group'           => $validated['age_group'],
             'fitness_level'       => $validated['fitness_level'],
