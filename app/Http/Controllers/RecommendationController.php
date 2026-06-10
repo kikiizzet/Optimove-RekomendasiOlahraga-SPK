@@ -30,7 +30,7 @@ class RecommendationController extends Controller
     private array $dietOrder    = ['No', 'Not always', 'Yes'];
 
     /** Olahraga high-impact — dibatasi jika ada kondisi fisik tertentu */
-    private array $highImpactSports = ['Basketball', 'Running', 'Football', 'Volleyball', 'Badminton', 'Gym'];
+    private array $highImpactSports = ['Basketball', 'Running', 'Football', 'Volleyball', 'Badminton', 'Gym', 'Workout', 'Zumba', 'Aerobic', 'Lifting Weights'];
     private array $lowImpactSports  = ['Swimming', 'Yoga', 'Walking or jogging', 'Cycling'];
 
     /** Konversi usia ke age_group */
@@ -116,14 +116,47 @@ class RecommendationController extends Controller
                 return $item;
             });
 
+        $recommendations = session('recommendation_results');
+        $formData = session('formData');
+        $bmi = session('bmi');
+        $bmiCategory = session('bmiCategory');
+        $physicalCondition = session('physicalCondition');
+
+        if (Auth::check() && empty($recommendations)) {
+            $user = Auth::user();
+            $lastHistory = RecommendationHistory::where('user_id', $user->id)
+                ->latest()
+                ->first();
+            if ($lastHistory) {
+                $recommendations = is_array($lastHistory->all_recommendations)
+                    ? $lastHistory->all_recommendations
+                    : json_decode($lastHistory->all_recommendations, true);
+                
+                $bmi = $user->bmi;
+                $bmiCategory = $bmi ? $this->bmiCategory($bmi) : null;
+                $physicalCondition = $user->physical_condition;
+                $formData = [
+                    'age' => $user->age,
+                    'age_group' => $lastHistory->age_group ?? $this->ageToGroup($user->age ?? 22),
+                    'gender' => $user->gender ?? $lastHistory->gender ?? 'Male',
+                    'fitness_level' => $lastHistory->fitness_level ?? 'Good',
+                    'exercise_frequency' => $lastHistory->exercise_frequency ?? '1 to 2 times a week',
+                    'diet' => $lastHistory->diet ?? 'Not always',
+                    'height' => $user->height,
+                    'weight' => $user->weight,
+                    'physical_condition' => $user->physical_condition,
+                ];
+            }
+        }
+
         return Inertia::render('Recommendation/Index', [
             'histories'          => $histories,
             'stats'              => $stats,
-            'recommendations'    => session('recommendation_results'),
-            'formData'           => session('formData'),
-            'bmi'                => session('bmi'),
-            'bmiCategory'        => session('bmiCategory'),
-            'physicalCondition'  => session('physicalCondition'),
+            'recommendations'    => $recommendations,
+            'formData'           => $formData,
+            'bmi'                => $bmi,
+            'bmiCategory'        => $bmiCategory,
+            'physicalCondition'  => $physicalCondition,
             'testimonials'       => $testimonials,
         ]);
     }
@@ -226,14 +259,12 @@ class RecommendationController extends Controller
             ];
         }
 
-        // Urutkan ulang: warning di bawah, low-impact ke atas jika ada kondisi fisik
-        if ($physicalCondition !== 'none') {
-            usort($topSports, fn($a, $b) => $a['warning'] <=> $b['warning'] ?: $b['low_impact'] <=> $a['low_impact']);
-            foreach ($topSports as $i => &$s) $s['rank'] = $i + 1;
-        }
+        // Selalu urutkan berdasarkan score desc agar skor tertinggi selalu nomor 1
+        usort($topSports, fn($a, $b) => $b['score'] <=> $a['score']);
+        foreach ($topSports as $i => &$s) $s['rank'] = $i + 1;
 
         // Simpan riwayat ke DB (memicu Trigger DB ke-5)
-        RecommendationHistory::create([
+        $history = RecommendationHistory::create([
             'user_id'             => Auth::check() ? Auth::id() : null,
             'gender'              => $validated['gender'],
             'age_group'           => $validated['age_group'],
@@ -275,6 +306,7 @@ class RecommendationController extends Controller
             // Simpan ke session untuk diambil setelah login/register
             session([
                 'pending_recommendation' => [
+                    'history_id'         => $history->id,
                     'top_sports'         => $topSports,
                     'bmi'                => $bmi,
                     'bmi_category'       => $bmiCategory,

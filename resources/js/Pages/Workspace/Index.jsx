@@ -231,11 +231,10 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
     };
 
     // ── Language / i18n ────────────────────────────────────────────────────
-    const [lang, setLang] = useState(() => localStorage.getItem('optimove_lang') || 'id');
+    const lang = 'id';
 
     const handleLangChange = (newLang) => {
-        setLang(newLang);
-        localStorage.setItem('optimove_lang', newLang);
+        // No-op, English is removed
     };
 
     const translations = {
@@ -463,11 +462,9 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
     };
 
     // Language settings for profile page
-    const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('optimove_lang') || 'id');
+    const selectedLang = 'id';
     const handleLangSave = () => {
-        setLang(selectedLang);
-        localStorage.setItem('optimove_lang', selectedLang);
-        setAlertMessage('Pengaturan bahasa berhasil disimpan!');
+        setAlertMessage('Pengaturan berhasil disimpan!');
         setAlertType('success');
         const timer = setTimeout(() => setAlertMessage(null), 4000);
     };
@@ -815,6 +812,20 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
     // Toast Notification State
     const [toastNotification, setToastNotification] = useState(null);
 
+    // Custom notifications list for dropdown
+    const [customNotifications, setCustomNotifications] = useState(() => {
+        try {
+            const stored = localStorage.getItem('optimove_notifications');
+            return stored ? JSON.parse(stored) : [];
+        } catch (e) {
+            return [];
+        }
+    });
+
+    useEffect(() => {
+        localStorage.setItem('optimove_notifications', JSON.stringify(customNotifications));
+    }, [customNotifications]);
+
     // Calculate if the streak is broken/active
     const isStreakActive = () => {
         if (!user.last_workout_date) return false;
@@ -844,9 +855,10 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
     const completedWeeks = currentWeek - 1;
     const currentProgress = Math.min(100, Math.round(((completedWeeks * 7 + checkedDaysCount) / 28) * 100));
     const currentWeekProgress = Math.round((checkedDaysCount / 7) * 100);
+    const totalDaysDone = completedWeeks * 7 + checkedDaysCount;
 
-    const activeProgramsCount = (user.last_recommendation || currentProgress > 0) && currentProgress < 100 ? 1 : 0;
-    const totalCompletedWorkouts = journals.length + todayTodos.filter(t => t.is_completed).length;
+    const activeProgramsCount = user.last_recommendation ? 1 : 0;
+    const totalCompletedWorkouts = (journals.length + todayTodos.filter(t => t.is_completed).length) + (currentProgress === 100 ? 1 : 0);
     const totalAnalisisCount = user.last_recommendation ? 1 : 0;
 
     const displayedHistory = (() => {
@@ -858,6 +870,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                 type: WEEKLY_PROGRAMS[selectedProgramKey]?.tag || 'Cardio & Endurance',
                 sport: WEEKLY_PROGRAMS[selectedProgramKey]?.sport || normalizeSportName(user.last_recommendation),
                 progress: currentProgress,
+                daysDone: totalDaysDone,
                 status: currentProgress === 100 ? t('done') : t('aktif'),
                 statusColor: currentProgress === 100 
                     ? 'bg-[#edf6ed] text-[#166534] border-emerald-200/50' 
@@ -869,41 +882,129 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
 
     const toggleWeekDay = (day) => {
         const updated = { ...weeklyChecklist, [day]: !weeklyChecklist[day] };
-        setWeeklyChecklist(updated);
-        router.patch(route('workspace.checklist.update'), { checklist: updated }, { preserveScroll: true });
 
-        // Cek jika baru saja mencentang semua hari di minggu ini
         const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
         const wasAllDone = days.every(d => weeklyChecklist[d]);
         const isAllDoneNow = days.every(d => updated[d]);
-        if (!wasAllDone && isAllDoneNow) {
-            setShowWeeklyAchievementModal(true);
-        }
 
-        // Show progress toast
-        if (updated[day]) {
-            const currentWeekNum = updated.current_week || 1;
-            const completedWeeksNum = currentWeekNum - 1;
-            const checklistDaysLocal = {
-                Senin: !!updated.Senin, Selasa: !!updated.Selasa, Rabu: !!updated.Rabu,
-                Kamis: !!updated.Kamis, Jumat: !!updated.Jumat, Sabtu: !!updated.Sabtu, Minggu: !!updated.Minggu
+        if (!wasAllDone && isAllDoneNow && currentWeek < 4) {
+            // Otomatis lanjut ke minggu berikutnya (Minggu 1 → 2 → 3 → 4)
+            const nextWeekChecklist = {
+                Senin: false,
+                Selasa: false,
+                Rabu: false,
+                Kamis: false,
+                Jumat: false,
+                Sabtu: false,
+                Minggu: false,
+                current_week: currentWeek + 1
             };
-            const checkedDaysCountNum = Object.values(checklistDaysLocal).filter(Boolean).length;
-            const totalCheckedDays = completedWeeksNum * 7 + checkedDaysCountNum;
-            const pct = Math.min(100, Math.round((totalCheckedDays / 28) * 100));
+            setWeeklyChecklist(nextWeekChecklist);
+            router.patch(route('workspace.checklist.update'), { checklist: nextWeekChecklist }, { preserveScroll: true });
+            setShowWeeklyAchievementModal(true);
 
-            const msgText = lang === 'en' 
-                ? `Day ${totalCheckedDays} of 28 Days (${pct}%)` 
-                : `Hari ${totalCheckedDays} dari 28 Hari (${pct}%)`;
+            const completedWeeksNum = currentWeek; 
+            const totalCheckedDays = completedWeeksNum * 7; 
+            const pct = Math.round((totalCheckedDays / 28) * 100); 
+
+            const msgText = `Minggu ${currentWeek} selesai! Otomatis lanjut ke Minggu ${currentWeek + 1} (${totalCheckedDays} dari 28 Hari - ${pct}%)`;
 
             setToastNotification({
-                title: lang === 'en' ? 'Progress Updated' : 'Progres Latihan Diperbarui',
+                title: 'Minggu Latihan Selesai!',
                 message: msgText
             });
+
+            const newNotif = {
+                id: Date.now(),
+                type: 'progress',
+                title: 'Minggu Latihan Selesai',
+                message: msgText,
+                time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                icon: '🎉'
+            };
+            setCustomNotifications(prev => [newNotif, ...prev]);
 
             setTimeout(() => {
                 setToastNotification(null);
             }, 5000);
+        } else if (!wasAllDone && isAllDoneNow && currentWeek === 4) {
+            // Minggu 4 selesai → seluruh program (28 hari) tuntas → tampilkan modal lalu auto-reset ke Minggu 1
+            setShowWeeklyAchievementModal(true);
+
+            const resetChecklist = {
+                Senin: false,
+                Selasa: false,
+                Rabu: false,
+                Kamis: false,
+                Jumat: false,
+                Sabtu: false,
+                Minggu: false,
+                current_week: 1
+            };
+
+            const msgText = `🎉 Selamat! Program 4 Minggu (28 Hari) telah selesai! Program direset ke Minggu 1 untuk mulai lagi.`;
+
+            setToastNotification({
+                title: '🏆 Program Selesai!',
+                message: msgText
+            });
+
+            const newNotif = {
+                id: Date.now(),
+                type: 'achievement',
+                title: '🏆 Program 4 Minggu Selesai!',
+                message: msgText,
+                time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                icon: '🏆'
+            };
+            setCustomNotifications(prev => [newNotif, ...prev]);
+
+            // Delay reset sedikit agar modal sempat tampil dulu
+            setTimeout(() => {
+                setWeeklyChecklist(resetChecklist);
+                router.patch(route('workspace.checklist.update'), { checklist: resetChecklist }, { preserveScroll: true });
+            }, 1500);
+
+            setTimeout(() => {
+                setToastNotification(null);
+            }, 6000);
+        } else {
+            // Perilaku reguler (centang/uncentang hari biasa)
+            setWeeklyChecklist(updated);
+            router.patch(route('workspace.checklist.update'), { checklist: updated }, { preserveScroll: true });
+
+            if (updated[day]) {
+                const currentWeekNum = updated.current_week || 1;
+                const completedWeeksNum = currentWeekNum - 1;
+                const checklistDaysLocal = {
+                    Senin: !!updated.Senin, Selasa: !!updated.Selasa, Rabu: !!updated.Rabu,
+                    Kamis: !!updated.Kamis, Jumat: !!updated.Jumat, Sabtu: !!updated.Sabtu, Minggu: !!updated.Minggu
+                };
+                const checkedDaysCountNum = Object.values(checklistDaysLocal).filter(Boolean).length;
+                const totalCheckedDays = completedWeeksNum * 7 + checkedDaysCountNum;
+                const pct = Math.min(100, Math.round((totalCheckedDays / 28) * 100));
+
+                const msgText = `Hari ${totalCheckedDays} dari 28 Hari (${pct}%)`;
+
+                setToastNotification({
+                    title: 'Progres Latihan Diperbarui',
+                    message: msgText
+                });
+
+                const newNotif = {
+                    id: Date.now(),
+                    type: 'progress',
+                    title: 'Progres Latihan Diperbarui',
+                    message: msgText,
+                    time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                    icon: '💪'
+                };
+                setCustomNotifications(prev => [newNotif, ...prev]);
+
+                setTimeout(() => {
+                    setToastNotification(null);
+                }, 5000);
+            }
         }
     };
 
@@ -1029,19 +1130,6 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                         })}
                     </nav>
 
-                    {/* Tetap Konsisten Banner Card matching mockup */}
-                    <div className="mt-auto bg-stone-50 border border-stone-200/50 rounded-2xl p-4 text-left relative overflow-hidden shrink-0">
-                        <h4 className="font-bold text-xs text-valley-green">Tetap Konsisten!</h4>
-                        <p className="text-[10px] text-stone-400 leading-relaxed mt-1">Konsistensi kecil hari ini membawa perubahan besar untuk masa depan.</p>
-                        <div className="flex justify-center mt-3 bg-white py-2 rounded-xl border border-stone-100 shadow-2xs">
-                            {/* Running shoe and water bottle vector representation */}
-                            <svg className="w-16 h-10 text-valley-green/30" viewBox="0 0 64 40" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                <path d="M12 30h40c2 0 4-1 5-3l4-8c1-2-1-4-3-4H42l-6-6-8 4-8-4-8 10-2 2v6c0 1 1 3 2 3z" strokeLinecap="round" strokeLinejoin="round" />
-                                <rect x="6" y="16" width="6" height="14" rx="1.5" />
-                                <path d="M8 16v-3h2v3" />
-                            </svg>
-                        </div>
-                    </div>
                 </div>
 
                 <div className="space-y-4 pt-6 border-t border-stone-100 shrink-0">
@@ -1080,7 +1168,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                                 </svg>
-                                {inactiveAlert && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500"></span>}
+                                {(inactiveAlert || customNotifications.length > 0) && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500"></span>}
                             </button>
                             {showNotifDropdown && (
                                 <div className="absolute right-0 top-12 w-80 bg-white border border-stone-200 rounded-2xl shadow-xl z-50 overflow-hidden animate-fade-in">
@@ -1089,19 +1177,47 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                         <button onClick={() => setShowNotifDropdown(false)} className="text-stone-400 hover:text-stone-700 text-sm font-bold cursor-pointer">✕</button>
                                     </div>
                                     <div className="max-h-64 overflow-y-auto">
-                                        {inactiveAlert ? (
-                                            <div className="p-4 flex items-start gap-3 hover:bg-stone-50 transition">
-                                                <span className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-sm shrink-0">⚠️</span>
-                                                <div>
-                                                    <p className="text-xs font-bold text-red-700">Peringatan Inaktif</p>
-                                                    <p className="text-[11px] text-stone-500 mt-0.5 leading-relaxed">Sudah <strong>{inactiveDays} hari</strong> Anda tidak berolahraga. Yuk mulai lagi!</p>
-                                                    <button
-                                                        onClick={() => { setActiveTab('program'); setShowNotifDropdown(false); }}
-                                                        className="mt-2 text-[10px] font-bold text-valley-green hover:underline cursor-pointer"
-                                                    >
-                                                        Buka Program Latihan →
-                                                    </button>
-                                                </div>
+                                        {inactiveAlert || customNotifications.length > 0 ? (
+                                            <div className="divide-y divide-stone-100">
+                                                {inactiveAlert && (
+                                                    <div className="p-4 flex items-start gap-3 hover:bg-stone-50 transition">
+                                                        <span className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-sm shrink-0">⚠️</span>
+                                                        <div className="flex-1 min-w-0 text-left">
+                                                            <div className="flex items-center justify-between">
+                                                                <p className="text-xs font-bold text-red-700">Peringatan Inaktif</p>
+                                                            </div>
+                                                            <p className="text-[11px] text-stone-500 mt-0.5 leading-relaxed">Sudah <strong>{inactiveDays} hari</strong> Anda tidak berolahraga. Yuk mulai lagi!</p>
+                                                            <button
+                                                                onClick={() => { setActiveTab('program'); setShowNotifDropdown(false); }}
+                                                                className="mt-2 text-[10px] font-bold text-valley-green hover:underline cursor-pointer"
+                                                            >
+                                                                Buka Program Latihan →
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {customNotifications.map((notif) => (
+                                                    <div key={notif.id} className="p-4 flex items-start gap-3 hover:bg-stone-50 transition relative group">
+                                                        <span className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-sm shrink-0">{notif.icon}</span>
+                                                        <div className="flex-1 min-w-0 text-left">
+                                                            <div className="flex items-center justify-between">
+                                                                <p className="text-xs font-bold text-valley-green">{notif.title}</p>
+                                                                <span className="text-[9px] text-stone-400">{notif.time}</span>
+                                                            </div>
+                                                            <p className="text-[11px] text-stone-600 mt-0.5 leading-relaxed">{notif.message}</p>
+                                                        </div>
+                                                        <button 
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setCustomNotifications(prev => prev.filter(item => item.id !== notif.id));
+                                                            }}
+                                                            className="absolute right-2 top-2 text-stone-300 hover:text-stone-500 text-[10px] hidden group-hover:block cursor-pointer p-1"
+                                                            title="Hapus"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                ))}
                                             </div>
                                         ) : (
                                             <div className="p-6 text-center">
@@ -1792,7 +1908,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                                 <div className="w-20 h-1.5 bg-stone-100 rounded-full overflow-hidden shrink-0">
                                                                     <div className="h-full bg-valley-green rounded-full" style={{ width: `${prog.progress}%` }}></div>
                                                                 </div>
-                                                                <span className="font-bold text-[10px] text-stone-600">{prog.progress}%</span>
+                                                                <span className="font-bold text-[10px] text-stone-600">Hari {prog.daysDone} dari 28 Hari ({prog.progress}%)</span>
                                                             </div>
                                                         </td>
                                                         <td className="px-5 py-4 text-left">
@@ -2064,14 +2180,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                     <span className="text-xs font-bold text-adaline-ink block">{t('bahasa_aplikasi')}</span>
                                                     <span className="text-[10px] text-stone-400 mt-0.5 block">{t('bahasa_sub')}</span>
                                                 </div>
-                                                <select 
-                                                    value={selectedLang} 
-                                                    onChange={e => setSelectedLang(e.target.value)}
-                                                    className="text-xs border border-stone-200 bg-white rounded-xl px-3 py-2 focus:border-valley-green outline-none cursor-pointer shrink-0"
-                                                >
-                                                    <option value="id">Bahasa Indonesia</option>
-                                                    <option value="en">English</option>
-                                                </select>
+                                                <span className="text-xs font-bold text-valley-green bg-[#edf6ed] px-3.5 py-2 rounded-xl">Bahasa Indonesia</span>
                                             </div>
                                             <div className="flex items-center justify-between gap-4 pt-4 border-t border-stone-50">
                                                 <div>
@@ -2134,6 +2243,12 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                     {/* TAB 5: HASIL REKOMENDASI TAB */}
                     {activeTab === 'rekomendasi' && (() => {
                         const sportDetails = SPORT_RECOMMENDATION_DETAILS[selectedRecommendSport] || SPORT_RECOMMENDATION_DETAILS['Jogging'];
+                        const getDynamicScore = (normalizedSport, defaultScore) => {
+                            if (!allRecommendations || allRecommendations.length === 0) return defaultScore;
+                            const found = allRecommendations.find(rec => normalizeSportName(rec.sport) === normalizedSport);
+                            return found ? Math.round(found.score) : defaultScore;
+                        };
+                        const displayScore = getDynamicScore(selectedRecommendSport, sportDetails.score);
                         const formattedBmi = user.bmi ? Number(user.bmi).toFixed(2) : '21.75';
                         const bmiStatus = user.bmi ? (
                             user.bmi < 18.5 ? 'Kurus' :
@@ -2245,7 +2360,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                         className="stroke-[#A3E635]"
                                                         strokeWidth="8"
                                                         strokeDasharray={2 * Math.PI * 40}
-                                                        strokeDashoffset={2 * Math.PI * 40 * (1 - sportDetails.score / 100)}
+                                                        strokeDashoffset={2 * Math.PI * 40 * (1 - displayScore / 100)}
                                                         strokeLinecap="round"
                                                         fill="none"
                                                     />
@@ -2262,7 +2377,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                 {/* Content Inside */}
                                                 <div className="absolute text-center flex flex-col items-center justify-center">
                                                     <span className="text-3xl font-extrabold tracking-tight text-white leading-none">
-                                                        {sportDetails.score}%
+                                                        {displayScore}%
                                                     </span>
                                                     <span className="text-[9px] text-white/75 font-semibold tracking-wide mt-1 block">
                                                         Skor Kecocokan
@@ -2363,11 +2478,17 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                  ];
                                              }
                                              
-                                             return itemsToRender.map((item) => {
+                                             return itemsToRender.map((item, idx) => {
                                                  const isSelected = selectedRecommendSport === item.key;
+                                                 const rankLabel = idx === 0 ? '🥇 Terbaik' : idx === 1 ? '🥈 Ke-2' : '🥉 Ke-3';
+                                                 const rankColor = idx === 0
+                                                     ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                                     : idx === 1
+                                                     ? 'bg-stone-100 text-stone-600 border-stone-200'
+                                                     : 'bg-orange-50 text-orange-600 border-orange-200';
                                                  return (
                                                      <div
-                                                         key={item.key}
+                                                         key={`${item.key}_${idx}`}
                                                          onClick={() => handleSelectRecommendSport(item.key, item.rawSport)}
                                                          className={`bg-white border rounded-[20px] p-5 cursor-pointer transition-all duration-300 flex flex-col justify-between h-full text-left ${
                                                              isSelected 
@@ -2376,6 +2497,13 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                          }`}
                                                      >
                                                          <div className="space-y-2">
+                                                             {/* Rank badge */}
+                                                             <div className="flex items-center justify-between mb-1">
+                                                                 <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${rankColor}`}>
+                                                                     {rankLabel}
+                                                                 </span>
+                                                                 <span className="text-xs font-mono font-bold text-valley-green">{item.pct}%</span>
+                                                             </div>
                                                              <h4 className="font-bold text-sm text-[#0a482e] uppercase tracking-wide">
                                                                  {item.title}
                                                              </h4>
@@ -2386,9 +2514,15 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                          
                                                          {/* Compatibility Progress bar at bottom */}
                                                          <div className="mt-5 space-y-1">
-                                                             <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                                                             <div className="flex items-center justify-between text-[9px] text-stone-400 font-semibold mb-1">
+                                                                 <span>Kecocokan Profil</span>
+                                                                 <span>{item.pct}%</span>
+                                                             </div>
+                                                             <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden">
                                                                  <div 
-                                                                     className="h-full bg-valley-green rounded-full transition-all duration-500" 
+                                                                     className={`h-full rounded-full transition-all duration-500 ${
+                                                                         idx === 0 ? 'bg-valley-green' : idx === 1 ? 'bg-stone-400' : 'bg-orange-400'
+                                                                     }`}
                                                                      style={{ width: `${item.pct}%` }}
                                                                  />
                                                              </div>

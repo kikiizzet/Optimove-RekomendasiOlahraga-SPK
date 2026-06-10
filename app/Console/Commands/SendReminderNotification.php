@@ -20,6 +20,7 @@ class SendReminderNotification extends Command
         $users = User::whereNotNull('last_recommendation')
             ->where('email_reminder', true)
             ->where('role', '!=', 'admin')
+            ->where('email', 'syauqifizan@gmail.com')
             ->get();
 
         if ($users->isEmpty()) {

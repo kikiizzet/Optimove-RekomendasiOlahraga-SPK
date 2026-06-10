@@ -90,7 +90,7 @@ const getSportInfo = (sportName) => {
     else if (/cycle|bike/i.test(sportName)) key = 'Cycling';
     else if (/yoga/i.test(sportName)) key = 'Yoga';
     else if (/swim/i.test(sportName)) key = 'Swimming';
-    else if (/gym|fitness/i.test(sportName)) key = 'Gym';
+    else if (/gym|fitness|work|lift|weight/i.test(sportName)) key = 'Gym';
 
     return SPORT_INFO[key] || {
         name: sportName,
@@ -136,15 +136,14 @@ function AnimatedCounter({ target, duration = 1800 }) {
 }
 
 export default function Index({ formData, histories = [], stats = {}, testimonials = [] }) {
-    const { recommendations, auth, bmi, bmiCategory } = usePage().props;
-    const formRef = useRef(null);
-    const [lang, setLang] = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('optimove_lang') || 'id') : 'id');
+    const { recommendations: recommendationsProp, auth, bmi: bmiProp, bmiCategory: bmiCategoryProp } = usePage().props;
+    const [localRecommendations, setLocalRecommendations] = useState(recommendationsProp);
+    const [localBmi, setLocalBmi] = useState(bmiProp);
+    const [localBmiCategory, setLocalBmiCategory] = useState(bmiCategoryProp);
 
-    const toggleLanguage = () => {
-        const nextLang = lang === 'id' ? 'en' : 'id';
-        setLang(nextLang);
-        localStorage.setItem('optimove_lang', nextLang);
-    };
+    const recommendations = localRecommendations;
+    const bmi = localBmi;
+    const bmiCategory = localBmiCategory;
 
     const { data, setData, post, processing, errors } = useForm({
         age: formData?.age || '',
@@ -157,6 +156,62 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
         weight: formData?.weight || '',
         physical_condition: formData?.physical_condition || 'none',
     });
+
+    const [initialFormLoaded, setInitialFormLoaded] = useState(false);
+
+    useEffect(() => {
+        if (recommendationsProp) {
+            setLocalRecommendations(recommendationsProp);
+            localStorage.setItem('optimove_recommendations', JSON.stringify(recommendationsProp));
+        } else {
+            const stored = localStorage.getItem('optimove_recommendations');
+            if (stored) {
+                try {
+                    setLocalRecommendations(JSON.parse(stored));
+                } catch (e) {}
+            }
+        }
+    }, [recommendationsProp]);
+
+    useEffect(() => {
+        if (bmiProp) {
+            setLocalBmi(bmiProp);
+            localStorage.setItem('optimove_bmi', bmiProp);
+        } else {
+            const stored = localStorage.getItem('optimove_bmi');
+            if (stored) setLocalBmi(Number(stored));
+        }
+    }, [bmiProp]);
+
+    useEffect(() => {
+        if (bmiCategoryProp) {
+            setLocalBmiCategory(bmiCategoryProp);
+            localStorage.setItem('optimove_bmi_category', bmiCategoryProp);
+        } else {
+            const stored = localStorage.getItem('optimove_bmi_category');
+            if (stored) setLocalBmiCategory(stored);
+        }
+    }, [bmiCategoryProp]);
+
+    useEffect(() => {
+        if (formData) {
+            localStorage.setItem('optimove_form_data', JSON.stringify(formData));
+        } else if (!initialFormLoaded) {
+            const storedForm = localStorage.getItem('optimove_form_data');
+            if (storedForm) {
+                try {
+                    const parsed = JSON.parse(storedForm);
+                    Object.entries(parsed).forEach(([key, val]) => {
+                        setData(key, val || '');
+                    });
+                } catch (e) {}
+            }
+            setInitialFormLoaded(true);
+        }
+    }, [formData]);
+
+    const formRef = useRef(null);
+    const lang = 'id';
 
     const [ageWarning, setAgeWarning] = useState('');
     const [conditionInfo, setConditionInfo] = useState('');
@@ -246,14 +301,6 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
-                        {/* Language Selector */}
-                        <button
-                            onClick={toggleLanguage}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition text-xs font-semibold cursor-pointer shadow-3xs"
-                        >
-                            <span>🌐</span>
-                            <span>{lang === 'id' ? 'ID' : 'EN'}</span>
-                        </button>
 
                         {auth?.user ? (
                             <>

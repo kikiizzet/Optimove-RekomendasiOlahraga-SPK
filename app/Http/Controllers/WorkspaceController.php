@@ -48,6 +48,15 @@ class WorkspaceController extends Controller
                 : json_decode($lastHistory->all_recommendations, true);
         }
 
+        // Pastikan selalu urut score tertinggi di posisi pertama & rank konsisten
+        if (!empty($allRecommendations)) {
+            usort($allRecommendations, fn($a, $b) => $b['score'] <=> $a['score']);
+            foreach ($allRecommendations as $i => &$rec) {
+                $rec['rank'] = $i + 1;
+            }
+            unset($rec);
+        }
+
         if ($todayTodos->isEmpty()) {
             // Gunakan rekomendasi terbaru user jika ada
             $topSports = array_slice($allRecommendations, 0, 3);
