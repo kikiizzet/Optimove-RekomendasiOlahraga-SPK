@@ -20,7 +20,6 @@ class SendReminderNotification extends Command
         $users = User::whereNotNull('last_recommendation')
             ->where('email_reminder', true)
             ->where('role', '!=', 'admin')
-            ->where('email', 'syauqifizan@gmail.com')
             ->get();
 
         if ($users->isEmpty()) {
@@ -96,6 +95,16 @@ class SendReminderNotification extends Command
             'cycling' => ['activity' => 'Bersepeda', 'duration' => '30-50 menit'],
             'swimming' => ['activity' => 'Renang', 'duration' => '25-45 menit'],
             'running' => ['activity' => 'Berlari', 'duration' => '30-45 menit'],
+            'football' => ['activity' => 'Sepak Bola', 'duration' => '45-60 menit'],
+            'soccer' => ['activity' => 'Sepak Bola', 'duration' => '45-60 menit'],
+            'sepak bola' => ['activity' => 'Sepak Bola', 'duration' => '45-60 menit'],
+            'basketball' => ['activity' => 'Bola Basket', 'duration' => '45-60 menit'],
+            'bola basket' => ['activity' => 'Bola Basket', 'duration' => '45-60 menit'],
+            'volleyball' => ['activity' => 'Bola Voli', 'duration' => '40-60 menit'],
+            'bola voli' => ['activity' => 'Bola Voli', 'duration' => '40-60 menit'],
+            'badminton' => ['activity' => 'Badminton', 'duration' => '30-45 menit'],
+            'team' => ['activity' => 'Olahraga Tim', 'duration' => '45-60 menit'],
+            'esport' => ['activity' => 'Olahraga Tim', 'duration' => '45-60 menit'],
         ];
 
         $key = strtolower($sportName);

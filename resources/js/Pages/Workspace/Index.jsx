@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useForm, usePage, Link, router } from '@inertiajs/react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import Swal from 'sweetalert2';
 
 // Weekly Workout Plans Database matching mockup columns exactly
 const WEEKLY_PROGRAMS = {
@@ -118,6 +119,121 @@ const WEEKLY_PROGRAMS = {
             { day: 'Sabtu', activity: 'Istirahat Aktif & Peregangan', duration: '15 Menit', intensity: 'Rendah', intensityColor: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
             { day: 'Minggu', activity: 'Istirahat Total', duration: '-', intensity: '-', intensityColor: 'bg-stone-50 text-stone-400' },
         ]
+    },
+    'Football': {
+        name: 'Agility & Team Play (Sepak Bola)',
+        sport: 'Sepak Bola',
+        tag: 'Agility & Team Play',
+        duration: '4 Minggu',
+        duration_sub: 'Aktif Berkelanjutan',
+        target: '3 Sesi',
+        target_sub: 'Latihan teknik & fisik',
+        duration_per_sesi: '45-60 Menit',
+        duration_per_sesi_sub: 'Latihan teknis & kondisi',
+        focus: 'Agility & Stamina',
+        focus_sub: 'Kelincahan dan daya tahan',
+        desc: 'Meningkatkan kelincahan, stamina, dan koordinasi tubuh melalui olahraga tim yang dinamis.',
+        schedule: [
+            { day: 'Senin', activity: 'Latihan Teknik Dasar (Passing & Dribbling)', duration: '45 Menit', intensity: 'Sedang', intensityColor: 'bg-amber-50 text-amber-700 border-amber-100' },
+            { day: 'Selasa', activity: 'Latihan Fisik (Sprint & Agility Ladder)', duration: '40 Menit', intensity: 'Tinggi', intensityColor: 'bg-red-50 text-red-700 border-red-100' },
+            { day: 'Rabu', activity: 'Active Recovery & Peregangan', duration: '20 Menit', intensity: 'Rendah', intensityColor: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+            { day: 'Kamis', activity: 'Small-Sided Games (4v4 / 5v5)', duration: '60 Menit', intensity: 'Sedang', intensityColor: 'bg-amber-50 text-amber-700 border-amber-100' },
+            { day: 'Jumat', activity: 'Shooting & Finishing Drill', duration: '45 Menit', intensity: 'Sedang', intensityColor: 'bg-amber-50 text-amber-700 border-amber-100' },
+            { day: 'Sabtu', activity: 'Match Simulation atau Scrimmage', duration: '60 Menit', intensity: 'Tinggi', intensityColor: 'bg-red-50 text-red-700 border-red-100' },
+            { day: 'Minggu', activity: 'Istirahat Total', duration: '-', intensity: '-', intensityColor: 'bg-stone-50 text-stone-400' },
+        ]
+    },
+    'Basketball': {
+        name: 'Power & Coordination (Bola Basket)',
+        sport: 'Bola Basket',
+        tag: 'Power & Coordination',
+        duration: '4 Minggu',
+        duration_sub: 'Aktif Berkelanjutan',
+        target: '3 Sesi',
+        target_sub: 'Latihan teknik & kekuatan',
+        duration_per_sesi: '45-60 Menit',
+        duration_per_sesi_sub: 'Latihan intensitas tinggi',
+        focus: 'Power & Coordination',
+        focus_sub: 'Kekuatan eksplosif & koordinasi',
+        desc: 'Melatih kekuatan eksplosif, koordinasi, dan kelincahan dalam olahraga tim yang kompetitif.',
+        schedule: [
+            { day: 'Senin', activity: 'Dribbling & Ballhandling Drill', duration: '40 Menit', intensity: 'Sedang', intensityColor: 'bg-amber-50 text-amber-700 border-amber-100' },
+            { day: 'Selasa', activity: 'Shooting & Layup Practice', duration: '45 Menit', intensity: 'Sedang', intensityColor: 'bg-amber-50 text-amber-700 border-amber-100' },
+            { day: 'Rabu', activity: 'Active Recovery & Peregangan', duration: '20 Menit', intensity: 'Rendah', intensityColor: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+            { day: 'Kamis', activity: '3-on-3 Game & Defensive Drill', duration: '60 Menit', intensity: 'Tinggi', intensityColor: 'bg-red-50 text-red-700 border-red-100' },
+            { day: 'Jumat', activity: 'Strength & Jump Training (Plyometrics)', duration: '40 Menit', intensity: 'Tinggi', intensityColor: 'bg-red-50 text-red-700 border-red-100' },
+            { day: 'Sabtu', activity: 'Full Court Scrimmage', duration: '60 Menit', intensity: 'Tinggi', intensityColor: 'bg-red-50 text-red-700 border-red-100' },
+            { day: 'Minggu', activity: 'Istirahat Total', duration: '-', intensity: '-', intensityColor: 'bg-stone-50 text-stone-400' },
+        ]
+    },
+    'Volleyball': {
+        name: 'Teamwork & Reflexes (Bola Voli)',
+        sport: 'Bola Voli',
+        tag: 'Teamwork & Reflexes',
+        duration: '4 Minggu',
+        duration_sub: 'Aktif Berkelanjutan',
+        target: '3 Sesi',
+        target_sub: 'Latihan teknik & refleks',
+        duration_per_sesi: '40-60 Menit',
+        duration_per_sesi_sub: 'Latihan intensitas sedang',
+        focus: 'Reflexes & Endurance',
+        focus_sub: 'Refleks, koordinasi, & stamina',
+        desc: 'Meningkatkan refleks, koordinasi, dan daya tahan tubuh melalui olahraga tim yang interaktif.',
+        schedule: [
+            { day: 'Senin', activity: 'Passing & Setting Drill (Teknik Dasar)', duration: '40 Menit', intensity: 'Rendah', intensityColor: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+            { day: 'Selasa', activity: 'Spiking & Blocking Drill', duration: '45 Menit', intensity: 'Sedang', intensityColor: 'bg-amber-50 text-amber-700 border-amber-100' },
+            { day: 'Rabu', activity: 'Active Recovery & Peregangan', duration: '20 Menit', intensity: 'Rendah', intensityColor: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+            { day: 'Kamis', activity: 'Servis & Receiving Drill', duration: '40 Menit', intensity: 'Sedang', intensityColor: 'bg-amber-50 text-amber-700 border-amber-100' },
+            { day: 'Jumat', activity: 'Team Play & Rotation Practice', duration: '60 Menit', intensity: 'Sedang', intensityColor: 'bg-amber-50 text-amber-700 border-amber-100' },
+            { day: 'Sabtu', activity: 'Full Game Match Scrimmage', duration: '60 Menit', intensity: 'Tinggi', intensityColor: 'bg-red-50 text-red-700 border-red-100' },
+            { day: 'Minggu', activity: 'Istirahat Total', duration: '-', intensity: '-', intensityColor: 'bg-stone-50 text-stone-400' },
+        ]
+    },
+    'Badminton': {
+        name: 'Speed & Agility (Badminton)',
+        sport: 'Badminton',
+        tag: 'Speed & Agility',
+        duration: '4 Minggu',
+        duration_sub: 'Aktif Berkelanjutan',
+        target: '4 Sesi',
+        target_sub: 'Latihan teknik & kecepatan',
+        duration_per_sesi: '30-45 Menit',
+        duration_per_sesi_sub: 'Latihan intensitas sedang',
+        focus: 'Speed & Agility',
+        focus_sub: 'Kecepatan gerak & kelincahan',
+        desc: 'Meningkatkan kecepatan reaksi, kelincahan kaki, dan kekuatan pukulan secara bertahap.',
+        schedule: [
+            { day: 'Senin', activity: 'Footwork & Shadow Drill (Kelincahan)', duration: '30 Menit', intensity: 'Sedang', intensityColor: 'bg-amber-50 text-amber-700 border-amber-100' },
+            { day: 'Selasa', activity: 'Teknik Smash & Drop Shot', duration: '35 Menit', intensity: 'Sedang', intensityColor: 'bg-amber-50 text-amber-700 border-amber-100' },
+            { day: 'Rabu', activity: 'Active Recovery & Peregangan', duration: '15 Menit', intensity: 'Rendah', intensityColor: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+            { day: 'Kamis', activity: 'Singles & Doubles Drills', duration: '40 Menit', intensity: 'Sedang', intensityColor: 'bg-amber-50 text-amber-700 border-amber-100' },
+            { day: 'Jumat', activity: 'Speed Training & Net Play Drill', duration: '35 Menit', intensity: 'Tinggi', intensityColor: 'bg-red-50 text-red-700 border-red-100' },
+            { day: 'Sabtu', activity: 'Match Play (Pertandingan Latihan)', duration: '45 Menit', intensity: 'Tinggi', intensityColor: 'bg-red-50 text-red-700 border-red-100' },
+            { day: 'Minggu', activity: 'Istirahat Total', duration: '-', intensity: '-', intensityColor: 'bg-stone-50 text-stone-400' },
+        ]
+    },
+    'Team Sport': {
+        name: 'Team Sports Conditioning',
+        sport: 'Team Sport',
+        tag: 'Team Sports',
+        duration: '4 Minggu',
+        duration_sub: 'Aktif Berkelanjutan',
+        target: '3 Sesi',
+        target_sub: 'Latihan tim & fisik',
+        duration_per_sesi: '45-60 Menit',
+        duration_per_sesi_sub: 'Latihan tim & kondisi',
+        focus: 'Endurance & Teamwork',
+        focus_sub: 'Stamina & kerja tim',
+        desc: 'Program olahraga tim untuk meningkatkan stamina, koordinasi, dan semangat kerja sama.',
+        schedule: [
+            { day: 'Senin', activity: 'Latihan Fisik Dasar (Sprint & Agility)', duration: '40 Menit', intensity: 'Sedang', intensityColor: 'bg-amber-50 text-amber-700 border-amber-100' },
+            { day: 'Selasa', activity: 'Drill Teknik Olahraga Tim Pilihan', duration: '45 Menit', intensity: 'Sedang', intensityColor: 'bg-amber-50 text-amber-700 border-amber-100' },
+            { day: 'Rabu', activity: 'Active Recovery & Peregangan', duration: '20 Menit', intensity: 'Rendah', intensityColor: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+            { day: 'Kamis', activity: 'Team Play & Game Strategy', duration: '60 Menit', intensity: 'Sedang', intensityColor: 'bg-amber-50 text-amber-700 border-amber-100' },
+            { day: 'Jumat', activity: 'Strength & Endurance Training', duration: '45 Menit', intensity: 'Tinggi', intensityColor: 'bg-red-50 text-red-700 border-red-100' },
+            { day: 'Sabtu', activity: 'Full Match Simulation', duration: '60 Menit', intensity: 'Tinggi', intensityColor: 'bg-red-50 text-red-700 border-red-100' },
+            { day: 'Minggu', activity: 'Istirahat Total', duration: '-', intensity: '-', intensityColor: 'bg-stone-50 text-stone-400' },
+        ]
     }
 };
 
@@ -188,6 +304,61 @@ const SPORT_RECOMMENDATION_DETAILS = {
         calories: '300 - 600 kkal',
         desc: 'Latihan beban untuk kekuatan otot, kepadatan tulang, dan metabolisme prima.',
         score: 60,
+    },
+    'Sepak Bola': {
+        name: 'Sepak Bola',
+        suitability: 'Sangat Cocok untuk Anda',
+        stars: 4,
+        intensityLabel: '(Tinggi)',
+        duration: '45 - 60 Menit',
+        frequency: '3 kali/minggu',
+        calories: '400 - 700 kkal',
+        desc: 'Meningkatkan kelincahan, stamina, dan koordinasi melalui olahraga tim yang dinamis.',
+        score: 75,
+    },
+    'Bola Basket': {
+        name: 'Bola Basket',
+        suitability: 'Sangat Cocok untuk Anda',
+        stars: 4,
+        intensityLabel: '(Tinggi)',
+        duration: '45 - 60 Menit',
+        frequency: '3 kali/minggu',
+        calories: '400 - 650 kkal',
+        desc: 'Melatih kekuatan eksplosif, koordinasi, dan kelincahan dalam olahraga tim yang kompetitif.',
+        score: 72,
+    },
+    'Bola Voli': {
+        name: 'Bola Voli',
+        suitability: 'Cocok untuk Anda',
+        stars: 3,
+        intensityLabel: '(Sedang)',
+        duration: '40 - 60 Menit',
+        frequency: '3 kali/minggu',
+        calories: '300 - 500 kkal',
+        desc: 'Meningkatkan refleks, koordinasi, dan daya tahan tubuh melalui olahraga tim.',
+        score: 68,
+    },
+    'Badminton': {
+        name: 'Badminton',
+        suitability: 'Cocok untuk Anda',
+        stars: 3,
+        intensityLabel: '(Sedang)',
+        duration: '30 - 45 Menit',
+        frequency: '4 kali/minggu',
+        calories: '250 - 450 kkal',
+        desc: 'Meningkatkan kecepatan reaksi, kelincahan, dan koordinasi tangan-mata.',
+        score: 70,
+    },
+    'Team Sport': {
+        name: 'Team Sport',
+        suitability: 'Cocok untuk Anda',
+        stars: 3,
+        intensityLabel: '(Sedang)',
+        duration: '45 - 60 Menit',
+        frequency: '3 kali/minggu',
+        calories: '350 - 600 kkal',
+        desc: 'Program olahraga tim untuk meningkatkan stamina, koordinasi, dan semangat kerja sama.',
+        score: 65,
     }
 };
 
@@ -496,6 +667,67 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
         mood: 'good',
     });
 
+    // SAW Analysis form (embedded in workspace)
+    const sawForm = useForm({
+        age: '',
+        age_group: '19 to 25',
+        gender: 'Male',
+        fitness_level: 'Good',
+        exercise_frequency: '1 to 2 times a week',
+        diet: 'Not always',
+        height: '',
+        weight: '',
+        physical_condition: 'none',
+        from_workspace: true,
+    });
+    const [sawShowHealthForm, setSawShowHealthForm] = useState(false);
+    const [sawAgeWarning, setSawAgeWarning] = useState('');
+    const [sawConditionInfo, setSawConditionInfo] = useState('');
+    const [sawResult, setSawResult] = useState(allRecommendations && allRecommendations.length > 0 ? allRecommendations : null);
+
+    useEffect(() => {
+        const ageVal = parseInt(sawForm.data.age);
+        if (ageVal) {
+            let grp = '40 and above';
+            if (ageVal <= 18) grp = '15 to 18';
+            else if (ageVal <= 25) grp = '19 to 25';
+            else if (ageVal <= 30) grp = '26 to 30';
+            else if (ageVal <= 40) grp = '31 to 40';
+            sawForm.setData('age_group', grp);
+            if (ageVal < 15 || ageVal > 60) {
+                setSawAgeWarning('⚠️ Perhatian: Metode SAW dioptimalkan untuk usia produktif (15–60 tahun).');
+            } else {
+                setSawAgeWarning('');
+            }
+        } else {
+            setSawAgeWarning('');
+        }
+    }, [sawForm.data.age]);
+
+    useEffect(() => {
+        if (sawForm.data.physical_condition === 'knee_injury') {
+            setSawConditionInfo('💡 Cedera Lutut: Olahraga high-impact (lari, basket) akan dibatasi. Direkomendasikan renang & yoga.');
+        } else if (sawForm.data.physical_condition === 'asthma') {
+            setSawConditionInfo('💡 Gangguan Asma: Olahraga kardio intensitas tinggi ditandai peringatan. Yoga atau jalan kaki direkomendasikan.');
+        } else if (sawForm.data.physical_condition === 'heart') {
+            setSawConditionInfo('💡 Masalah Jantung: Harap konsultasikan ke dokter. Olahraga intensitas tinggi akan disaring.');
+        } else {
+            setSawConditionInfo('');
+        }
+    }, [sawForm.data.physical_condition]);
+
+    const handleSawSubmit = (e) => {
+        e.preventDefault();
+        sawForm.post(route('recommend'), {
+            preserveScroll: true,
+            onSuccess: (page) => {
+                const recs = page.props?.recommendations;
+                if (recs && recs.length > 0) setSawResult(recs);
+                setActiveTab('rekomendasi');
+            },
+        });
+    };
+
     const testimonialForm = useForm({
         content: '',
         rating: 5,
@@ -509,11 +741,16 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
     const getProgramKey = (sportName) => {
         if (!sportName) return 'Walking or jogging';
         const name = sportName.toLowerCase();
-        if (/walk|jog|run|foot|soccer|basket|volley|badminton|zumba|jump|rope|aerobic|hiking|softball|skj/i.test(name)) return 'Walking or jogging';
-        if (/gym|fitness|lift|weight|beban|work|calisthenic/i.test(name)) return 'Gym';
+        if (/walk|jog|run|lari|zumba|jump|rope|aerobic|hiking|softball|skj/i.test(name)) return 'Walking or jogging';
+        if (/gym|fitness|lift|weight|beban|calisthenic/i.test(name)) return 'Gym';
         if (/yoga|martial|golf|tennis|table/i.test(name)) return 'Yoga';
         if (/cycle|bike|sepeda/i.test(name)) return 'Cycling';
         if (/swim|renang/i.test(name)) return 'Swimming';
+        if (/football|soccer|sepak bola|sepakbola/i.test(name)) return 'Football';
+        if (/basketball|bola basket|basket/i.test(name)) return 'Basketball';
+        if (/volleyball|bola voli|volley/i.test(name)) return 'Volleyball';
+        if (/badminton/i.test(name)) return 'Badminton';
+        if (/team sport|esport|e-sport|olahraga tim/i.test(name)) return 'Team Sport';
         return 'Walking or jogging';
     };
 
@@ -542,8 +779,8 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
         }
         if (name.includes('cycle') || name.includes('sepeda')) {
             return (
-                <div className="w-10 h-10 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0 text-lg">
-                    🚴
+                <div className="w-10 h-10 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0">
+                    <img src="/images/bicycle 3.png" alt="Cycling" className="w-6 h-6 object-contain" />
                 </div>
             );
         }
@@ -554,9 +791,23 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                 </div>
             );
         }
+        if (name.includes('football') || name.includes('soccer') || name.includes('sepak bola') || name.includes('basket') || name.includes('voli') || name.includes('badminton')) {
+            return (
+                <div className="w-10 h-10 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0">
+                    <img src="/images/football.png" alt="Football" className="w-full h-full object-cover rounded-full" />
+                </div>
+            );
+        }
+        if (name.includes('team') || name.includes('esport')) {
+            return (
+                <div className="w-10 h-10 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0">
+                    <img src="/images/teamsports.png" alt="Team Sport" className="w-full h-full object-cover rounded-full" />
+                </div>
+            );
+        }
         return (
-            <div className="w-10 h-10 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0 text-lg">
-                💪
+            <div className="w-10 h-10 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0">
+                <img src="/images/running (1).png" alt="Sport" className="w-6 h-6 object-contain" />
             </div>
         );
     };
@@ -568,6 +819,11 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
             case 'Yoga': return '/images/yoga.png';
             case 'Swimming': return '/images/swimming.png';
             case 'Gym': return '/images/gym.png';
+            case 'Football': return '/images/football.png';
+            case 'Basketball': return '/images/football.png';
+            case 'Volleyball': return '/images/football.png';
+            case 'Badminton': return '/images/football.png';
+            case 'Team Sport': return '/images/teamsports.png';
             default: return '/images/Gambar Lari.png';
         }
     };
@@ -579,6 +835,8 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
         if (/swimming|renang/i.test(sportName)) return '/images/running (3).png';
         if (/cycle|sepeda/i.test(sportName)) return '/images/bicycle 3.png';
         if (/gym|fitness|lift|weight/i.test(sportName)) return '/images/dumbbell 2.png';
+        if (/football|soccer|sepak bola|basketball|basket|volleyball|voli|badminton/i.test(sportName)) return '/images/football.png';
+        if (/team|esport/i.test(sportName)) return '/images/teamsports.png';
         return '/images/running (1).png';
     };
 
@@ -639,31 +897,68 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
     const normalizeSportName = (name) => {
         if (!name) return 'Jogging';
         const lower = name.toLowerCase();
-        if (/walk|jog|run|foot|soccer|basket|volley|badminton|zumba|jump|rope|aerobic|hiking|softball|skj/i.test(lower)) return 'Jogging';
-        if (/cycle|sepeda/i.test(lower)) return 'Bersepeda';
+        if (/walk|jog|lari|run/i.test(lower)) return 'Jogging';
+        if (/cycle|sepeda|bersepeda/i.test(lower)) return 'Bersepeda';
         if (/yoga|martial|golf|tennis|table/i.test(lower)) return 'Yoga';
-        if (/swimming|renang/i.test(lower)) return 'Renang';
-        if (/gym|fitness|lift|weight|beban|work|calisthenic/i.test(lower)) return 'Gym / Fitness';
+        if (/swim|renang/i.test(lower)) return 'Renang';
+        if (/gym|fitness|lift|weight|beban|calisthenic/i.test(lower)) return 'Gym / Fitness';
+        if (/football|soccer|sepak bola|sepakbola/i.test(lower)) return 'Sepak Bola';
+        if (/basketball|bola basket|basket/i.test(lower)) return 'Bola Basket';
+        if (/volleyball|bola voli|volley/i.test(lower)) return 'Bola Voli';
+        if (/badminton/i.test(lower)) return 'Badminton';
+        if (/team sport|esport|e-sport|olahraga tim/i.test(lower)) return 'Team Sport';
+        // fallback: if it's a team sport keyword from the backend
+        if (/zumba|aerobic|hiking|softball|skj|jump|rope/i.test(lower)) return 'Jogging';
         return 'Jogging';
     };
 
     const [selectedRecommendSport, setSelectedRecommendSport] = useState(normalizeSportName(user.last_recommendation));
 
     const handleSelectRecommendSport = (sportName, rawSportName) => {
-        setSelectedRecommendSport(sportName);
+        const currentActive = normalizeSportName(user.last_recommendation);
         
-        // Map back to WEEKLY_PROGRAMS keys: 'Walking or jogging', 'Cycling', 'Yoga', 'Swimming', 'Gym'
-        let progKey = 'Walking or jogging';
+        // Map normalized sport name to WEEKLY_PROGRAMS keys
+        let progKey = 'Walking or jogging'; // default
         if (sportName === 'Bersepeda') progKey = 'Cycling';
         else if (sportName === 'Yoga') progKey = 'Yoga';
         else if (sportName === 'Renang') progKey = 'Swimming';
         else if (sportName === 'Gym / Fitness') progKey = 'Gym';
-        
-        setSelectedProgramKey(progKey);
+        else if (sportName === 'Sepak Bola') progKey = 'Football';
+        else if (sportName === 'Bola Basket') progKey = 'Basketball';
+        else if (sportName === 'Bola Voli') progKey = 'Volleyball';
+        else if (sportName === 'Badminton') progKey = 'Badminton';
+        else if (sportName === 'Team Sport') progKey = 'Team Sport';
 
-        const targetSport = rawSportName || progKey;
-        router.post(route('workspace.program.activate'), { sport: targetSport }, {
-            preserveScroll: true
+        if (sportName === currentActive) {
+            setSelectedRecommendSport(sportName);
+            setSelectedProgramKey(progKey);
+            return;
+        }
+
+        Swal.fire({
+            title: 'Ganti Rekomendasi Olahraga?',
+            text: `Apakah Anda yakin ingin mengganti olahraga aktif Anda menjadi ${sportName}? Tindakan ini akan memengaruhi dan mengubah program latihan Anda saat ini.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Ganti Program',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#203b14', // Brand green (valley-green)
+            cancelButtonColor: '#78716c', // Stone-500
+            customClass: {
+                popup: 'rounded-3xl border border-stone-200',
+                confirmButton: 'rounded-full font-bold px-6 py-2.5 text-sm',
+                cancelButton: 'rounded-full font-bold px-6 py-2.5 text-sm'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                setSelectedRecommendSport(sportName);
+                setSelectedProgramKey(progKey);
+
+                const targetSport = rawSportName || progKey;
+                router.post(route('workspace.program.activate'), { sport: targetSport }, {
+                    preserveScroll: true
+                });
+            }
         });
     };
 
@@ -851,6 +1146,12 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
         Sabtu: !!weeklyChecklist.Sabtu,
         Minggu: !!weeklyChecklist.Minggu,
     };
+    const getTodayDayName = () => {
+        const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        return days[new Date().getDay()];
+    };
+    const todayDayName = getTodayDayName();
+    const hasTodayInactivityAlert = user.last_recommendation && todayDayName !== 'Minggu' && !checklistDays[todayDayName];
     const checkedDaysCount = Object.values(checklistDays).filter(Boolean).length;
     const completedWeeks = currentWeek - 1;
     const currentProgress = Math.min(100, Math.round(((completedWeeks * 7 + checkedDaysCount) / 28) * 100));
@@ -997,7 +1298,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                     title: 'Progres Latihan Diperbarui',
                     message: msgText,
                     time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-                    icon: '💪'
+                    icon: '🏃'
                 };
                 setCustomNotifications(prev => [newNotif, ...prev]);
 
@@ -1008,31 +1309,89 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
         }
     };
 
-    // Download workout schedule plan (.txt blob)
+    // Download workout schedule plan as PDF
     const handleDownloadSchedule = () => {
         const prog = WEEKLY_PROGRAMS[selectedProgramKey];
-        let content = `PROGRAM LATIHAN PERSONAL - ${prog.name.toUpperCase()}\n`;
-        content += `Durasi Program: ${prog.duration} (${getDynamicDateRange()})\n`;
-        content += `Target Mingguan: ${prog.target} (${prog.target_sub})\n`;
-        content += `Durasi Per Sesi: ${prog.duration_per_sesi} (${prog.duration_per_sesi_sub})\n`;
-        content += `Fokus Program: ${prog.focus} (${prog.focus_sub})\n\n`;
-        content += `JADWAL MINGGUAN:\n`;
-        content += `------------------------------------------------------------\n`;
-        content += `Hari   | Aktivitas                        | Durasi   | Intensitas\n`;
-        content += `------------------------------------------------------------\n`;
-        prog.schedule.forEach(row => {
-            content += `${row.day.padEnd(6)} | ${row.activity.padEnd(32)} | ${row.duration.padEnd(8)} | ${row.intensity}\n`;
-        });
-        content += `------------------------------------------------------------\n`;
-        
-        const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `jadwal_latihan_${selectedProgramKey}.txt`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const dateRange = getDynamicDateRange();
+
+        const scheduleRows = prog.schedule.map(row => {
+            const intensityBadge = row.intensity !== '-'
+                ? `<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;background:${row.intensity === 'Rendah' ? '#d1fae5' : row.intensity === 'Sedang' ? '#fef9c3' : '#fee2e2'};color:${row.intensity === 'Rendah' ? '#065f46' : row.intensity === 'Sedang' ? '#92400e' : '#991b1b'};">${row.intensity}</span>`
+                : '-';
+            return `
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:12px 16px;font-weight:700;color:#166534;font-size:13px;">${row.day}</td>
+                    <td style="padding:12px 16px;font-size:13px;color:#1c1917;font-weight:600;">${row.activity}</td>
+                    <td style="padding:12px 16px;font-size:12px;color:#57534e;">${row.duration}</td>
+                    <td style="padding:12px 16px;">${intensityBadge}</td>
+                </tr>`;
+        }).join('');
+
+        const html = `<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', Arial, sans-serif; background: #fff; color: #1c1917; padding: 40px; }
+        .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #166534; padding-bottom: 18px; margin-bottom: 28px; }
+        .brand { font-size: 22px; font-weight: 900; color: #166534; letter-spacing: -0.5px; }
+        .badge { background: #166534; color: #fff; font-size: 10px; font-weight: 700; padding: 4px 14px; border-radius: 20px; letter-spacing: 0.5px; }
+        h1 { font-size: 20px; font-weight: 900; color: #1c1917; margin-bottom: 6px; }
+        .subtitle { font-size: 12px; color: #78716c; margin-bottom: 24px; }
+        .info-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 28px; }
+        .info-card { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 14px 16px; }
+        .info-card .lbl { font-size: 9px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.6px; display: block; margin-bottom: 6px; }
+        .info-card .val { font-size: 14px; font-weight: 900; color: #166534; display: block; }
+        .info-card .sub { font-size: 10px; color: #9ca3af; display: block; margin-top: 2px; }
+        table { width: 100%; border-collapse: collapse; }
+        thead tr { background: #f0fdf4; }
+        th { padding: 12px 16px; text-align: left; font-size: 10px; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.6px; }
+        td { vertical-align: middle; }
+        .footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid #e7e5e4; display: flex; justify-content: space-between; align-items: center; }
+        .footer span { font-size: 10px; color: #a8a29e; }
+        @page { margin: 0; size: A4; }
+        @media print {
+            body { padding: 20px 28px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <span class="brand">Optimove</span>
+        <span class="badge">Program Latihan Personal</span>
+    </div>
+    <h1>${prog.name}</h1>
+    <p class="subtitle">Jadwal latihan mingguan yang dirancang khusus untuk Anda · ${dateRange}</p>
+    <div class="info-grid">
+        <div class="info-card"><span class="lbl">Durasi Program</span><span class="val">${prog.duration}</span><span class="sub">${dateRange}</span></div>
+        <div class="info-card"><span class="lbl">Target Mingguan</span><span class="val">${prog.target}</span><span class="sub">${prog.target_sub}</span></div>
+        <div class="info-card"><span class="lbl">Durasi per Sesi</span><span class="val">${prog.duration_per_sesi}</span><span class="sub">${prog.duration_per_sesi_sub}</span></div>
+        <div class="info-card"><span class="lbl">Fokus Program</span><span class="val">${prog.focus}</span><span class="sub">${prog.focus_sub}</span></div>
+    </div>
+    <table>
+        <thead>
+            <tr><th>Hari</th><th>Aktivitas</th><th>Durasi</th><th>Intensitas</th></tr>
+        </thead>
+        <tbody>${scheduleRows}</tbody>
+    </table>
+    <div class="footer">
+        <span>Dicetak dari Optimove &mdash; Sistem Pendukung Keputusan Olahraga</span>
+        <span>${new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' })}</span>
+    </div>
+</body>
+</html>`;
+
+        const win = window.open('', '_blank');
+        if (!win) return;
+        win.document.write(html);
+        win.document.close();
+        win.focus();
+        setTimeout(() => {
+            win.print();
+        }, 600);
     };
 
     // Mood mapping
@@ -1067,7 +1426,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                                 </svg>
                             )},
-                            { id: 'analisis', label: 'Analisis SAW', link: route('home') + '#form', icon: (
+                            { id: 'analisis', label: 'Analisis SAW', icon: (
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                                 </svg>
@@ -1142,15 +1501,64 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                 </div>
             </aside>
 
+            {/* MOBILE BOTTOM NAVIGATION BAR */}
+            <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-stone-200/80 flex md:hidden items-center justify-around px-2 py-2 shadow-lg">
+                {[
+                    { id: 'dashboard', label: 'Beranda', icon: (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                    )},
+                    { id: 'rekomendasi', label: 'Analisis', icon: (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                    )},
+                    { id: 'program', label: 'Program', icon: (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
+                        </svg>
+                    )},
+                    { id: 'riwayat', label: 'Riwayat', icon: (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    )},
+                    { id: 'profil', label: 'Profil', icon: (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    )},
+                ].map((item) => {
+                    const isActive = activeTab === item.id;
+                    return (
+                        <button
+                            key={item.id}
+                            onClick={() => setActiveTab(item.id)}
+                            className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all ${
+                                isActive ? 'text-valley-green' : 'text-stone-400'
+                            }`}
+                        >
+                            {item.icon}
+                            <span className={`text-[9px] font-bold leading-none ${
+                                isActive ? 'text-valley-green' : 'text-stone-400'
+                            }`}>{item.label}</span>
+                            {isActive && <span className="w-1 h-1 rounded-full bg-valley-green mt-0.5" />}
+                        </button>
+                    );
+                })}
+            </nav>
+
             {/* MAIN CONTENT AREA */}
             <div className="flex-1 flex flex-col min-w-0 overflow-y-auto h-screen">
                 
                 {/* Header navbar */}
-                <header className="sticky top-0 z-30 bg-canvas-ice/90 backdrop-blur-md border-b border-stone-200/50 py-4 px-6 md:px-10 flex justify-between items-center shrink-0">
+                <header className="sticky top-0 z-30 bg-canvas-ice/90 backdrop-blur-md border-b border-stone-200/50 py-3 px-4 md:py-4 md:px-10 flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-3">
                         <h2 className="font-extrabold text-base capitalize text-valley-green">
                             {activeTab === 'dashboard' && 'Dashboard Utama'}
-                            {activeTab === 'rekomendasi' && 'Hasil Analisis SAW'}
+                            {activeTab === 'analisis' && 'Analisis SAW'}
+                            {activeTab === 'rekomendasi' && 'Hasil Rekomendasi'}
                             {activeTab === 'program' && 'Program Latihan Personal'}
                             {activeTab === 'riwayat' && 'Riwayat Aktivitas'}
                             {activeTab === 'testimoni' && 'Testimoni Saya'}
@@ -1168,7 +1576,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                                 </svg>
-                                {(inactiveAlert || customNotifications.length > 0) && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500"></span>}
+                                {(inactiveAlert || hasTodayInactivityAlert || customNotifications.length > 0) && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500"></span>}
                             </button>
                             {showNotifDropdown && (
                                 <div className="absolute right-0 top-12 w-80 bg-white border border-stone-200 rounded-2xl shadow-xl z-50 overflow-hidden animate-fade-in">
@@ -1177,7 +1585,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                         <button onClick={() => setShowNotifDropdown(false)} className="text-stone-400 hover:text-stone-700 text-sm font-bold cursor-pointer">✕</button>
                                     </div>
                                     <div className="max-h-64 overflow-y-auto">
-                                        {inactiveAlert || customNotifications.length > 0 ? (
+                                        {inactiveAlert || hasTodayInactivityAlert || customNotifications.length > 0 ? (
                                             <div className="divide-y divide-stone-100">
                                                 {inactiveAlert && (
                                                     <div className="p-4 flex items-start gap-3 hover:bg-stone-50 transition">
@@ -1187,6 +1595,25 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                                 <p className="text-xs font-bold text-red-700">Peringatan Inaktif</p>
                                                             </div>
                                                             <p className="text-[11px] text-stone-500 mt-0.5 leading-relaxed">Sudah <strong>{inactiveDays} hari</strong> Anda tidak berolahraga. Yuk mulai lagi!</p>
+                                                            <button
+                                                                onClick={() => { setActiveTab('program'); setShowNotifDropdown(false); }}
+                                                                className="mt-2 text-[10px] font-bold text-valley-green hover:underline cursor-pointer"
+                                                            >
+                                                                Buka Program Latihan →
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {hasTodayInactivityAlert && (
+                                                    <div className="p-4 flex items-start gap-3 hover:bg-stone-50 transition">
+                                                        <span className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-sm shrink-0">🔔</span>
+                                                        <div className="flex-1 min-w-0 text-left">
+                                                            <div className="flex items-center justify-between">
+                                                                <p className="text-xs font-bold text-amber-700">Latihan Hari Ini</p>
+                                                            </div>
+                                                            <p className="text-[11px] text-stone-500 mt-0.5 leading-relaxed">
+                                                                Anda belum melaksanakan aktivitas olahraga hari ini (<strong>{todayDayName}</strong>). Yuk selesaikan sekarang!
+                                                            </p>
                                                             <button
                                                                 onClick={() => { setActiveTab('program'); setShowNotifDropdown(false); }}
                                                                 className="mt-2 text-[10px] font-bold text-valley-green hover:underline cursor-pointer"
@@ -1232,9 +1659,9 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                         </div>
                         
                         {/* Profile chip */}
-                        <div className="flex items-center gap-2 bg-white border border-stone-200 rounded-full py-1 pl-1 pr-3 shadow-2xs hover:bg-stone-50 cursor-pointer">
+                        <div className="flex items-center gap-2 bg-white border border-stone-200 rounded-full py-1 pl-1 pr-2 md:pr-3 shadow-2xs hover:bg-stone-50 cursor-pointer">
                             <img className="w-7 h-7 rounded-full object-cover" src={user.profile_photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&color=166534&background=f0fdf4`} alt={user.name} />
-                            <span className="text-xs font-bold text-valley-green truncate max-w-28">{user.name}</span>
+                            <span className="text-xs font-bold text-valley-green truncate max-w-[80px] md:max-w-28 hidden sm:block">{user.name}</span>
                         </div>
                     </div>
                 </header>
@@ -1250,7 +1677,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                 )}
 
                 {/* Tab content wrapper */}
-                <main className="flex-1 p-6 md:p-10 bg-canvas-ice/30">
+                <main className="flex-1 p-4 md:p-10 bg-canvas-ice/30 pb-24 md:pb-10">
                     
                     {/* Global Flash Alert Notification */}
                     {alertMessage && (
@@ -1271,9 +1698,9 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                     
                     {/* Floating Toast Notification (Top Right) */}
                     {toastNotification && (
-                        <div className="fixed top-24 right-6 z-[9999] bg-white border border-emerald-200 rounded-2xl p-4 shadow-xl flex items-start gap-3 w-80 animate-fade-in transition-all duration-500">
-                            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-sm shrink-0">
-                                💪
+                        <div className="fixed top-20 right-3 left-3 md:left-auto md:right-6 z-[9999] bg-white border border-emerald-200 rounded-2xl p-4 shadow-xl flex items-start gap-3 md:w-80 animate-fade-in transition-all duration-500">
+                            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 overflow-hidden">
+                                <img src="/images/running (1).png" alt="notif" className="w-5 h-5 object-contain" />
                             </div>
                             <div className="flex-1">
                                 <h4 className="font-extrabold text-xs text-valley-green">{toastNotification.title}</h4>
@@ -1292,16 +1719,16 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                             {/* Row 1: Greeting & Progress */}
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 {/* Welcome Banner */}
-                                <div className="lg:col-span-2 bg-white border border-stone-200/80 rounded-3xl p-6 md:p-8 shadow-sm flex items-center justify-between gap-6 relative h-[180px]">
-                                    <div className="space-y-2 relative z-10 max-w-[60%] text-left">
-                                        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#203b14]">Halo, {user.name}!</h1>
-                                        <p className="text-xs md:text-sm text-stone-500 font-semibold leading-relaxed">Pantau progres rencana kebugaran dan catat kemajuan Anda di sini.</p>
+                                <div className="lg:col-span-2 bg-white border border-stone-200/80 rounded-3xl p-5 md:p-8 shadow-sm flex items-center justify-between gap-4 relative h-[140px] md:h-[180px] overflow-hidden">
+                                    <div className="space-y-1.5 relative z-10 max-w-[65%] md:max-w-[60%] text-left">
+                                        <h1 className="text-xl md:text-3xl font-extrabold tracking-tight text-[#203b14] leading-tight">Halo, {user.name}!</h1>
+                                        <p className="text-[11px] md:text-sm text-stone-500 font-semibold leading-relaxed">Pantau progres rencana kebugaran dan catat kemajuan Anda di sini.</p>
                                     </div>
-                                    <div className="absolute right-4 bottom-0 top-[-35px] flex items-end justify-end w-[40%] pointer-events-none select-none z-20">
+                                    <div className="absolute right-2 md:right-4 bottom-0 top-[-20px] md:top-[-35px] flex items-end justify-end w-[38%] md:w-[40%] pointer-events-none select-none z-20">
                                         <img 
                                             src="/images/dashboard.png" 
                                             alt="Waving guy illustration" 
-                                            className="h-[215px] max-h-[215px] object-contain object-bottom"
+                                            className="h-[160px] md:h-[215px] max-h-[160px] md:max-h-[215px] object-contain object-bottom"
                                         />
                                     </div>
                                 </div>
@@ -1313,7 +1740,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                     const percentage = totalToday > 0 ? Math.round((doneToday / totalToday) * 100) : 0;
                                     const strokeDashoffset = 113.09 - (113.09 * percentage) / 100;
                                     return (
-                                        <div className="bg-white border border-stone-200/80 rounded-3xl p-6 shadow-sm flex items-center justify-center gap-6 h-[180px]">
+                                        <div className="bg-white border border-stone-200/80 rounded-3xl p-5 md:p-6 shadow-sm flex items-center justify-center gap-4 md:gap-6 h-[140px] md:h-[180px]">
                                             <div className="relative w-20 h-20 shrink-0">
                                                 {/* Circle Ring */}
                                                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 42 42">
@@ -1439,7 +1866,6 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                     todo.is_completed ? 'bg-stone-50/70 border-stone-200 opacity-60' : 'bg-white border-stone-200 hover:shadow-xs'
                                                 }`}>
                                                     <div className="flex items-center gap-3.5 min-w-0">
-                                                        {getSportIcon(todo.sport_name || todo.task_name)}
                                                         <div className="min-w-0">
                                                             <p className={`text-xs font-bold leading-tight ${todo.is_completed ? 'line-through text-stone-400' : 'text-adaline-ink'}`}>
                                                                 {todo.task_name}
@@ -1593,6 +2019,233 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                         </div>
                     )}
 
+                    {/* TAB: ANALISIS SAW TAB */}
+                    {activeTab === 'analisis' && (
+                        <div className="space-y-6 animate-fade-in pb-12 text-left">
+
+                            {/* Header */}
+                            <div>
+                                <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">Sistem Pendukung Keputusan</span>
+                                <h1 className="text-2xl font-black text-adaline-ink mt-0.5">Analisis SAW — Simple Additive Weighting</h1>
+                                <p className="text-xs text-stone-400 mt-1">
+                                    Isi data profil Anda untuk mendapatkan rekomendasi olahraga terbaik berdasarkan metode SAW.
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+                                {/* Form Card */}
+                                <div className="lg:col-span-3 bg-white border border-stone-200/80 rounded-3xl p-6 shadow-sm">
+                                    <div className="flex items-center gap-3 pb-5 mb-5 border-b border-stone-100">
+                                        <div className="w-10 h-10 rounded-full bg-forest-dew flex items-center justify-center text-valley-green shadow-xs shrink-0">
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-base text-adaline-ink">Masukkan Data Profil Anda</h3>
+                                            <p className="text-xs text-stone-400">Pilih kriteria untuk menyesuaikan perhitungan SAW</p>
+                                        </div>
+                                    </div>
+
+                                    <form onSubmit={handleSawSubmit} className="space-y-5">
+                                        {/* Jenis Kelamin */}
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-sm font-bold text-adaline-ink/90">Jenis Kelamin</label>
+                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-forest-dew/60 text-valley-green">Bobot 10%</span>
+                                            </div>
+                                            <select value={sawForm.data.gender} onChange={e => sawForm.setData('gender', e.target.value)}
+                                                className="w-full rounded-xl text-sm py-3 px-4 border border-stone-200 focus:border-valley-green focus:ring-1 focus:ring-valley-green bg-white text-adaline-ink outline-none transition">
+                                                <option value="Male">Laki-laki</option>
+                                                <option value="Female">Perempuan</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Rentang Usia */}
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-sm font-bold text-adaline-ink/90">Rentang Usia</label>
+                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-forest-dew/60 text-valley-green">Bobot 15%</span>
+                                            </div>
+                                            <select value={sawForm.data.age_group} onChange={e => sawForm.setData('age_group', e.target.value)}
+                                                className="w-full rounded-xl text-sm py-3 px-4 border border-stone-200 focus:border-valley-green focus:ring-1 focus:ring-valley-green bg-white text-adaline-ink outline-none transition">
+                                                <option value="15 to 18">15–18 tahun</option>
+                                                <option value="19 to 25">19–25 tahun</option>
+                                                <option value="26 to 30">26–30 tahun</option>
+                                                <option value="31 to 40">31–40 tahun</option>
+                                                <option value="40 and above">40+ tahun</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Tingkat Kebugaran */}
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-sm font-bold text-adaline-ink/90">Tingkat Kebugaran</label>
+                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-forest-dew/60 text-valley-green">Bobot 35%</span>
+                                            </div>
+                                            <select value={sawForm.data.fitness_level} onChange={e => sawForm.setData('fitness_level', e.target.value)}
+                                                className="w-full rounded-xl text-sm py-3 px-4 border border-stone-200 focus:border-valley-green focus:ring-1 focus:ring-valley-green bg-white text-adaline-ink outline-none transition">
+                                                <option value="Unfit">Tidak Bugar</option>
+                                                <option value="Average">Rata-rata</option>
+                                                <option value="Good">Bugar</option>
+                                                <option value="Very good">Sangat Bugar</option>
+                                                <option value="Excellent">Prima</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Frekuensi Olahraga */}
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-sm font-bold text-adaline-ink/90">Frekuensi Olahraga</label>
+                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-forest-dew/60 text-valley-green">Bobot 20%</span>
+                                            </div>
+                                            <select value={sawForm.data.exercise_frequency} onChange={e => sawForm.setData('exercise_frequency', e.target.value)}
+                                                className="w-full rounded-xl text-sm py-3 px-4 border border-stone-200 focus:border-valley-green focus:ring-1 focus:ring-valley-green bg-white text-adaline-ink outline-none transition">
+                                                <option value="Never">Tidak Pernah</option>
+                                                <option value="1 to 2 times a week">1–2x seminggu</option>
+                                                <option value="3 to 4 times a week">3–4x seminggu</option>
+                                                <option value="Everyday">Setiap Hari</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Pola Makan Sehat */}
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-sm font-bold text-adaline-ink/90">Pola Makan Sehat</label>
+                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-forest-dew/60 text-valley-green">Bobot 20%</span>
+                                            </div>
+                                            <select value={sawForm.data.diet} onChange={e => sawForm.setData('diet', e.target.value)}
+                                                className="w-full rounded-xl text-sm py-3 px-4 border border-stone-200 focus:border-valley-green focus:ring-1 focus:ring-valley-green bg-white text-adaline-ink outline-none transition">
+                                                <option value="No">Tidak</option>
+                                                <option value="Not always">Kadang-kadang</option>
+                                                <option value="Yes">Ya, Selalu</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Collapsible Optional Health Section */}
+                                        <div className="border border-stone-200/70 rounded-2xl overflow-hidden bg-stone-50/50">
+                                            <button
+                                                type="button"
+                                                onClick={() => setSawShowHealthForm(!sawShowHealthForm)}
+                                                className="w-full px-4 py-3 text-left font-bold text-xs flex justify-between items-center text-valley-green hover:bg-stone-100/60 transition"
+                                            >
+                                                <span className="flex items-center gap-1.5">🩺 Tambah Detail Kesehatan & BMI (Opsional)</span>
+                                                <span>{sawShowHealthForm ? '▼' : '►'}</span>
+                                            </button>
+                                            {sawShowHealthForm && (
+                                                <div className="p-4 border-t border-stone-200/70 bg-white space-y-4 animate-fade-in">
+                                                    {/* Age Number */}
+                                                    <div className="space-y-1">
+                                                        <label className="text-xs font-bold text-stone-500">Usia Angka (Tahun)</label>
+                                                        <input type="number" value={sawForm.data.age} onChange={e => sawForm.setData('age', e.target.value)} min="5" max="100" placeholder="Masukkan angka usia (opsional)..."
+                                                            className="w-full rounded-xl text-xs py-2.5 px-3 border border-stone-200 focus:border-valley-green outline-none transition text-adaline-ink" />
+                                                        {sawAgeWarning && <p className="text-[10px] text-amber-800 font-semibold mt-1">{sawAgeWarning}</p>}
+                                                    </div>
+                                                    {/* Height & Weight */}
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div className="space-y-1">
+                                                            <label className="text-xs font-bold text-stone-500">Tinggi Badan (cm)</label>
+                                                            <input type="number" value={sawForm.data.height} onChange={e => sawForm.setData('height', e.target.value)} min="50" max="250" placeholder="cm"
+                                                                className="w-full rounded-xl text-xs py-2.5 px-3 border border-stone-200 focus:border-valley-green outline-none transition text-adaline-ink" />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <label className="text-xs font-bold text-stone-500">Berat Badan (kg)</label>
+                                                            <input type="number" value={sawForm.data.weight} onChange={e => sawForm.setData('weight', e.target.value)} min="10" max="300" placeholder="kg"
+                                                                className="w-full rounded-xl text-xs py-2.5 px-3 border border-stone-200 focus:border-valley-green outline-none transition text-adaline-ink" />
+                                                        </div>
+                                                    </div>
+                                                    {/* Physical Condition */}
+                                                    <div className="space-y-1">
+                                                        <label className="text-xs font-bold text-stone-500">Kondisi Fisik / Batasan</label>
+                                                        <select value={sawForm.data.physical_condition} onChange={e => sawForm.setData('physical_condition', e.target.value)}
+                                                            className="w-full rounded-xl text-xs py-2.5 px-3 border border-stone-200 focus:border-valley-green outline-none bg-white text-adaline-ink transition">
+                                                            <option value="none">Tidak Ada Batasan (Fit)</option>
+                                                            <option value="knee_injury">Cedera Lutut</option>
+                                                            <option value="asthma">Gangguan Asma</option>
+                                                            <option value="heart">Masalah Jantung</option>
+                                                        </select>
+                                                        {sawConditionInfo && <p className="text-[10px] text-valley-green font-mono leading-relaxed mt-1">{sawConditionInfo}</p>}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <button type="submit" disabled={sawForm.processing}
+                                            className="w-full py-4 rounded-full font-bold text-sm bg-valley-green hover:opacity-90 text-white transition flex items-center justify-center gap-2 shadow-sm cursor-pointer disabled:opacity-55">
+                                            {sawForm.processing ? (
+                                                <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Menghitung Skor SAW...</>
+                                            ) : (
+                                                <>Proses Analisis SAW <span>→</span></>
+                                            )}
+                                        </button>
+                                    </form>
+                                </div>
+
+                                {/* Right: Info Panel */}
+                                <div className="lg:col-span-2 space-y-4">
+                                    {/* Methodology Card */}
+                                    <div className="bg-white border border-stone-200/80 rounded-3xl p-5 shadow-sm">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <h3 className="font-bold text-sm text-adaline-ink">Metodologi SAW</h3>
+                                        </div>
+                                        <p className="text-xs text-stone-500 leading-relaxed">
+                                            Simple Additive Weighting (SAW) adalah metode MADM yang menghitung skor berbobot dari setiap kriteria untuk menghasilkan peringkat olahraga yang paling sesuai.
+                                        </p>
+                                        <div className="mt-4 space-y-2">
+                                            {[
+                                                { label: 'Jenis Kelamin', weight: '10%', color: 'bg-sky-100 text-sky-700' },
+                                                { label: 'Rentang Usia', weight: '15%', color: 'bg-purple-100 text-purple-700' },
+                                                { label: 'Tingkat Kebugaran', weight: '35%', color: 'bg-emerald-100 text-emerald-700' },
+                                                { label: 'Frekuensi Olahraga', weight: '20%', color: 'bg-amber-100 text-amber-700' },
+                                                { label: 'Pola Makan Sehat', weight: '20%', color: 'bg-rose-100 text-rose-700' },
+                                            ].map(c => (
+                                                <div key={c.label} className="flex items-center justify-between">
+                                                    <span className="text-[11px] text-stone-600">{c.label}</span>
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${c.color}`}>{c.weight}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Quick Info Card */}
+                                    <div className="bg-gradient-to-br from-valley-green/10 to-forest-dew/20 border border-valley-green/20 rounded-3xl p-5">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <h3 className="font-bold text-sm text-valley-green">Tips Pengisian</h3>
+                                        </div>
+                                        <ul className="text-xs text-stone-600 space-y-1.5 leading-relaxed list-none">
+                                            <li>• Pilih <strong>Tingkat Kebugaran</strong> sesuai kondisi nyata Anda sehari-hari.</li>
+                                            <li>• Isian <strong>Detail Kesehatan & BMI</strong> bersifat opsional namun meningkatkan akurasi rekomendasi.</li>
+                                            <li>• Hasil analisis akan langsung ditampilkan di tab <strong>Hasil Rekomendasi</strong>.</li>
+                                        </ul>
+                                    </div>
+
+                                    {/* Previous Result Preview */}
+                                    {sawResult && sawResult.length > 0 && (
+                                        <div className="bg-white border border-stone-200/80 rounded-3xl p-5 shadow-sm">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <h3 className="font-bold text-sm text-adaline-ink">Hasil Terakhir</h3>
+                                                <button onClick={() => setActiveTab('rekomendasi')} className="text-[10px] font-bold text-valley-green hover:underline cursor-pointer">Lihat Semua →</button>
+                                            </div>
+                                            <div className="space-y-2">
+                                                {sawResult.slice(0, 3).map((rec, idx) => (
+                                                    <div key={idx} className={`flex items-center gap-3 p-2.5 rounded-xl ${idx === 0 ? 'bg-forest-dew/40 border border-valley-green/20' : 'bg-stone-50'}`}>
+                                                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${idx === 0 ? 'bg-valley-green text-white' : 'bg-stone-200 text-stone-500'}`}>{idx + 1}</span>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className={`text-[11px] font-bold truncate ${idx === 0 ? 'text-valley-green' : 'text-adaline-ink'}`}>{normalizeSportName(rec.sport)}</p>
+                                                            <p className="text-[10px] text-stone-400">Skor: {Math.round(rec.score)}</p>
+                                                        </div>
+                                                        {idx === 0 && <span className="text-[9px] font-bold bg-valley-green text-white px-1.5 py-0.5 rounded-full shrink-0">Terbaik</span>}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* TAB 2: PROGRAM LATIHAN TAB */}
                     {activeTab === 'program' && (
                         <div className="space-y-6 animate-fade-in pb-12 text-left">
@@ -1611,10 +2264,10 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                 <img 
                                     src={getSportImage(selectedProgramKey)} 
                                     alt={WEEKLY_PROGRAMS[selectedProgramKey].sport} 
-                                    className="w-72 h-56 object-contain shrink-0 md:w-[340px] md:h-[260px] relative z-10 pointer-events-none" 
+                                    className="w-48 h-40 md:w-[340px] md:h-[260px] object-contain shrink-0 relative z-10 pointer-events-none" 
                                 />
                                 <div className="space-y-2.5">
-                                    <h2 className="text-4xl font-black text-adaline-ink">
+                                    <h2 className="text-2xl md:text-4xl font-black text-adaline-ink">
                                         {WEEKLY_PROGRAMS[selectedProgramKey].sport}
                                     </h2>
                                     <div>
@@ -1656,7 +2309,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                         <h3 className="font-extrabold text-sm text-valley-green">Jadwal Mingguan (Minggu {currentWeek} dari 4)</h3>
                                         <p className="text-[10px] text-stone-400 leading-normal mt-0.5">Ikuti jadwal latihan berikut secara konsisten untuk hasil yang optimal.</p>
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-wrap gap-2">
                                         {checkedDaysCount === 7 && currentWeek < 4 && (
                                             <button 
                                                 onClick={() => {
@@ -1693,13 +2346,13 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                     }
                                                 }}
                                                 className="py-2.5 px-4 rounded-xl border border-red-200 hover:border-red-600 text-red-600 hover:text-red-700 bg-white hover:bg-red-50/50 font-bold text-xs transition flex items-center gap-1.5 shadow-3xs cursor-pointer">
-                                                <span>🔄</span> Reset Progres Minggu Ini
+                                                Reset Progres Minggu Ini
                                             </button>
                                         )}
                                         <button 
                                             onClick={handleDownloadSchedule}
-                                            className="py-2.5 px-4 rounded-xl border border-stone-200 hover:border-valley-green text-stone-600 hover:text-valley-green bg-white hover:bg-stone-50 font-bold text-xs transition flex items-center gap-1.5 shadow-3xs cursor-pointer">
-                                            <span>📥</span> Unduh Jadwal
+                                            className="py-2 px-3 rounded-xl border border-stone-200 hover:border-valley-green text-stone-600 hover:text-valley-green bg-white hover:bg-stone-50 font-bold text-xs transition flex items-center gap-1.5 shadow-3xs cursor-pointer">
+                                            <span className="hidden sm:inline">Unduh PDF</span><span className="sm:hidden">PDF</span>
                                         </button>
                                     </div>
                                 </div>
@@ -1708,11 +2361,11 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                     <table className="w-full text-xs md:text-sm text-left">
                                         <thead>
                                             <tr className="bg-stone-50 border-b border-stone-100 text-stone-400 font-bold uppercase tracking-wider text-[10px]">
-                                                <th className="px-5 py-4 w-28">Hari</th>
-                                                <th className="px-5 py-4">Aktivitas</th>
-                                                <th className="px-5 py-4 w-32">Durasi</th>
-                                                <th className="px-5 py-4 w-32">Intensitas</th>
-                                                <th className="px-5 py-4 w-32">Status</th>
+                                                <th className="px-3 md:px-5 py-3 md:py-4 w-20 md:w-28">Hari</th>
+                                                <th className="px-3 md:px-5 py-3 md:py-4">Aktivitas</th>
+                                                <th className="px-3 md:px-5 py-3 md:py-4 w-24 md:w-32 hidden sm:table-cell">Durasi</th>
+                                                <th className="px-3 md:px-5 py-3 md:py-4 w-24 md:w-32 hidden sm:table-cell">Intensitas</th>
+                                                <th className="px-3 md:px-5 py-3 md:py-4 w-20 md:w-32">Status</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-stone-100">
@@ -1720,31 +2373,31 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                 const isCompleted = weeklyChecklist[row.day];
                                                 return (
                                                     <tr key={row.day} className={`hover:bg-stone-50/40 transition ${isCompleted ? 'bg-emerald-50/10 opacity-75' : ''}`}>
-                                                        <td className="px-5 py-4 font-bold text-valley-green">
-                                                            <div>{row.day}</div>
-                                                            <div className="text-[10px] text-stone-400 font-semibold mt-0.5">{getWeekdayDateStr(row.day)}</div>
+                                                        <td className="px-3 md:px-5 py-3 md:py-4 font-bold text-valley-green">
+                                                            <div className="text-xs md:text-sm">{row.day}</div>
+                                                            <div className="text-[9px] md:text-[10px] text-stone-400 font-semibold mt-0.5">{getWeekdayDateStr(row.day)}</div>
                                                         </td>
-                                                        <td className={`px-5 py-4 font-bold ${isCompleted ? 'line-through text-stone-400' : 'text-adaline-ink'}`}>{row.activity}</td>
-                                                        <td className="px-5 py-4 text-stone-500 font-medium">{row.duration}</td>
-                                                        <td className="px-5 py-4">
+                                                        <td className={`px-3 md:px-5 py-3 md:py-4 font-bold text-xs md:text-sm ${isCompleted ? 'line-through text-stone-400' : 'text-adaline-ink'}`}>{row.activity}</td>
+                                                        <td className="px-3 md:px-5 py-3 md:py-4 text-stone-500 font-medium text-xs hidden sm:table-cell">{row.duration}</td>
+                                                        <td className="px-3 md:px-5 py-3 md:py-4 hidden sm:table-cell">
                                                             {row.intensity !== '-' ? (
-                                                                <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wider ${row.intensityColor}`}>
+                                                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wider ${row.intensityColor}`}>
                                                                     {row.intensity}
                                                                 </span>
                                                             ) : '-'}
                                                         </td>
-                                                        <td className="px-5 py-4">
+                                                        <td className="px-3 md:px-5 py-3 md:py-4">
                                                             <button 
                                                                 onClick={() => toggleWeekDay(row.day)}
-                                                                className={`inline-flex items-center gap-1.5 cursor-pointer text-left select-none text-[11px] font-bold ${
+                                                                className={`inline-flex items-center gap-1 cursor-pointer text-left select-none text-[11px] font-bold ${
                                                                     isCompleted ? 'text-emerald-600' : 'text-stone-400 hover:text-stone-600'
                                                                 }`}>
                                                                 {isCompleted ? (
-                                                                    <img src="/images/Check circle.png" alt="Selesai" className="w-4.5 h-4.5 object-contain" />
+                                                                    <img src="/images/Check circle.png" alt="Selesai" className="w-4 h-4 object-contain" />
                                                                 ) : (
                                                                     <span className="w-4 h-4 rounded-full border border-stone-300 bg-white flex items-center justify-center" />
                                                                 )}
-                                                                {isCompleted ? 'Selesai' : 'Belum'}
+                                                                <span className="hidden sm:inline">{isCompleted ? 'Selesai' : 'Belum'}</span>
                                                             </button>
                                                         </td>
                                                     </tr>
@@ -1898,10 +2551,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                         </td>
                                                         <td className="px-5 py-4 font-bold text-adaline-ink text-left">{prog.type}</td>
                                                         <td className="px-5 py-4 text-left">
-                                                            <div className="flex items-center gap-2">
-                                                                <img src={getSportIconPath(prog.sport)} className="w-5.5 h-5.5 object-contain shrink-0" alt={prog.sport} />
-                                                                <span className="text-xs font-bold text-adaline-ink">{translateSportName(prog.sport)}</span>
-                                                            </div>
+                                                            <span className="text-xs font-bold text-adaline-ink">{translateSportName(prog.sport)}</span>
                                                         </td>
                                                         <td className="px-5 py-4 text-left">
                                                             <div className="flex items-center gap-2.5">
@@ -2214,25 +2864,50 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                                                 <p className="text-[10px] text-stone-400 mt-0.5 leading-relaxed">Hapus akun dan semua data secara permanen. Tindakan ini tidak dapat dibatalkan.</p>
                                             </div>
                                         </div>
-                                        <Link
-                                            href={route('profile.destroy')}
-                                            method="delete"
-                                            as="button"
-                                            data={{ password: '' }}
+                                        <button
                                             onClick={(e) => {
                                                 e.preventDefault();
-                                                const pw = prompt('Masukkan password Anda untuk mengonfirmasi penghapusan akun:');
-                                                if (pw !== null && pw.trim() !== '') {
-                                                    if (confirm('Apakah Anda benar-benar yakin ingin menghapus akun ini? Semua data akan hilang permanen.')) {
-                                                        router.delete(route('profile.destroy'), { data: { password: pw }, preserveScroll: false });
+                                                Swal.fire({
+                                                    title: 'Hapus Akun Anda?',
+                                                    text: 'Apakah Anda benar-benar yakin ingin menghapus akun ini? Semua data Anda akan hilang secara permanen dan tindakan ini tidak dapat dibatalkan.',
+                                                    icon: 'warning',
+                                                    input: 'password',
+                                                    inputPlaceholder: 'Masukkan password Anda untuk konfirmasi',
+                                                    inputAttributes: {
+                                                        autocapitalize: 'off',
+                                                        autocorrect: 'off'
+                                                    },
+                                                    showCancelButton: true,
+                                                    confirmButtonText: 'Ya, Hapus Akun',
+                                                    cancelButtonText: 'Batal',
+                                                    confirmButtonColor: '#dc2626', // Red-600
+                                                    cancelButtonColor: '#78716c', // Stone-500
+                                                    customClass: {
+                                                        popup: 'rounded-3xl border border-stone-200',
+                                                        confirmButton: 'rounded-full font-bold px-6 py-2.5 text-sm',
+                                                        cancelButton: 'rounded-full font-bold px-6 py-2.5 text-sm',
+                                                        input: 'rounded-xl border border-stone-200 focus:border-red-500 focus:ring-1 focus:ring-red-500 text-sm'
+                                                    },
+                                                    preConfirm: (password) => {
+                                                        if (!password) {
+                                                            Swal.showValidationMessage('Password wajib diisi untuk konfirmasi');
+                                                        }
+                                                        return password;
                                                     }
-                                                }
+                                                }).then((result) => {
+                                                    if (result.isConfirmed && result.value) {
+                                                        router.delete(route('profile.destroy'), { 
+                                                            data: { password: result.value }, 
+                                                            preserveScroll: false 
+                                                        });
+                                                    }
+                                                });
                                             }}
                                             className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-400 text-red-600 rounded-xl font-bold text-xs transition cursor-pointer"
                                         >
                                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                             Hapus Akun Saya
-                                        </Link>
+                                        </button>
                                     </div>
                                 </div>
 

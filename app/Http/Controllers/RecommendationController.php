@@ -326,7 +326,9 @@ class RecommendationController extends Controller
             'physicalCondition'      => $physicalCondition,
         ]);
 
-        return redirect()->route('home');
+        return $request->input('from_workspace')
+            ? redirect()->route('workspace.index')
+            : redirect()->route('home');
     }
 
     /** Statistik distribusi dataset */

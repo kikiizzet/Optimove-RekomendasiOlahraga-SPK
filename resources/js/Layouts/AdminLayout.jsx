@@ -1,9 +1,22 @@
-import React, { useState } from 'react';
-import { Link, usePage } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
+import { Link, usePage, router } from '@inertiajs/react';
+import ApplicationLogo from '@/Components/ApplicationLogo';
 
 export default function AdminLayout({ children, activeTab = 'dashboard' }) {
     const user = usePage().props.auth.user;
     const [showingMobileMenu, setShowingMobileMenu] = useState(false);
+    
+    const [isPageLoading, setIsPageLoading] = useState(false);
+
+    useEffect(() => {
+        const startListener = router.on('start', () => setIsPageLoading(true));
+        const finishListener = router.on('finish', () => setIsPageLoading(false));
+
+        return () => {
+            startListener();
+            finishListener();
+        };
+    }, []);
 
     const THEME = {
         ink: '#0a1d08',
@@ -21,7 +34,7 @@ export default function AdminLayout({ children, activeTab = 'dashboard' }) {
             <header className="md:hidden flex items-center justify-between px-6 py-4 border-b z-50 sticky top-0 backdrop-blur-md bg-opacity-90" 
                 style={{ backgroundColor: THEME.ice, borderColor: THEME.moss }}>
                 <div className="flex items-center gap-2">
-                    <img src="/images/icon hijau.png" alt="Optimove" className="w-6 h-6 object-contain" />
+                    <ApplicationLogo className="w-6 h-6" />
                     <span className="font-bold text-lg tracking-tight" style={{ letterSpacing: '-0.04em', color: THEME.ink }}>Optimove</span>
                     <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold" style={{ backgroundColor: THEME.dew, color: THEME.green }}>ADMIN</span>
                 </div>
@@ -90,7 +103,7 @@ export default function AdminLayout({ children, activeTab = 'dashboard' }) {
                 <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: THEME.moss }}>
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <img src="/images/icon hijau.png" alt="Optimove" className="w-7 h-7 object-contain" />
+                            <ApplicationLogo className="w-7 h-7" />
                             <span className="font-bold text-2xl tracking-tighter" style={{ letterSpacing: '-0.04em', color: THEME.ink }}>Optimove</span>
                             <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold" style={{ backgroundColor: THEME.dew, color: THEME.green }}>ADMIN</span>
                         </div>
@@ -190,7 +203,32 @@ export default function AdminLayout({ children, activeTab = 'dashboard' }) {
 
             {/* MAIN CONTENT AREA */}
             <main className="flex-1 min-w-0 overflow-y-auto h-full px-6 md:px-10 py-8" style={{ backgroundColor: THEME.ice }}>
-                {children}
+                {isPageLoading ? (
+                    <div className="space-y-6">
+                        <div className="flex justify-between items-center border-b pb-5" style={{ borderColor: THEME.moss }}>
+                            <div className="space-y-2">
+                                <div className="h-8 w-64 bg-stone-moss/50 rounded-2xl animate-pulse" />
+                                <div className="h-4 w-96 bg-stone-moss/50 rounded-2xl animate-pulse" />
+                            </div>
+                            <div className="h-10 w-28 bg-stone-moss/50 rounded-xl animate-pulse" />
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                                <div key={i} className="h-20 bg-white border border-stone-moss/80 rounded-2xl p-4 flex flex-col justify-between animate-pulse">
+                                    <div className="h-3 w-16 bg-stone-moss/50 rounded" />
+                                    <div className="h-6 w-10 bg-stone-moss/50 rounded" />
+                                </div>
+                            ))}
+                        </div>
+                        <div className="h-96 bg-white border border-stone-moss/80 rounded-3xl p-6 space-y-4 animate-pulse">
+                            <div className="h-4 w-48 bg-stone-moss/50 rounded" />
+                            <div className="h-3 w-72 bg-stone-moss/50 rounded" />
+                            <div className="h-64 border border-stone-moss/40 rounded-xl" />
+                        </div>
+                    </div>
+                ) : (
+                    children
+                )}
             </main>
         </div>
     );

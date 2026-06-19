@@ -2,14 +2,26 @@ import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { Link, usePage, router } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
 
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
+
+    const [isPageLoading, setIsPageLoading] = useState(false);
+
+    useEffect(() => {
+        const startListener = router.on('start', () => setIsPageLoading(true));
+        const finishListener = router.on('finish', () => setIsPageLoading(false));
+
+        return () => {
+            startListener();
+            finishListener();
+        };
+    }, []);
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -171,7 +183,24 @@ export default function AuthenticatedLayout({ header, children }) {
                 </header>
             )}
 
-            <main>{children}</main>
+            <main>
+                {isPageLoading ? (
+                    <div className="py-12">
+                        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
+                            <div className="h-8 w-64 bg-stone-moss/50 rounded-2xl animate-pulse" />
+                            <div className="h-4 w-96 bg-stone-moss/50 rounded-2xl animate-pulse" />
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                                <div className="h-32 bg-stone-moss/50 rounded-3xl animate-pulse" />
+                                <div className="h-32 bg-stone-moss/50 rounded-3xl animate-pulse" />
+                                <div className="h-32 bg-stone-moss/50 rounded-3xl animate-pulse" />
+                            </div>
+                            <div className="h-64 bg-stone-moss/50 rounded-3xl mt-8 animate-pulse" />
+                        </div>
+                    </div>
+                ) : (
+                    children
+                )}
+            </main>
         </div>
     );
 }

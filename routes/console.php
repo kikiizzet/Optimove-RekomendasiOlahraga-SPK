@@ -9,4 +9,4 @@ Artisan::command('inspire', function () {
 
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command('reminder:send')->dailyAt('07:00');
+Schedule::command('reminder:send')->dailyAt('07:00')->timezone('Asia/Jakarta');

@@ -1,5 +1,7 @@
 import { useForm, usePage, Link } from '@inertiajs/react';
 import { useRef, useEffect, useState } from 'react';
+import ApplicationLogo from '@/Components/ApplicationLogo';
+import RecommendationSkeleton from '@/Components/RecommendationSkeleton';
 
 // Custom Sport Icons and Descriptions
 const SPORT_INFO = {
@@ -7,9 +9,9 @@ const SPORT_INFO = {
         name: 'Jogging',
         image: '/images/jogging.png',
         icon: (className) => (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="18" cy="5" r="2" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 9h5l11-4M9 9v5L6 20M12 14v4l5 4" />
+            <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                <circle cx="15" cy="5" r="2" />
+                <path d="M9 9l3 1.5 3-2.5 2 4M6 17l3-3.5 3 2.5 4-5.5M8 11.5l1.5-3.5h3" />
             </svg>
         ),
         desc: 'Kesesuaian Jantung, Sendi, & Stamina',
@@ -23,10 +25,10 @@ const SPORT_INFO = {
         name: 'Bersepeda',
         image: '/images/cycle.png',
         icon: (className) => (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="5.5" cy="17.5" r="2.5" />
-                <circle cx="18.5" cy="17.5" r="2.5" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 6h2M6.5 17.5l3-7h5.5l3 7M9.5 10.5l2.5-4.5h3" />
+            <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                <circle cx="18.5" cy="17.5" r="3.5" />
+                <circle cx="5.5" cy="17.5" r="3.5" />
+                <path d="M15 17.5L11.5 10H5M12 5h3.5L18 10H11.5L9.5 5.5M12 5H9" />
             </svg>
         ),
         desc: 'Melatih Kardio & Kekuatan Kaki',
@@ -40,9 +42,10 @@ const SPORT_INFO = {
         name: 'Yoga',
         image: '/images/yoga.png',
         icon: (className) => (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="5" r="2" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 7v10M8 11h8M6 21c3-1 9-1 12 0" />
+            <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                <circle cx="12" cy="6" r="2" />
+                <path d="M12 8v7M8 10h8M5 13l2-1 3 3M19 13l-2-1-3 3" />
+                <path d="M6 20c1.5-2.5 4.5-3 6-3s4.5.5 6 3M3 21h18" />
             </svg>
         ),
         desc: 'Meningkatkan Fleksibilitas & Ketenangan',
@@ -56,8 +59,10 @@ const SPORT_INFO = {
         name: 'Renang',
         image: '/images/swimming.png',
         icon: (className) => (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2 10a4 4 0 0 1 8 0 4 4 0 0 1 8 0 4 4 0 0 1 4 0M2 14a4 4 0 0 1 8 0 4 4 0 0 1 8 0 4 4 0 0 1 4 0" />
+            <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                <path d="M2 14a4 4 0 0 1 8 0 4 4 0 0 1 8 0 4 4 0 0 1 4 0M2 18a4 4 0 0 1 8 0 4 4 0 0 1 8 0 4 4 0 0 1 4 0" />
+                <circle cx="12" cy="5" r="1.5" />
+                <path d="M8 8.5c1.5.8 3-.8 4.5.3v2" />
             </svg>
         ),
         desc: 'Seluruh Tubuh & Rendah Beban Sendi',
@@ -71,8 +76,12 @@ const SPORT_INFO = {
         name: 'Gym / Fitness',
         image: '/images/gym.png',
         icon: (className) => (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18h12M6 6h12M3 12h18M3 9v6M21 9v6" />
+            <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                <path d="M3 12h18" />
+                <rect x="5" y="7" width="2" height="10" rx="1" />
+                <rect x="7" y="5" width="2" height="14" rx="1" />
+                <rect x="17" y="7" width="2" height="10" rx="1" />
+                <rect x="15" y="5" width="2" height="14" rx="1" />
             </svg>
         ),
         desc: 'Latihan Beban & Pembentukan Otot',
@@ -217,6 +226,7 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
     const [conditionInfo, setConditionInfo] = useState('');
     const [showHealthForm, setShowHealthForm] = useState(false);
     const [selectedSportDetail, setSelectedSportDetail] = useState(null);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         const ageVal = parseInt(data.age);
@@ -270,7 +280,7 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
         });
     };
 
-    // Calculations for counter values
+    // Calculations for counter valuess
     const totalDataset = stats.total || 709;
     const totalSports = Object.keys(stats.top_sports || {}).length || 8;
 
@@ -282,7 +292,7 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
                 <nav className="max-w-7xl mx-auto px-6 md:px-10 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-12">
                         <Link href="/" className="flex items-center gap-2 font-bold text-2xl tracking-tight text-valley-green hover:opacity-85 transition">
-                            <img src="/images/icon hijau.png" alt="Optimove" className="w-7 h-7 object-contain" />
+                            <ApplicationLogo className="w-8 h-8" />
                             Optimove
                         </Link>
                         <div className="hidden md:flex gap-8 text-sm font-medium">
@@ -300,8 +310,9 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
                             </a>
                         </div>
                     </div>
-                    <div className="flex items-center gap-4">
-
+                    
+                    {/* Desktop Actions */}
+                    <div className="hidden md:flex items-center gap-4">
                         {auth?.user ? (
                             <>
                                 {auth.user.role === 'admin' ? (
@@ -319,7 +330,10 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
                             </>
                         ) : (
                             <div className="flex items-center gap-3">
-                                <Link href={route('login')} className="py-2 px-4.5 rounded-full text-xs font-bold border border-stone-200 text-stone-600 hover:bg-stone-50 bg-white transition shadow-3xs">
+                                <Link href={route('login')} className="py-2.5 px-5 rounded-full text-xs font-bold border border-stone-200 text-stone-700 hover:text-valley-green hover:border-valley-green/30 hover:bg-stone-50 bg-white transition shadow-sm flex items-center gap-1.5">
+                                    <svg className="w-3.5 h-3.5 text-stone-500 transition group-hover:text-valley-green" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
                                     Login
                                 </Link>
                                 <button onClick={scrollToForm} className="py-2.5 px-6 rounded-full text-xs md:text-sm font-bold bg-valley-green text-white hover:opacity-90 transition flex items-center gap-1.5 shadow-sm">
@@ -328,13 +342,113 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
                             </div>
                         )}
                     </div>
+
+                    {/* Mobile Menu Button */}
+                    <div className="flex md:hidden items-center">
+                        <button
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            className="p-2 rounded-lg text-adaline-ink/80 hover:text-valley-green hover:bg-forest-dew/25 transition focus:outline-none"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                {mobileMenuOpen ? (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6" />
+                                ) : (
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                                )}
+                            </svg>
+                        </button>
+                    </div>
                 </nav>
+
+                {/* Mobile Dropdown Panel */}
+                {mobileMenuOpen && (
+                    <div className="md:hidden border-t border-stone-200/50 bg-canvas-ice/95 backdrop-blur-md px-6 py-5 space-y-4 animate-fade-in shadow-inner">
+                        <div className="flex flex-col gap-3.5">
+                            <a 
+                                href="#statistik" 
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="text-sm font-bold text-adaline-ink/80 hover:text-valley-green transition py-1"
+                            >
+                                {lang === 'id' ? 'Statistik Dataset' : 'Dataset Statistics'}
+                            </a>
+                            <a 
+                                href="#metodologi" 
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="text-sm font-bold text-adaline-ink/80 hover:text-valley-green transition py-1"
+                            >
+                                {lang === 'id' ? 'Metodologi' : 'Methodology'}
+                            </a>
+                            <a 
+                                href="#form" 
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="text-sm font-bold text-adaline-ink/80 hover:text-valley-green transition py-1"
+                            >
+                                {lang === 'id' ? 'Mulai Analisis' : 'Start Analysis'}
+                            </a>
+                            <a 
+                                href="#riwayat" 
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="text-sm font-bold text-adaline-ink/80 hover:text-valley-green transition py-1"
+                            >
+                                {lang === 'id' ? 'Riwayat' : 'History'}
+                            </a>
+                        </div>
+                        
+                        <div className="border-t border-stone-200/50 pt-4">
+                            {auth?.user ? (
+                                <div className="flex flex-col gap-3">
+                                    {auth.user.role === 'admin' ? (
+                                        <a 
+                                            href={route('admin.dashboard')} 
+                                            className="w-full text-center py-2.5 px-5 rounded-full text-xs font-bold transition hover:bg-valley-green hover:text-white border border-valley-green text-valley-green"
+                                        >
+                                            {lang === 'id' ? 'Dashboard Admin' : 'Admin Dashboard'}
+                                        </a>
+                                    ) : (
+                                        <Link 
+                                            href={route('workspace.index')} 
+                                            className="w-full text-center py-2.5 px-5 rounded-full text-xs font-bold transition bg-forest-dew text-valley-green border border-valley-green/30 hover:bg-forest-dew/80"
+                                        >
+                                            Personal Workspace
+                                        </Link>
+                                    )}
+                                    <Link 
+                                        href={route('logout')} 
+                                        method="post" 
+                                        as="button" 
+                                        className="w-full text-center py-2 px-4 rounded-full text-xs font-bold text-red-600 hover:bg-red-50 border border-red-200 transition"
+                                    >
+                                        {lang === 'id' ? 'Logout' : 'Log Out'}
+                                    </Link>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-2.5">
+                                    <Link 
+                                        href={route('login')} 
+                                        className="w-full justify-center py-2.5 px-5 rounded-full text-xs font-bold border border-stone-200 text-stone-700 hover:text-valley-green hover:border-valley-green/30 hover:bg-stone-50 bg-white transition shadow-sm flex items-center gap-1.5"
+                                    >
+                                        <svg className="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                        </svg>
+                                        Login
+                                    </Link>
+                                    <button 
+                                        onClick={() => { setMobileMenuOpen(false); scrollToForm(); }} 
+                                        className="w-full justify-center py-2.5 px-6 rounded-full text-xs font-bold bg-valley-green text-white hover:opacity-90 transition flex items-center gap-1.5 shadow-sm"
+                                    >
+                                        {lang === 'id' ? 'Mulai Analisis' : 'Start Analysis'} <span className="text-xs">→</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </header>
 
             {/* HERO SECTION */}
-            <section className="relative overflow-hidden flex items-center pt-8 pb-16 lg:py-24" style={{ minHeight: '85vh' }}>
-                <img src="/images/hero-bg.png" alt="Landscape background" className="absolute inset-0 w-full h-full object-cover" style={{ opacity: 0.15 }} />
-                <div className="absolute inset-0 bg-gradient-to-b from-canvas-ice/30 via-canvas-ice/90 to-canvas-ice" />
+            <section className="relative overflow-hidden flex items-center pt-8 pb-16 lg:py-24" style={{ minHeight: 'min(85vh, 600px)' }}>
+                <img src="/images/Background.png" alt="Landscape background" className="absolute inset-0 w-full h-full object-cover object-bottom transform scale-95 origin-bottom" style={{ opacity: 1 }} />
+                <div className="absolute inset-0 bg-white/10" />
                 
                 <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-10 w-full">
                     <div className="grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
@@ -379,7 +493,7 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
                         </div>
 
                         {/* Hero Right Visual Mockup */}
-                        <div className="lg:col-span-6 relative flex justify-center">
+                        <div className="hidden lg:flex lg:col-span-6 relative justify-center">
                             <div className="w-full max-w-[520px] rounded-3xl border border-stone-moss shadow-xl bg-white overflow-hidden flex flex-col aspect-[4/3] md:aspect-[16/11]">
                                 {/* Top Bar mockup */}
                                 <div className="bg-stone-50 border-b border-stone-200/60 px-4 py-2.5 flex items-center gap-2">
@@ -393,7 +507,11 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
                                     {/* Sidebar mockup */}
                                     <div className="w-[140px] md:w-[170px] bg-valley-green p-4 flex flex-col gap-4 text-white shrink-0">
                                         <div className="flex items-center gap-1.5">
-                                            <img src="/images/icon hijau.png" alt="Optimove" className="w-6 h-6 object-contain" />
+                                            <div className="w-6 h-6 rounded bg-forest-dew flex items-center justify-center text-valley-green shadow-3xs">
+                                                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                                                </svg>
+                                            </div>
                                             <span className="font-bold text-xs md:text-sm tracking-tight text-forest-dew">OptiMove</span>
                                         </div>
                                         <div className="flex-1 flex flex-col gap-1.5 mt-2">
@@ -799,7 +917,9 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
 
                         {/* Result Card (Right Column) */}
                         <div id="hasil-analisis" className="lg:col-span-6">
-                            {recommendations ? (
+                            {processing ? (
+                                <RecommendationSkeleton />
+                            ) : recommendations ? (
                                 <div className="bg-white border border-stone-200 rounded-3xl p-6 md:p-8 shadow-md space-y-6 animate-fade-in">
                                     
                                     {/* Header */}

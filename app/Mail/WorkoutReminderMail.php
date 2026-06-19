@@ -32,7 +32,7 @@ class WorkoutReminderMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '🏃 Pengingat Latihan Harian Optimove!',
+            subject: ' Pengingat Latihan Harian Optimove!',
         );
     }
 

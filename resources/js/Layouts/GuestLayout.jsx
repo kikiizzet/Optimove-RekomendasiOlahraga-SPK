@@ -36,22 +36,22 @@ export default function GuestLayout({
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
                         {/* Left Column: Welcome & Info */}
                         <div className="lg:col-span-5 flex flex-col justify-center text-left py-4">
-                            <Link href="/" className="inline-flex items-center gap-2 mb-8 group self-start">
-                                <img src="/images/icon hijau.png" alt="Optimove" className="w-8 h-8 object-contain" />
+                            <Link href="/" className="inline-flex items-center gap-2 mb-6 lg:mb-8 group self-start">
+                                <ApplicationLogo className="w-8 h-8" />
                                 <span className="text-3xl font-extrabold tracking-tight transition group-hover:opacity-80" style={{ color: THEME.ink }}>
                                     Optimove
                                 </span>
                             </Link>
 
-                            <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight mb-4 leading-tight" style={{ color: THEME.ink }}>
+                            <h1 className="text-2xl lg:text-4xl font-extrabold tracking-tight mb-3 leading-tight" style={{ color: THEME.ink }}>
                                 {leftTitle}
                             </h1>
-                            <p className="text-sm lg:text-base mb-8 opacity-80 leading-relaxed font-medium" style={{ color: THEME.green }}>
+                            <p className="text-sm lg:text-base mb-6 opacity-80 leading-relaxed font-medium" style={{ color: THEME.green }}>
                                 {leftSubtitle}
                             </p>
 
                             {leftImage && (
-                                <div className="w-full max-w-[420px] mx-auto lg:mx-0 mb-8 flex justify-center lg:justify-start">
+                                <div className="hidden lg:flex w-full max-w-[420px] mx-auto lg:mx-0 mb-8 justify-center lg:justify-start">
                                     <img 
                                         src={leftImage} 
                                         alt="Welcome Illustration" 
@@ -62,7 +62,7 @@ export default function GuestLayout({
                             )}
 
                             {leftHighlights && leftHighlights.length > 0 && (
-                                <div className="space-y-4">
+                                <div className="hidden lg:block space-y-4">
                                     <h3 className="text-lg font-bold tracking-tight" style={{ color: THEME.ink }}>
                                         {lang === 'id' ? 'Mengapa Login?' : 'Why Login?'}
                                     </h3>
@@ -108,7 +108,7 @@ export default function GuestLayout({
                 {/* Header */}
                 <div className="text-center mb-8">
                     <Link href="/" className="inline-flex items-center gap-2 mb-4 justify-center">
-                        <img src="/images/icon hijau.png" alt="Optimove" className="w-8 h-8 object-contain" />
+                        <ApplicationLogo className="w-8 h-8" />
                         <span className="text-3xl font-bold" style={{ color: THEME.ink, letterSpacing: '-0.04em' }}>
                             Optimove
                         </span>
