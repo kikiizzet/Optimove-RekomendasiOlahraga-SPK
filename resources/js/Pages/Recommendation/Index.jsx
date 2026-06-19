@@ -311,7 +311,7 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
                         </div>
                     </div>
                     
-                    {/* Desktop Actions */}
+                    
                     <div className="hidden md:flex items-center gap-4">
                         {auth?.user ? (
                             <>
