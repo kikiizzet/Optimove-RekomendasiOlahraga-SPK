@@ -280,7 +280,7 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
         });
     };
 
-    // Calculations for counter valuess
+    // Calculations for counter values
     const totalDataset = stats.total || 709;
     const totalSports = Object.keys(stats.top_sports || {}).length || 8;
 
