@@ -287,7 +287,7 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
     return (
         <div className="min-h-screen font-sans bg-canvas-ice text-adaline-ink selection:bg-forest-dew selection:text-valley-green">
             
-            {/* NAVBAR */}
+            {/* NAVBARs */}
             <header className="sticky top-0 z-50 border-b border-stone-moss/70 backdrop-blur-md bg-canvas-ice/85">
                 <nav className="max-w-7xl mx-auto px-6 md:px-10 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-12">
@@ -446,7 +446,7 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
             </header>
 
             {/* HERO SECTION */}
-            <section className="relative overflow-hidden flex items-center pt-8 pb-16 lg:py-24" style={{ minHeight: 'min(85vh, 600px)' }}>
+            <section className="relative overflow-hidden flex items-center pt-8 pb-28 lg:pt-16 lg:pb-36" style={{ minHeight: 'min(85vh, 600px)' }}>
                 <img src="/images/Background.png" alt="Landscape background" className="absolute inset-0 w-full h-full object-cover object-bottom transform scale-95 origin-bottom" style={{ opacity: 1 }} />
                 <div className="absolute inset-0 bg-white/10" />
                 
@@ -576,6 +576,17 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
                         
                     </div>
                 </div>
+
+                {/* Scroll Down Indicator */}
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 cursor-pointer group"
+                     onClick={() => document.getElementById('statistik')?.scrollIntoView({ behavior: 'smooth' })}>
+                    <span className="text-[10px] md:text-xs font-bold text-valley-green/80 uppercase tracking-widest group-hover:text-valley-green transition duration-300 text-center px-4">
+                        {lang === 'id' ? 'Scroll ke bawah untuk info penting' : 'Scroll down for important info'}
+                    </span>
+                    <div className="w-6 h-10 rounded-full border-2 border-valley-green/50 flex items-start justify-center p-1 bg-white/60 backdrop-blur-xs shadow-sm group-hover:border-valley-green transition duration-300">
+                        <div className="w-1.5 h-3 bg-valley-green rounded-full animate-bounce"></div>
+                    </div>
+                </div>
             </section>
 
             {/* KENAPA MEMILIH OPTIMOVE SECTION */}
@@ -644,7 +655,7 @@ export default function Index({ formData, histories = [], stats = {}, testimonia
             </section>
 
             {/* STATISTICS COUNTER BAR */}
-            <section className="py-10 bg-canvas-ice">
+            <section id="statistik" className="py-10 bg-canvas-ice">
                 <div className="max-w-7xl mx-auto px-6 md:px-10">
                     <div className="bg-forest-dew/40 border border-valley-green/20 rounded-3xl p-8 md:p-10 shadow-sm">
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 divide-y lg:divide-y-0 lg:divide-x divide-valley-green/10">

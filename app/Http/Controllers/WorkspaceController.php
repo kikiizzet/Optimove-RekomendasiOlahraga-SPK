@@ -108,6 +108,14 @@ class WorkspaceController extends Controller
             $user->profile_photo_url = null;
         }
 
+        // Strava Integration: cek koneksi dan ambil aktivitas
+        $stravaConnection = $user->stravaConnection;
+        $stravaActivities = [];
+
+        if ($stravaConnection) {
+            $stravaActivities = \App\Http\Controllers\StravaController::fetchActivities($stravaConnection, 5);
+        }
+
         return Inertia::render('Workspace/Index', [
             'user'               => $user,
             'todayTodos'         => $todayTodos,
@@ -116,6 +124,9 @@ class WorkspaceController extends Controller
             'inactiveAlert'      => $inactiveAlert,
             'testimonials'       => $testimonials,
             'allRecommendations' => $allRecommendations,
+            'stravaConnected'    => $stravaConnection !== null,
+            'stravaAthleteData'  => $stravaConnection?->athlete_data,
+            'stravaActivities'   => $stravaActivities,
         ]);
     }
 

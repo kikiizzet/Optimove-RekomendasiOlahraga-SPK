@@ -78,6 +78,11 @@ class User extends Authenticatable
         return $this->hasMany(PushSubscription::class);
     }
 
+    public function stravaConnection(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(StravaConnection::class);
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, usePage, Link, router } from '@inertiajs/react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Swal from 'sweetalert2';
@@ -362,7 +362,7 @@ const SPORT_RECOMMENDATION_DETAILS = {
     }
 };
 
-export default function Index({ user, todayTodos = [], journals = [], inactiveDays = 0, inactiveAlert = false, testimonials = [], allRecommendations = [] }) {
+export default function Index({ user, todayTodos = [], journals = [], inactiveDays = 0, inactiveAlert = false, testimonials = [], allRecommendations = [], stravaConnected = false, stravaAthleteData = null, stravaActivities = [] }) {
     const { flash } = usePage().props;
 
     // Sidebar tab state
@@ -1719,10 +1719,24 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                             {/* Row 1: Greeting & Progress */}
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 {/* Welcome Banner */}
-                                <div className="lg:col-span-2 bg-white border border-stone-200/80 rounded-3xl p-5 md:p-8 shadow-sm flex items-center justify-between gap-4 relative h-[140px] md:h-[180px] overflow-hidden">
-                                    <div className="space-y-1.5 relative z-10 max-w-[65%] md:max-w-[60%] text-left">
-                                        <h1 className="text-xl md:text-3xl font-extrabold tracking-tight text-[#203b14] leading-tight">Halo, {user.name}!</h1>
-                                        <p className="text-[11px] md:text-sm text-stone-500 font-semibold leading-relaxed">Pantau progres rencana kebugaran dan catat kemajuan Anda di sini.</p>
+                                <div className="lg:col-span-2 bg-white border border-stone-200/80 rounded-3xl p-5 md:p-8 shadow-sm flex items-center justify-between gap-4 relative min-h-[160px] md:h-[200px] overflow-hidden pb-6 md:pb-8">
+                                    <div className="space-y-3.5 relative z-10 max-w-[65%] md:max-w-[60%] text-left">
+                                        <div>
+                                            <h1 className="text-xl md:text-3xl font-extrabold tracking-tight text-[#203b14] leading-tight">Halo, {user.name}!</h1>
+                                            <p className="text-[11px] md:text-sm text-stone-500 font-semibold leading-relaxed mt-1">Pantau progres rencana kebugaran dan catat kemajuan Anda di sini.</p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2.5">
+                                            <button 
+                                                onClick={() => setActiveTab('program')} 
+                                                className="py-2.5 px-4 rounded-xl bg-valley-green text-white font-bold text-[10px] md:text-xs hover:opacity-90 transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+                                            >Program Latihan
+                                            </button>
+                                            <button 
+                                                onClick={() => setActiveTab('rekomendasi')} 
+                                                className="py-2.5 px-4 rounded-xl bg-forest-dew/70 text-valley-green font-bold text-[10px] md:text-xs hover:bg-forest-dew/95 transition flex items-center gap-1.5 shadow-sm border border-valley-green/10 cursor-pointer"
+                                            >Hasil Rekomendasi
+                                            </button>
+                                        </div>
                                     </div>
                                     <div className="absolute right-2 md:right-4 bottom-0 top-[-20px] md:top-[-35px] flex items-end justify-end w-[38%] md:w-[40%] pointer-events-none select-none z-20">
                                         <img 
@@ -1765,63 +1779,307 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
                             {/* Row 2: Four Metric Cards */}
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                 {/* Card 1: Program Aktif */}
-                                <div className="bg-white border border-stone-200/80 rounded-2xl p-4 flex items-center gap-3 shadow-2xs text-left">
-                                    <div className="w-12 h-12 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0">
+                                <div 
+                                    onClick={() => setActiveTab('program')} 
+                                    className="bg-white border border-stone-200/80 rounded-2xl p-4 flex items-center gap-3 shadow-2xs text-left cursor-pointer hover:border-valley-green/30 hover:shadow-xs transition duration-250 group"
+                                >
+                                    <div className="w-12 h-12 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-250">
                                         <img src="/images/Calendar.png" alt="Calendar" className="w-6 h-6 object-contain" />
                                     </div>
                                     <div>
                                         <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">Program Aktif</span>
-                                        <span className="text-lg font-black text-valley-green mt-0.5 block leading-none">
+                                        <span className="text-lg font-black text-valley-green mt-0.5 block leading-none group-hover:text-[#065f46] transition-colors duration-250">
                                             {activeProgramsCount}
                                         </span>
-                                        <span className="text-[10px] text-stone-400 font-semibold block mt-1">
-                                            {activeProgramsCount > 0 ? 'Program berjalan' : 'Belum ada program'}
+                                        <span className="text-[10px] text-stone-400 font-semibold block mt-1 flex items-center gap-1">
+                                            {activeProgramsCount > 0 ? 'Program berjalan' : 'Belum ada program'} <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-250 text-valley-green">→</span>
                                         </span>
                                     </div>
                                 </div>
 
                                 {/* Card 2: Latihan Selesai */}
-                                <div className="bg-white border border-stone-200/80 rounded-2xl p-4 flex items-center gap-3 shadow-2xs text-left">
-                                    <div className="w-12 h-12 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0">
+                                <div 
+                                    onClick={() => setActiveTab('riwayat')} 
+                                    className="bg-white border border-stone-200/80 rounded-2xl p-4 flex items-center gap-3 shadow-2xs text-left cursor-pointer hover:border-valley-green/30 hover:shadow-xs transition duration-250 group"
+                                >
+                                    <div className="w-12 h-12 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-250">
                                         <img src="/images/Check circle.png" alt="Check circle" className="w-6 h-6 object-contain" />
                                     </div>
                                     <div>
                                         <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">Latihan Selesai</span>
-                                        <span className="text-lg font-black text-valley-green mt-0.5 block leading-none font-bold">
+                                        <span className="text-lg font-black text-valley-green mt-0.5 block leading-none group-hover:text-[#065f46] transition-colors duration-250">
                                             {totalCompletedWorkouts}
                                         </span>
-                                        <span className="text-[10px] text-stone-400 font-semibold block mt-1">Sesi latihan</span>
+                                        <span className="text-[10px] text-stone-400 font-semibold block mt-1 flex items-center gap-1">
+                                            Sesi latihan <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-250 text-valley-green">→</span>
+                                        </span>
                                     </div>
                                 </div>
 
                                 {/* Card 3: Streak */}
-                                <div className="bg-white border border-stone-200/80 rounded-2xl p-4 flex items-center gap-3 shadow-2xs text-left">
-                                    <div className="w-12 h-12 rounded-full bg-[#fef7e0] flex items-center justify-center shrink-0 text-xl">
+                                <div 
+                                    onClick={() => setActiveTab('program')} 
+                                    className="bg-white border border-stone-200/80 rounded-2xl p-4 flex items-center gap-3 shadow-2xs text-left cursor-pointer hover:border-valley-green/30 hover:shadow-xs transition duration-250 group"
+                                >
+                                    <div className="w-12 h-12 rounded-full bg-[#fef7e0] flex items-center justify-center shrink-0 text-xl group-hover:scale-105 transition-transform duration-250">
                                         🔥
                                     </div>
                                     <div>
                                         <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">Streak</span>
-                                        <span className="text-lg font-black text-valley-green mt-0.5 block leading-none font-bold">
+                                        <span className="text-lg font-black text-valley-green mt-0.5 block leading-none group-hover:text-[#065f46] transition-colors duration-250">
                                             {activeStreak} hari
                                         </span>
-                                        <span className="text-[10px] text-stone-400 font-semibold block mt-1">
-                                            {activeStreak > 0 ? 'Konsistensi luar biasa!' : 'Mulai olahraga hari ini!'}
+                                        <span className="text-[10px] text-stone-400 font-semibold block mt-1 flex items-center gap-1">
+                                            {activeStreak > 0 ? 'Konsistensi luar biasa!' : 'Mulai olahraga hari ini!'} <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-250 text-valley-green">→</span>
                                         </span>
                                     </div>
                                 </div>
 
                                 {/* Card 4: Rata-rata Progress */}
-                                <div className="bg-white border border-stone-200/80 rounded-2xl p-4 flex items-center gap-3 shadow-2xs text-left">
-                                    <div className="w-12 h-12 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0">
+                                <div 
+                                    onClick={() => setActiveTab('program')} 
+                                    className="bg-white border border-stone-200/80 rounded-2xl p-4 flex items-center gap-3 shadow-2xs text-left cursor-pointer hover:border-valley-green/30 hover:shadow-xs transition duration-250 group"
+                                >
+                                    <div className="w-12 h-12 rounded-full bg-[#edf1e6] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-250">
                                         <img src="/images/Icon Rentang Usia.png" alt="Rata-rata progress" className="w-6 h-6 object-contain" />
                                     </div>
                                     <div>
                                         <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">Rata - rata Progress</span>
-                                        <span className="text-lg font-black text-valley-green mt-0.5 block leading-none">
+                                        <span className="text-lg font-black text-valley-green mt-0.5 block leading-none group-hover:text-[#065f46] transition-colors duration-250">
                                             {currentProgress}%
                                         </span>
-                                        <span className="text-[10px] text-stone-400 font-semibold block mt-1">Seminggu terakhir</span>
+                                        <span className="text-[10px] text-stone-400 font-semibold block mt-1 flex items-center gap-1">
+                                            Lihat detail progres <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-250 text-valley-green">→</span>
+                                        </span>
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* Row 2.5: Strava Integration */}
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                                {/* Strava Connection Card */}
+                                <div className={`lg:col-span-5 border rounded-3xl p-6 shadow-sm relative overflow-hidden transition-all duration-300 ${
+                                    stravaConnected 
+                                        ? 'bg-gradient-to-br from-[#fc4c02]/5 via-white to-orange-50 border-[#fc4c02]/20' 
+                                        : 'bg-white border-stone-200/80'
+                                }`}>
+                                    {/* Decorative background pattern */}
+                                    <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-[#fc4c02]/5 blur-2xl pointer-events-none"></div>
+                                    <div className="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-orange-100/40 blur-xl pointer-events-none"></div>
+                                    
+                                    <div className="relative z-10">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-3">
+                                                {/* Strava Logo */}
+                                                <div className="w-11 h-11 rounded-2xl bg-[#fc4c02] flex items-center justify-center shadow-sm shadow-[#fc4c02]/20">
+                                                    <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                                                        <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/>
+                                                    </svg>
+                                                </div>
+                                                <div className="text-left">
+                                                    <h3 className="text-sm font-extrabold text-adaline-ink">Strava</h3>
+                                                    <p className="text-[10px] text-stone-400 font-semibold">
+                                                        {stravaConnected ? 'Terhubung' : 'Integrasi Fitness'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            {stravaConnected && (
+                                                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                    <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-wider">Connected</span>
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {stravaConnected ? (
+                                            <div className="space-y-4">
+                                                {/* Connected User Info */}
+                                                <div className="flex items-center gap-3 p-3 bg-white/70 rounded-2xl border border-stone-100">
+                                                    {stravaAthleteData?.avatar ? (
+                                                        <img src={stravaAthleteData.avatar} alt="Strava" className="w-9 h-9 rounded-full object-cover border-2 border-[#fc4c02]/20" />
+                                                    ) : (
+                                                        <div className="w-9 h-9 rounded-full bg-[#fc4c02]/10 flex items-center justify-center">
+                                                            <span className="text-sm">🏃</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="text-left min-w-0">
+                                                        <p className="text-xs font-bold text-adaline-ink truncate">{stravaAthleteData?.name || 'Strava Athlete'}</p>
+                                                        <p className="text-[10px] text-stone-400 font-medium">@{stravaAthleteData?.username || 'athlete'}</p>
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Quick Stats from recent activities */}
+                                                {stravaActivities.length > 0 && (
+                                                    <div className="grid grid-cols-3 gap-2">
+                                                        <div className="text-center p-2.5 bg-orange-50/60 rounded-xl border border-orange-100/50">
+                                                            <span className="text-lg font-black text-[#fc4c02] block leading-none">
+                                                                {stravaActivities.reduce((sum, a) => sum + a.distance, 0).toFixed(1)}
+                                                            </span>
+                                                            <span className="text-[8px] font-bold text-stone-400 uppercase tracking-wider mt-1 block">KM Total</span>
+                                                        </div>
+                                                        <div className="text-center p-2.5 bg-orange-50/60 rounded-xl border border-orange-100/50">
+                                                            <span className="text-lg font-black text-[#fc4c02] block leading-none">
+                                                                {stravaActivities.length}
+                                                            </span>
+                                                            <span className="text-[8px] font-bold text-stone-400 uppercase tracking-wider mt-1 block">Aktivitas</span>
+                                                        </div>
+                                                        <div className="text-center p-2.5 bg-orange-50/60 rounded-xl border border-orange-100/50">
+                                                            <span className="text-lg font-black text-[#fc4c02] block leading-none">
+                                                                {Math.round(stravaActivities.reduce((sum, a) => sum + a.moving_time, 0) / 60)}
+                                                            </span>
+                                                            <span className="text-[8px] font-bold text-stone-400 uppercase tracking-wider mt-1 block">Menit</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <button
+                                                    onClick={() => {
+                                                        if (confirm('Yakin ingin memutuskan koneksi Strava?')) {
+                                                            router.post(route('strava.disconnect'), {}, { preserveScroll: true });
+                                                        }
+                                                    }}
+                                                    className="w-full py-2 px-4 rounded-xl border border-stone-200 text-stone-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50/50 text-[10px] font-bold transition cursor-pointer"
+                                                >
+                                                    Putuskan Koneksi Strava
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                <p className="text-xs text-stone-500 leading-relaxed text-left">
+                                                    Hubungkan akun Strava Anda untuk sinkronisasi data aktivitas olahraga dari <strong>smartwatch</strong> dan perangkat fitness lainnya secara otomatis.
+                                                </p>
+                                                <div className="flex flex-wrap gap-2 text-left">
+                                                    {['🏃 Running', '🚴 Cycling', '🏊 Swimming', '🧘 Yoga'].map((item) => (
+                                                        <span key={item} className="px-2.5 py-1 rounded-lg bg-stone-50 border border-stone-100 text-[9px] font-bold text-stone-500">
+                                                            {item}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                                <a
+                                                    href={route('strava.redirect')}
+                                                    className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-[#fc4c02] hover:bg-[#e04402] text-white font-bold text-xs transition shadow-sm shadow-[#fc4c02]/20 cursor-pointer"
+                                                >
+                                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                                        <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/>
+                                                    </svg>
+                                                    Hubungkan Strava
+                                                </a>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Strava Recent Activities */}
+                                <div className="lg:col-span-7 bg-white border border-stone-200/80 rounded-3xl p-6 shadow-sm text-left">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div>
+                                            <h3 className="text-xs font-mono uppercase tracking-widest text-[#203b14] font-bold">AKTIVITAS STRAVA TERBARU</h3>
+                                            <p className="text-[10px] text-stone-400 font-medium mt-0.5">
+                                                {stravaConnected ? 'Data langsung dari perangkat fitness Anda' : 'Hubungkan Strava untuk melihat aktivitas'}
+                                            </p>
+                                        </div>
+                                        {stravaConnected && stravaActivities.length > 0 && (
+                                            <button 
+                                                onClick={() => router.reload({ only: ['stravaActivities'] })}
+                                                className="text-[10px] font-bold text-valley-green hover:text-[#065f46] transition cursor-pointer flex items-center gap-1"
+                                            >
+                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                </svg>
+                                                Refresh
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {!stravaConnected ? (
+                                        <div className="text-center py-10 border border-dashed border-stone-200 rounded-2xl bg-stone-50/30">
+                                            <div className="w-14 h-14 rounded-2xl bg-[#fc4c02]/10 flex items-center justify-center mx-auto mb-3">
+                                                <svg className="w-7 h-7 text-[#fc4c02]/60" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/>
+                                                </svg>
+                                            </div>
+                                            <p className="text-xs text-stone-400 font-semibold">Belum ada aktivitas</p>
+                                            <p className="text-[10px] text-stone-300 mt-1">Hubungkan Strava untuk sinkronisasi data dari smartwatch Anda</p>
+                                        </div>
+                                    ) : stravaActivities.length === 0 ? (
+                                        <div className="text-center py-10 border border-dashed border-orange-200/50 rounded-2xl bg-orange-50/20">
+                                            <span className="text-3xl block mb-2">🏃</span>
+                                            <p className="text-xs text-stone-400 font-semibold">Belum ada aktivitas terbaru</p>
+                                            <p className="text-[10px] text-stone-300 mt-1">Mulai rekam aktivitas di Strava untuk melihatnya di sini</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
+                                            {stravaActivities.map((activity, idx) => {
+                                                const typeIcons = {
+                                                    'Run': '🏃', 'Ride': '🚴', 'Swim': '🏊', 'Walk': '🚶',
+                                                    'Hike': '🥾', 'Yoga': '🧘', 'WeightTraining': '🏋️',
+                                                    'Workout': '💪', 'VirtualRide': '🚴', 'VirtualRun': '🏃',
+                                                };
+                                                const typeColors = {
+                                                    'Run': 'bg-orange-50 border-orange-100 text-orange-600',
+                                                    'Ride': 'bg-blue-50 border-blue-100 text-blue-600',
+                                                    'Swim': 'bg-cyan-50 border-cyan-100 text-cyan-600',
+                                                    'Walk': 'bg-emerald-50 border-emerald-100 text-emerald-600',
+                                                    'Hike': 'bg-amber-50 border-amber-100 text-amber-600',
+                                                    'Yoga': 'bg-violet-50 border-violet-100 text-violet-600',
+                                                    'WeightTraining': 'bg-rose-50 border-rose-100 text-rose-600',
+                                                };
+                                                const icon = typeIcons[activity.type] || '💪';
+                                                const colorClass = typeColors[activity.type] || 'bg-stone-50 border-stone-100 text-stone-600';
+                                                const mins = Math.floor(activity.moving_time / 60);
+                                                const secs = activity.moving_time % 60;
+                                                const timeStr = `${mins}:${String(secs).padStart(2, '0')}`;
+                                                const dateStr = new Date(activity.start_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+
+                                                return (
+                                                    <div key={activity.id || idx} className="flex items-center gap-3.5 p-3.5 rounded-2xl border border-stone-100 hover:border-[#fc4c02]/20 hover:shadow-xs transition-all duration-200 bg-white group">
+                                                        {/* Activity Type Icon */}
+                                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 border ${colorClass} group-hover:scale-105 transition-transform duration-200`}>
+                                                            {icon}
+                                                        </div>
+                                                        
+                                                        {/* Activity Info */}
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center justify-between gap-2">
+                                                                <p className="text-xs font-bold text-adaline-ink truncate">{activity.name}</p>
+                                                                <span className="text-[9px] font-mono text-stone-300 shrink-0">{dateStr}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-3 mt-1.5">
+                                                                {activity.distance > 0 && (
+                                                                    <span className="flex items-center gap-1 text-[10px] font-bold text-stone-500">
+                                                                        <svg className="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                        </svg>
+                                                                        {activity.distance} km
+                                                                    </span>
+                                                                )}
+                                                                <span className="flex items-center gap-1 text-[10px] font-bold text-stone-500">
+                                                                    <svg className="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                    </svg>
+                                                                    {timeStr}
+                                                                </span>
+                                                                {activity.average_speed > 0 && (
+                                                                    <span className="flex items-center gap-1 text-[10px] font-bold text-stone-500">
+                                                                        <svg className="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                                                        </svg>
+                                                                        {activity.average_speed} km/h
+                                                                    </span>
+                                                                )}
+                                                                {activity.average_heartrate && (
+                                                                    <span className="flex items-center gap-1 text-[10px] font-bold text-red-400">
+                                                                        ❤️ {Math.round(activity.average_heartrate)} bpm
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use SocialiteProviders\Manager\SocialiteWasCalled;
+use SocialiteProviders\Strava\Provider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,5 +24,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Vite::prefetch(concurrency: 3);
+
+        // Register Strava Socialite Provider
+        Event::listen(function (SocialiteWasCalled $event) {
+            $event->extendSocialite('strava', Provider::class);
+        });
     }
 }

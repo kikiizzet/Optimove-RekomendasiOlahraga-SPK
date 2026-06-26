@@ -66,6 +66,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/push/subscribe', [PushNotificationController::class, 'subscribe']);
     Route::post('/api/push/unsubscribe', [PushNotificationController::class, 'unsubscribe']);
     Route::post('/api/push/test', [PushNotificationController::class, 'sendTest']);
+
+    // Strava Integration
+    Route::get('/auth/strava/redirect', [\App\Http\Controllers\StravaController::class, 'redirect'])->name('strava.redirect');
+    Route::get('/auth/strava/callback', [\App\Http\Controllers\StravaController::class, 'callback'])->name('strava.callback');
+    Route::post('/strava/disconnect', [\App\Http\Controllers\StravaController::class, 'disconnect'])->name('strava.disconnect');
 });
 
 // ─── Admin Routes ─────────────────────────────────────────────────────────────
