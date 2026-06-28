@@ -843,7 +843,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
     const getDynamicDateRange = () => {
         const startDate = new Date();
         const endDate = new Date();
-        endDate.setDate(startDate.getDate() + 28); 
+        endDate.setDate(startDate.getDate() + 28); // 4 weeks later
         
         const months = [
             'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
