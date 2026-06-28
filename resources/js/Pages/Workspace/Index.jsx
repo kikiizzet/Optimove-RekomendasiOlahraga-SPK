@@ -873,7 +873,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
         
         const today = new Date();
         const todayDayOfWeek = today.getDay(); // 0 is Sunday, 1 is Monday...
-        
+        // Calculate the current week number (1-4) based on the current date
         // Find Monday of the current week
         const daysToSubtract = todayDayOfWeek === 0 ? 6 : todayDayOfWeek - 1;
         const mondayOfThisWeek = new Date(today);
