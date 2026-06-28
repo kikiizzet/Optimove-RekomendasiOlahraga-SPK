@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useForm, usePage, Link, router } from '@inertiajs/react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Swal from 'sweetalert2';
@@ -843,7 +843,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
     const getDynamicDateRange = () => {
         const startDate = new Date();
         const endDate = new Date();
-        endDate.setDate(startDate.getDate() + 28); // 4 weeks later
+        endDate.setDate(startDate.getDate() + 28); 
         
         const months = [
             'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
