@@ -3,8 +3,7 @@ import { useRef, useEffect, useState } from 'react';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import RecommendationSkeleton from '@/Components/RecommendationSkeleton';
 
-// Custom Sport Icons and Descriptionss
-
+// Custom Sport Icons and Descriptions
 const SPORT_INFO = {
     'Walking or jogging': {
         name: 'Jogging',
