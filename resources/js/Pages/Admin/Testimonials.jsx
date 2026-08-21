@@ -85,7 +85,7 @@ export default function Testimonials({ testimonials = [] }) {
                                 Tidak ada testimoni yang ditemukan untuk kriteria filter ini.
                             </p>
                         </div>
-                        //ss
+                        //ssap
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full text-xs text-left">
