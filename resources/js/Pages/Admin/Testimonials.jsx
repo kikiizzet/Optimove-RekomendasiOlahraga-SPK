@@ -75,7 +75,7 @@ export default function Testimonials({ testimonials = [] }) {
                     ))}
                 </div>
 
-                {/* Testimonials Tables */}
+                {/* Testimonials Tabless */}
                 <div className="bg-white border rounded-3xl overflow-hidden shadow-xs" style={{ borderColor: THEME.moss }}>
                     {filteredTestimonials.length === 0 ? (
                         <div className="text-center py-16 flex flex-col items-center justify-center">
