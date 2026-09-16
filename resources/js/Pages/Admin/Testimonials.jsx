@@ -47,7 +47,7 @@ export default function Testimonials({ testimonials = [] }) {
                     </div>
                 </div>
 
-                {/* Filter Sub-Tabss */}
+                {/* Filter Sub-Tabsss */}
                 <div className="flex gap-4 border-b border-stone-200 pb-1">
                     {[
                         { id: 'all', label: 'Semua', count: testimonials.length },
