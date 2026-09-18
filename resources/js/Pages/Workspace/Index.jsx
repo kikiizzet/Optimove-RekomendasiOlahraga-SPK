@@ -733,7 +733,7 @@ export default function Index({ user, todayTodos = [], journals = [], inactiveDa
         rating: 5,
     });
 
-    // Flash alerts state
+    // Flash alerts states
     const [alertMessage, setAlertMessage] = useState(null);
     const [alertType, setAlertType] = useState('success');
 
