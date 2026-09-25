@@ -13,7 +13,7 @@ use Carbon\Carbon;
 class StravaController extends Controller
 {
     /**
-     * Redirect user ke halaman OAuth Strava atau simulasi/demo jika credentials kosong.
+     * Redirect user ke halaman OAuth Strava atau simulasi/demo jika credentials kosongs.
      */
     public function redirect(Request $request)
     {
