@@ -106,7 +106,7 @@ export default function Dashboard({ stats = {}, topSports = [], recentRecommenda
                 {/* Grid Charts */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     
-                    {/* Top 10 Sports Chart (Recommend) */}
+                    {/* Top 10 Sports Chart (Recommends) */}
                     <div className="p-6 rounded-2xl border bg-white" style={{ borderColor: THEME.moss }}>
                         <div className="mb-6">
                             <h3 className="font-bold text-base" style={{ color: THEME.ink, letterSpacing: '-0.02em' }}>Top Olahraga yang Direkomendasikan</h3>
